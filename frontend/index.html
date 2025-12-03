@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tamagotchi HTML - Aprende HTML Jugando</title>
+  <meta name="description" content="Aprende HTML de forma interactiva con tu mascota Tamagotchi">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <!-- Login/Register Page -->
+  <div id="auth-page" class="page active">
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>🎮 Tamagotchi HTML</h1>
+        <p>Aprende HTML jugando con tu mascota virtual</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="login-tab" class="tab-button active">Iniciar Sesión</button>
+        <button id="register-tab" class="tab-button">Registrarse</button>
+      </div>
+
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary">Entrar</button>
+        <div id="login-error" class="error-message"></div>
+      </form>
+
+      <form id="register-form" class="auth-form">
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label for="register-password">Contraseña</label>
+          <input type="password" id="register-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary">Crear Cuenta</button>
+        <div id="register-error" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Game Page -->
+  <div id="game-page" class="page">
+    <nav class="navbar">
+      <div class="nav-content">
+        <h2>🎮 Tamagotchi HTML</h2>
+        <div class="nav-actions">
+          <button id="profile-btn" class="btn-secondary">Mi Perfil</button>
+          <button id="logout-btn" class="btn-secondary">Salir</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="game-container">
+      <!-- Streak Counter -->
+      <div id="streak-display" class="streak-display">
+        <div class="book-icon">
+          <svg viewBox="0 0 100 120" class="book-svg">
+            <path d="M20 10 L80 10 L80 110 L50 100 L20 110 Z" fill="currentColor"/>
+            <text x="50" y="65" class="streak-number" text-anchor="middle">0</text>
+          </svg>
+        </div>
+        <p class="streak-label">Racha</p>
+      </div>
+
+      <!-- Tamagotchi -->
+      <div id="tamagotchi-container" class="tamagotchi-container">
+        <!-- SVG will be injected by JavaScript -->
+      </div>
+
+      <!-- Question Section -->
+      <div class="question-section">
+        <h3 id="question-text" class="question-text">Cargando pregunta...</h3>
+        
+        <div class="answer-section">
+          <textarea 
+            id="answer-input" 
+            class="answer-input" 
+            placeholder="Escribe tu respuesta aquí..."
+            rows="4"
+          ></textarea>
+          <button id="submit-answer-btn" class="btn-primary btn-large">Enviar Respuesta</button>
+        </div>
+
+        <div id="feedback-section" class="feedback-section hidden">
+          <div class="feedback-content">
+            <p id="feedback-text"></p>
+          </div>
+          <button id="next-question-btn" class="btn-primary">Siguiente Pregunta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Page -->
+  <div id="profile-page" class="page">
+    <nav class="navbar">
+      <div class="nav-content">
+        <h2>📊 Mi Perfil</h2>
+        <div class="nav-actions">
+          <button id="back-to-game-btn" class="btn-secondary">Volver al Juego</button>
+          <button id="logout-profile-btn" class="btn-secondary">Salir</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="profile-container">
+      <div class="profile-stats">
+        <div class="stat-card">
+          <h3>Email</h3>
+          <p id="profile-email">-</p>
+        </div>
+        <div class="stat-card">
+          <h3>Racha Actual</h3>
+          <p id="profile-streak" class="streak-value">0</p>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <h3>Historial de Respuestas</h3>
+        <div id="history-container" class="history-container">
+          <p class="loading">Cargando historial...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
