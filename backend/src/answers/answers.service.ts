@@ -99,15 +99,21 @@ Responde ÚNICAMENTE en el siguiente formato JSON (sin markdown, sin bloques de 
         }
 
         let newStreak = user.streak;
+        console.log('📊 Current streak:', newStreak, 'Type:', typeof newStreak);
+        console.log('🤖 Validation rating:', validation.rating);
 
         // Update streak based on rating
         if (validation.rating === 'correct') {
+            console.log('✅ Rating is correct, adding 1');
             newStreak += 1;
         } else if (validation.rating === 'partial') {
+            console.log('⚠️ Rating is partial, adding 0.5');
             newStreak += 0.5;
         } else {
+            console.log('❌ Rating is incorrect, resetting to 0');
             newStreak = 0;
         }
+        console.log('📊 New calculated streak:', newStreak);
 
         // Update user streak
         await this.db.updateUserStreak(userId, newStreak);
