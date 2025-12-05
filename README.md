@@ -170,3 +170,5 @@ Las contribuciones son bienvenidas. Por favor, abre un issue o pull request para
 
 
 https://aistudio.google.com/app/api-keys
+URL Backend:
+* https://mascota-virtual-backend-production.up.railway.app:443
