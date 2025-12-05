@@ -50,6 +50,7 @@ export class GameManager {
     }
 
     private async loadQuestion(): Promise<void> {
+        this.nextQuestionButton.disabled = true;
         try {
             // Reset UI
             this.feedbackSection.classList.add('hidden');
@@ -65,6 +66,8 @@ export class GameManager {
         } catch (error) {
             console.error('Error loading question:', error);
             this.questionText.textContent = 'Error al cargar la pregunta. Por favor, intenta de nuevo.';
+        } finally {
+            this.nextQuestionButton.disabled = false;
         }
     }
 
