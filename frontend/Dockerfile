@@ -21,8 +21,26 @@ FROM nginx:alpine
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port (Railway will use PORT env variable)
-EXPOSE 80
+# Create nginx config template
+RUN echo 'server { \
+    listen $PORT; \
+    listen [::]:$PORT; \
+    server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf.template
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Remove default config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Set default PORT if not provided
+ENV PORT=8080
+
+# Expose port
+EXPOSE $PORT
+
+# Start nginx with envsubst to replace PORT variable
+CMD sh -c "envsubst '\$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
