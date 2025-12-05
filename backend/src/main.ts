@@ -17,6 +17,7 @@ async function bootstrap() {
             'http://localhost:3001', // Alternative port
             'http://127.0.0.1:5173',
             'http://127.0.0.1:5174',
+            'https://mascota-virtual-frontend-production.up.railway.app',
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
