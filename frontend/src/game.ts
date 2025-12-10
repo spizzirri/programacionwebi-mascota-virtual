@@ -50,6 +50,7 @@ export class GameManager {
     }
 
     private async loadQuestion(): Promise<void> {
+        // Disable next question button to prevent double clicks
         this.nextQuestionButton.disabled = true;
         try {
             // Reset UI
@@ -57,18 +58,21 @@ export class GameManager {
             this.feedbackSection.classList.remove('correct', 'partial', 'incorrect');
             this.answerInput.value = '';
             this.answerInput.disabled = false;
-            this.submitButton.disabled = false;
             this.tamagotchi.setEmotion('neutral');
 
             // Load new question
             this.currentQuestion = await api.getRandomQuestion();
             this.questionText.textContent = this.currentQuestion.text;
+
+            // Re-enable submit button only after question is loaded
+            this.submitButton.disabled = false;
         } catch (error) {
             console.error('Error loading question:', error);
             this.questionText.textContent = 'Error al cargar la pregunta. Por favor, intenta de nuevo.';
-        } finally {
-            this.nextQuestionButton.disabled = false;
+            // Re-enable submit button even on error
+            this.submitButton.disabled = false;
         }
+        // Note: nextQuestionButton stays disabled until user submits an answer
     }
 
     private async handleSubmitAnswer(): Promise<void> {
@@ -114,6 +118,10 @@ export class GameManager {
             this.feedbackText.textContent = result.feedback;
             this.feedbackSection.classList.remove('hidden');
             this.submitButton.textContent = 'Enviar Respuesta';
+
+            // Enable next question button after feedback is shown
+            this.nextQuestionButton.disabled = false;
+            // Keep submit button disabled to prevent resubmission
         } catch (error) {
             console.error('Error submitting answer:', error);
             alert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
