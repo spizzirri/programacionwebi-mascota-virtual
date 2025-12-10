@@ -7,6 +7,7 @@ export class GameManager {
     private tamagotchi: Tamagotchi;
     private currentQuestion: Question | null = null;
     private currentStreak: number = 0;
+    private isLoadingQuestion: boolean = false;
 
     private questionText: HTMLElement;
     private answerInput: HTMLTextAreaElement;
@@ -50,8 +51,16 @@ export class GameManager {
     }
 
     private async loadQuestion(): Promise<void> {
-        // Disable next question button to prevent double clicks
+        // Prevent concurrent question loading
+        if (this.isLoadingQuestion) {
+            console.log('Already loading a question, ignoring duplicate request');
+            return;
+        }
+
+        // Set loading flag and disable button immediately
+        this.isLoadingQuestion = true;
         this.nextQuestionButton.disabled = true;
+
         try {
             // Reset UI
             this.feedbackSection.classList.add('hidden');
@@ -61,7 +70,11 @@ export class GameManager {
             this.tamagotchi.setEmotion('neutral');
 
             // Load new question
-            this.currentQuestion = await api.getRandomQuestion();
+            const newQuestion = await api.getRandomQuestion();
+
+            // Only update currentQuestion after successful load
+            // This ensures currentQuestion always matches what's on screen
+            this.currentQuestion = newQuestion;
             this.questionText.textContent = this.currentQuestion.text;
 
             // Re-enable submit button only after question is loaded
@@ -71,6 +84,9 @@ export class GameManager {
             this.questionText.textContent = 'Error al cargar la pregunta. Por favor, intenta de nuevo.';
             // Re-enable submit button even on error
             this.submitButton.disabled = false;
+        } finally {
+            // Always reset loading flag
+            this.isLoadingQuestion = false;
         }
         // Note: nextQuestionButton stays disabled until user submits an answer
     }
