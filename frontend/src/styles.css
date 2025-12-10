@@ -8,34 +8,34 @@
   --bg-secondary: #151b2e;
   --bg-card: rgba(30, 41, 66, 0.6);
   --bg-glass: rgba(255, 255, 255, 0.05);
-  
+
   --accent-primary: #6366f1;
   --accent-secondary: #8b5cf6;
   --accent-success: #10b981;
   --accent-warning: #f59e0b;
   --accent-error: #ef4444;
-  
+
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  
+
   --border-color: rgba(148, 163, 184, 0.1);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  
+
   /* Spacing */
   --spacing-xs: 0.5rem;
   --spacing-sm: 1rem;
   --spacing-md: 1.5rem;
   --spacing-lg: 2rem;
   --spacing-xl: 3rem;
-  
+
   /* Border Radius */
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
   --radius-lg: 1.5rem;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
@@ -66,7 +66,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
+  background:
     radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
   pointer-events: none;
@@ -85,8 +85,13 @@ body::before {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Auth Page Styles */
@@ -169,6 +174,7 @@ body::before {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -253,6 +259,25 @@ body::before {
 .btn-secondary:hover {
   background: var(--bg-card);
   border-color: var(--accent-primary);
+}
+
+/* Disabled Button States */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary:disabled {
+  background: linear-gradient(135deg, #4b5563, #6b7280);
+  box-shadow: none;
+}
+
+.btn-secondary:disabled {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-muted);
 }
 
 .error-message {
@@ -359,9 +384,12 @@ body::before {
 }
 
 @keyframes streakPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.2) rotate(10deg);
   }
@@ -447,6 +475,7 @@ body::before {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -669,21 +698,21 @@ body::before {
   .auth-header h1 {
     font-size: 2rem;
   }
-  
+
   .tamagotchi-svg {
     width: 200px;
     height: 200px;
   }
-  
+
   .question-text {
     font-size: 1.25rem;
   }
-  
+
   .nav-content {
     flex-direction: column;
     gap: var(--spacing-sm);
   }
-  
+
   .nav-actions {
     width: 100%;
     justify-content: center;
