@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
   <meta name="description" content="Aprende HTML de forma interactiva con tu mascota Tamagotchi">
   <link rel="stylesheet" href="/src/styles.css">
 </head>
+
 <body>
   <!-- Login/Register Page -->
   <div id="auth-page" class="page active">
@@ -30,7 +32,7 @@
           <label for="login-password">Contraseña</label>
           <input type="password" id="login-password" required placeholder="••••••••">
         </div>
-        <button type="submit" class="btn-primary">Entrar</button>
+        <button type="submit" id="login-button" class="btn-primary">Entrar</button>
         <div id="login-error" class="error-message"></div>
       </form>
 
@@ -43,7 +45,7 @@
           <label for="register-password">Contraseña</label>
           <input type="password" id="register-password" required placeholder="••••••••">
         </div>
-        <button type="submit" class="btn-primary">Crear Cuenta</button>
+        <button type="submit" id="register-button" class="btn-primary">Crear Cuenta</button>
         <div id="register-error" class="error-message"></div>
       </form>
     </div>
@@ -54,12 +56,12 @@
     <nav class="navbar">
       <div class="nav-content">
         <h2>🎮 Tamagotchi HTML</h2>
-        
+
         <!-- Streak Counter -->
         <div id="streak-display" class="streak-display">
           <div class="book-icon">
             <svg viewBox="0 0 100 120" class="book-svg">
-              <path d="M20 10 L80 10 L80 110 L50 100 L20 110 Z" fill="currentColor"/>
+              <path d="M20 10 L80 10 L80 110 L50 100 L20 110 Z" fill="currentColor" />
               <text x="50" y="65" class="streak-number" text-anchor="middle">0</text>
             </svg>
           </div>
@@ -85,14 +87,10 @@
       <!-- Question Section -->
       <div class="question-section">
         <h3 id="question-text" class="question-text">Cargando pregunta...</h3>
-        
+
         <div class="answer-section">
-          <textarea 
-            id="answer-input" 
-            class="answer-input" 
-            placeholder="Escribe tu respuesta aquí..."
-            rows="4"
-          ></textarea>
+          <textarea id="answer-input" class="answer-input" placeholder="Escribe tu respuesta aquí..."
+            rows="4"></textarea>
           <button id="submit-answer-btn" class="btn-primary btn-large">Enviar Respuesta</button>
         </div>
 
@@ -141,4 +139,5 @@
 
   <script type="module" src="/src/main.ts"></script>
 </body>
+
 </html>
