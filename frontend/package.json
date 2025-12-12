@@ -6,12 +6,25 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+        "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+        "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
     },
     "dependencies": {
         "serve": "^14.2.1"
     },
     "devDependencies": {
+        "@jest/globals": "^30.2.0",
+        "@testing-library/dom": "^10.4.1",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@types/jest": "^30.0.0",
+        "jest": "^30.2.0",
+        "jest-environment-jsdom": "^30.2.0",
+        "jsdom": "^27.3.0",
+        "jsdom-global": "^3.0.2",
+        "ts-jest": "^29.4.6",
+        "ts-node": "^10.9.2",
         "typescript": "^5.3.3",
         "vite": "^5.0.10"
     }
