@@ -110,43 +110,41 @@ describe('AuthManager', () => {
 
       registerTab.click();
 
-      expect(errorDiv.textContent).toBe('');
+      expect(document.getElementById('login-error')).toBeNull();
+      expect(document.getElementById('login-form')).toBeNull();
     });
   });
 
   describe('Tab switching', () => {
-    it('should switch to register form when register tab is clicked', () => {
+    it('deberia cambiar a formulario de registro cuando se hace click en la pestaña de registro', () => {
       new AuthManager();
 
-      const loginTab = document.getElementById('login-tab') as HTMLButtonElement;
       const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
-      const loginForm = document.getElementById('login-form') as HTMLFormElement;
-      const registerForm = document.getElementById('register-form') as HTMLFormElement;
+
+      expect(document.getElementById('login-form')).not.toBeNull();
+      expect(document.getElementById('register-form')).toBeNull();
 
       registerTab.click();
 
-      expect(registerTab.classList.contains('active')).toBe(true);
-      expect(loginTab.classList.contains('active')).toBe(false);
-      expect(registerForm.classList.contains('active')).toBe(true);
-      expect(loginForm.classList.contains('active')).toBe(false);
+      expect(document.getElementById('register-form')).not.toBeNull();
+      expect(document.getElementById('login-form')).toBeNull();
     });
 
-    it('should switch back to login form when login tab is clicked', () => {
+    it('deberia cambiar a formulario de login cuando se hace click en la pestaña de login', () => {
       new AuthManager();
 
       const loginTab = document.getElementById('login-tab') as HTMLButtonElement;
       const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
-      const loginForm = document.getElementById('login-form') as HTMLFormElement;
-      const registerForm = document.getElementById('register-form') as HTMLFormElement;
 
       registerTab.click();
+
+      expect(document.getElementById('register-form')).not.toBeNull();
+      expect(document.getElementById('login-form')).toBeNull();
 
       loginTab.click();
 
-      expect(loginTab.classList.contains('active')).toBe(true);
-      expect(registerTab.classList.contains('active')).toBe(false);
-      expect(loginForm.classList.contains('active')).toBe(true);
-      expect(registerForm.classList.contains('active')).toBe(false);
+      expect(document.getElementById('login-form')).not.toBeNull();
+      expect(document.getElementById('register-form')).toBeNull();
     });
   });
 });

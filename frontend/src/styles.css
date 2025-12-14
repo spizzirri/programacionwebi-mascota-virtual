@@ -154,7 +154,8 @@ body::before {
   box-shadow: var(--shadow-sm);
 }
 
-.auth-form {
+.auth-form,
+.register-form {
   display: none;
   background: var(--bg-card);
   padding: var(--spacing-lg);
@@ -164,7 +165,8 @@ body::before {
   box-shadow: var(--shadow-md);
 }
 
-.auth-form.active {
+.auth-form.active,
+.register-form.active {
   display: block;
   animation: slideUp var(--transition-base);
 }
