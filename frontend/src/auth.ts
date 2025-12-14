@@ -1,54 +1,69 @@
-// Authentication UI logic
+// Authentication business logic
+// Manages user authentication flow: login, registration, and form switching
 
 import { api } from './api';
+import { DOMManager } from './dom-manager';
 
-export class AuthManager {
+export class AuthManager extends DOMManager {
     private loginTab: HTMLButtonElement;
     private registerTab: HTMLButtonElement;
     private formsContainer: HTMLElement;
 
     constructor() {
-        this.loginTab = document.getElementById('login-tab') as HTMLButtonElement;
-        this.registerTab = document.getElementById('register-tab') as HTMLButtonElement;
-        this.formsContainer = document.getElementById('forms-container') as HTMLElement;
+        super();
+        this.loginTab = this.getElementByIdSafe<HTMLButtonElement>('login-tab');
+        this.registerTab = this.getElementByIdSafe<HTMLButtonElement>('register-tab');
+        this.formsContainer = this.getElementByIdSafe<HTMLElement>('forms-container');
 
-        this.setupEventListeners();
-        // Initialize with login form
-        this.switchTab('login');
+        this.initializeAuthInterface();
+        this.showLoginForm();
     }
 
-    private setupEventListeners(): void {
-        // Tab switching
-        this.loginTab.addEventListener('click', () => this.switchTab('login'));
-        this.registerTab.addEventListener('click', () => this.switchTab('register'));
+    /**
+     * Sets up the authentication interface with event listeners
+     */
+    initializeAuthInterface(): void {
+        this.attachEvent(this.loginTab, 'click', () => this.showLoginForm());
+        this.attachEvent(this.registerTab, 'click', () => this.showRegistrationForm());
     }
 
-    private switchTab(tab: 'login' | 'register'): void {
-        // Update tab buttons
+    /**
+     * Displays the login form and activates the login tab
+     */
+    showLoginForm(): void {
+        this.activateTab('login');
+        this.renderLoginForm();
+    }
+
+    /**
+     * Displays the registration form and activates the register tab
+     */
+    showRegistrationForm(): void {
+        this.activateTab('register');
+        this.renderRegistrationForm();
+    }
+
+    /**
+     * Activates the specified tab (login or register)
+     */
+    activateTab(tab: 'login' | 'register'): void {
         if (tab === 'login') {
-            this.loginTab.classList.add('active');
-            this.registerTab.classList.remove('active');
+            this.toggleClasses(this.loginTab, this.registerTab, 'active');
         } else {
-            this.registerTab.classList.add('active');
-            this.loginTab.classList.remove('active');
-        }
-
-        // Remove all forms from DOM
-        this.formsContainer.innerHTML = '';
-
-        // Create and insert the active form
-        if (tab === 'login') {
-            this.createLoginForm();
-        } else {
-            this.createRegisterForm();
+            this.toggleClasses(this.registerTab, this.loginTab, 'active');
         }
     }
 
-    private createLoginForm(): void {
-        const form = document.createElement('form');
-        form.id = 'login-form';
-        form.className = 'auth-form active';
-        form.innerHTML = `
+    /**
+     * Renders the login form in the forms container
+     */
+    renderLoginForm(): void {
+        this.clearContainer(this.formsContainer);
+
+        const form = this.createElement('form', {
+            id: 'login-form',
+            class: 'auth-form active'
+        }, `
             <div class="form-group">
                 <label for="login-email">Email</label>
                 <input type="email" id="login-email" required placeholder="tu@email.com">
@@ -59,17 +74,22 @@ export class AuthManager {
             </div>
             <button type="submit" id="login-button" class="btn-primary">Entrar</button>
             <div id="login-error" class="error-message"></div>
-        `;
+        `);
 
-        form.addEventListener('submit', (e) => this.handleLogin(e));
-        this.formsContainer.appendChild(form);
+        this.attachEvent(form, 'submit', (e) => this.processLogin(e));
+        this.appendToContainer(this.formsContainer, form);
     }
 
-    private createRegisterForm(): void {
-        const form = document.createElement('form');
-        form.id = 'register-form';
-        form.className = 'register-form active';
-        form.innerHTML = `
+    /**
+     * Renders the registration form in the forms container
+     */
+    renderRegistrationForm(): void {
+        this.clearContainer(this.formsContainer);
+
+        const form = this.createElement('form', {
+            id: 'register-form',
+            class: 'register-form active'
+        }, `
             <div class="form-group">
                 <label for="register-email">Email</label>
                 <input type="email" id="register-email" required placeholder="tu@email.com">
@@ -80,51 +100,96 @@ export class AuthManager {
             </div>
             <button type="submit" id="register-button" class="btn-primary">Crear Cuenta</button>
             <div id="register-error" class="error-message"></div>
-        `;
+        `);
 
-        form.addEventListener('submit', (e) => this.handleRegister(e));
-        this.formsContainer.appendChild(form);
+        this.attachEvent(form, 'submit', (e) => this.processRegistration(e));
+        this.appendToContainer(this.formsContainer, form);
     }
 
-    private async handleLogin(e: Event): Promise<void> {
+    /**
+     * Processes user login attempt
+     */
+    async processLogin(e: Event): Promise<void> {
         e.preventDefault();
-        const loginError = document.getElementById('login-error') as HTMLElement;
-        loginError.textContent = '';
+        const errorDisplay = this.getElementByIdSafe<HTMLElement>('login-error');
+        this.clearTextContent(errorDisplay);
 
-        const email = (document.getElementById('login-email') as HTMLInputElement).value;
-        const password = (document.getElementById('login-password') as HTMLInputElement).value;
+        const email = this.getInputValue('login-email');
+        const password = this.getInputValue('login-password');
 
         try {
-            await api.login(email, password);
-            this.onAuthSuccess();
+            await this.authenticateUser(email, password);
+            this.notifyAuthenticationSuccess();
         } catch (error) {
-            loginError.textContent = error instanceof Error ? error.message : 'Error al iniciar sesión';
+            this.displayLoginError(errorDisplay, error);
         }
     }
 
-    private async handleRegister(e: Event): Promise<void> {
+    /**
+     * Processes user registration attempt
+     */
+    async processRegistration(e: Event): Promise<void> {
         e.preventDefault();
-        const registerError = document.getElementById('register-error') as HTMLElement;
-        registerError.textContent = '';
+        const errorDisplay = this.getElementByIdSafe<HTMLElement>('register-error');
+        this.clearTextContent(errorDisplay);
 
-        const email = (document.getElementById('register-email') as HTMLInputElement).value;
-        const password = (document.getElementById('register-password') as HTMLInputElement).value;
+        const email = this.getInputValue('register-email');
+        const password = this.getInputValue('register-password');
 
-        if (password.length < 6) {
-            registerError.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        if (!this.validatePassword(password)) {
+            this.setTextContent(errorDisplay, 'La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
         try {
-            await api.register(email, password);
-            this.onAuthSuccess();
+            await this.registerNewUser(email, password);
+            this.notifyAuthenticationSuccess();
         } catch (error) {
-            registerError.textContent = error instanceof Error ? error.message : 'Error al registrarse';
+            this.displayRegistrationError(errorDisplay, error);
         }
     }
 
-    private onAuthSuccess(): void {
-        // Dispatch custom event that main.ts will listen to
-        window.dispatchEvent(new CustomEvent('auth-success'));
+    /**
+     * Authenticates a user with the API
+     */
+    async authenticateUser(email: string, password: string): Promise<void> {
+        await api.login(email, password);
+    }
+
+    /**
+     * Registers a new user with the API
+     */
+    async registerNewUser(email: string, password: string): Promise<void> {
+        await api.register(email, password);
+    }
+
+    /**
+     * Validates password meets minimum requirements
+     */
+    validatePassword(password: string): boolean {
+        return password.length >= 6;
+    }
+
+    /**
+     * Displays login error message
+     */
+    displayLoginError(errorElement: HTMLElement, error: unknown): void {
+        const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
+        this.setTextContent(errorElement, message);
+    }
+
+    /**
+     * Displays registration error message
+     */
+    displayRegistrationError(errorElement: HTMLElement, error: unknown): void {
+        const message = error instanceof Error ? error.message : 'Error al registrarse';
+        this.setTextContent(errorElement, message);
+    }
+
+    /**
+     * Notifies the application of successful authentication
+     */
+    notifyAuthenticationSuccess(): void {
+        this.dispatchCustomEvent('auth-success');
     }
 }
