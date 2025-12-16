@@ -10,26 +10,53 @@
 </head>
 
 <body>
-  <!-- Login/Register Page -->
-  <div id="auth-page" class="page active">
-    <div class="auth-container">
-      <div class="auth-header">
-        <h1>🎮 Tamagotchi HTML</h1>
-        <p>Aprende HTML jugando con tu mascota virtual</p>
-      </div>
+  <main id="auth-page" class="page active">
+    <article class="auth-header">
+      <h1>🎮 Tamagotchi HTML</h1>
+      <p>Aprende HTML jugando con tu mascota virtual</p>
+    </article>
 
-      <div class="auth-tabs">
+    <section class="auth-container">
+      <nav class="auth-tabs">
         <button id="login-tab" class="tab-button active">Iniciar Sesión</button>
         <button id="register-tab" class="tab-button">Registrarse</button>
-      </div>
+      </nav>
 
-      <!-- Forms will be dynamically inserted here -->
-      <div id="forms-container"></div>
-    </div>
-  </div>
+      <article id="forms-container"></article>
+    </section>
+
+    <template id="login-form-template">
+      <form id="login-form" class="auth-form active">
+
+        <label class="form-group" for="login-email">Email
+          <input type="email" id="login-email" required placeholder="tu@email.com">
+        </label>
+
+        <label class="form-group" for="login-password">Contraseña
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </label>
+
+        <button type="submit" id="login-button" class="btn-primary">Entrar</button>
+        <p id="login-error" class="error-message"></p>
+      </form>
+    </template>
+
+    <template id="register-form-template">
+      <form id="register-form" class="register-form active">
+        <label class="form-group" for="register-email">Email
+          <input type="email" id="register-email" required placeholder="tu@email.com">
+        </label>
+        <label class="form-group" for="register-password">Contraseña
+          <input type="password" id="register-password" required placeholder="••••••••">
+        </label>
+        <button type="submit" id="register-button" class="btn-primary">Crear Cuenta</button>
+        <p id="register-error" class="error-message"></p>
+      </form>
+    </template>
+  </main>
 
   <!-- Main Game Page -->
-  <div id="game-page" class="page">
+  <main id="game-page" class="page">
     <nav class="navbar">
       <div class="nav-content">
         <h2>🎮 Tamagotchi HTML</h2>
@@ -52,7 +79,7 @@
       </div>
     </nav>
 
-    <div class="game-container">
+    <section class="game-container">
       <!-- Streak Counter -->
       <!-- Streak Counter moved to navbar -->
 
@@ -78,11 +105,11 @@
           <button id="next-question-btn" class="btn-primary">Siguiente Pregunta</button>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <!-- Profile Page -->
-  <div id="profile-page" class="page">
+  <main id="profile-page" class="page">
     <nav class="navbar">
       <div class="nav-content">
         <h2>📊 Mi Perfil</h2>
@@ -93,7 +120,7 @@
       </div>
     </nav>
 
-    <div class="profile-container">
+    <section class="profile-container">
       <div class="profile-stats">
         <div class="stat-card">
           <h3>Email</h3>
@@ -111,8 +138,8 @@
           <p class="loading">Cargando historial...</p>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

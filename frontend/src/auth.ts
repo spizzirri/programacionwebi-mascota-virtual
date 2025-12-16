@@ -60,21 +60,8 @@ export class AuthManager extends DOMManager {
     renderLoginForm(): void {
         this.clearContainer(this.formsContainer);
 
-        const form = this.createElement('form', {
-            id: 'login-form',
-            class: 'auth-form active'
-        }, `
-            <div class="form-group">
-                <label for="login-email">Email</label>
-                <input type="email" id="login-email" required placeholder="tu@email.com">
-            </div>
-            <div class="form-group">
-                <label for="login-password">Contraseña</label>
-                <input type="password" id="login-password" required placeholder="••••••••">
-            </div>
-            <button type="submit" id="login-button" class="btn-primary">Entrar</button>
-            <div id="login-error" class="error-message"></div>
-        `);
+        // Clone the login form template from HTML
+        const form = this.cloneTemplateElement<HTMLFormElement>('login-form-template');
 
         this.attachEvent(form, 'submit', (e) => this.processLogin(e));
         this.appendToContainer(this.formsContainer, form);
@@ -86,21 +73,8 @@ export class AuthManager extends DOMManager {
     renderRegistrationForm(): void {
         this.clearContainer(this.formsContainer);
 
-        const form = this.createElement('form', {
-            id: 'register-form',
-            class: 'register-form active'
-        }, `
-            <div class="form-group">
-                <label for="register-email">Email</label>
-                <input type="email" id="register-email" required placeholder="tu@email.com">
-            </div>
-            <div class="form-group">
-                <label for="register-password">Contraseña</label>
-                <input type="password" id="register-password" required placeholder="••••••••">
-            </div>
-            <button type="submit" id="register-button" class="btn-primary">Crear Cuenta</button>
-            <div id="register-error" class="error-message"></div>
-        `);
+        // Clone the register form template from HTML
+        const form = this.cloneTemplateElement<HTMLFormElement>('register-form-template');
 
         this.attachEvent(form, 'submit', (e) => this.processRegistration(e));
         this.appendToContainer(this.formsContainer, form);

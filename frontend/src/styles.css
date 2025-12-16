@@ -102,7 +102,6 @@ body::before {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 .auth-header {
@@ -163,11 +162,13 @@ body::before {
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
+  gap: 0.5em;
 }
 
 .auth-form.active,
 .register-form.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
   animation: slideUp var(--transition-base);
 }
 

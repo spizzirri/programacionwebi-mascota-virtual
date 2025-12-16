@@ -115,4 +115,30 @@ export class DOMManager {
     protected dispatchCustomEvent(eventName: string, detail?: any): void {
         window.dispatchEvent(new CustomEvent(eventName, { detail }));
     }
+
+    /**
+     * Clones an HTML template element
+     * @param templateId - ID of the template element to clone
+     * @returns The cloned content as a DocumentFragment
+     */
+    protected cloneTemplate(templateId: string): DocumentFragment {
+        const template = this.getElementByIdSafe<HTMLTemplateElement>(templateId);
+        return template.content.cloneNode(true) as DocumentFragment;
+    }
+
+    /**
+     * Clones a template and returns the first element child
+     * @param templateId - ID of the template element to clone
+     * @returns The first element from the cloned template
+     */
+    protected cloneTemplateElement<T extends HTMLElement>(templateId: string): T {
+        const fragment = this.cloneTemplate(templateId);
+        const element = fragment.firstElementChild as T;
+
+        if (!element) {
+            throw new Error(`Template "${templateId}" has no element children`);
+        }
+
+        return element;
+    }
 }
