@@ -29,21 +29,22 @@ export class AnswersService {
             throw new Error('Gemini API not configured');
         }
 
-        const prompt = `Eres un profesor de HTML evaluando la respuesta de un estudiante.
+        const prompt = `Eres un profesor de Programación Web I evaluando la respuesta de un estudiante.
+        El nivel de la materia es básico, para principiantes que nunca han programado paginas web antes, por lo que no se espera que la respuesta sea compleja con un alto nivel de detalle.
 
-Pregunta: ${questionText}
-Respuesta del estudiante: ${userAnswer}
+        Pregunta: ${questionText}
+        Respuesta del estudiante: ${userAnswer}
 
-Evalúa la respuesta y clasifícala en una de estas categorías:
-- "correct": La respuesta es correcta y completa
-- "partial": La respuesta es parcialmente correcta o incompleta
-- "incorrect": La respuesta es incorrecta
+        Evalúa la respuesta y clasifícala en una de estas categorías:
+        - "correct": La respuesta explica correctamente el concepto y es correcta y completa según el nivel de la materia
+        - "partial": La respuesta explica parcialmente el concepto o no da ejemplos claros
+        - "incorrect": La respuesta es incorrecta
 
-Responde ÚNICAMENTE en el siguiente formato JSON (sin markdown, sin bloques de código):
-{
-  "rating": "correct" | "partial" | "incorrect",
-  "feedback": "Breve explicación de por qué la respuesta es correcta/parcial/incorrecta"
-}`;
+        Responde ÚNICAMENTE en el siguiente formato JSON (sin markdown, sin bloques de código):
+        {
+        "rating": "correct" | "partial" | "incorrect",
+        "feedback": "Breve explicación de no mas de 400 caracteres de por qué la respuesta es correcta/parcial/incorrecta"
+        }`;
 
         try {
             const response = await this.client.models.generateContent({
