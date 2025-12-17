@@ -5,7 +5,6 @@ import noAuthView from './views/401.html?raw';
 import { AuthView } from './views/auth';
 import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
-import { Navbar } from './views/navbar';
 import { session } from './session';
 
 const routes = {
@@ -16,12 +15,12 @@ const routes = {
     },
     '/game': {
         html: gameView,
-        init: [() => new GameView(), () => new Navbar()],
+        init: [() => new GameView()],
         guard: () => session.isAuthenticated()
     },
     '/profile': {
         html: profileView,
-        init: [() => new ProfileView(), () => new Navbar()],
+        init: [() => new ProfileView()],
         guard: () => session.isAuthenticated()
     }
 };

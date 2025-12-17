@@ -1,24 +1,5 @@
 <main id="game-page" class="page">
-    <nav class="navbar">
-        <div class="nav-content">
-            <h2>🎮 Tamagotchi HTML</h2>
-
-            <div id="streak-display" class="streak-display">
-                <div class="book-icon">
-                    <svg viewBox="0 0 100 120" class="book-svg">
-                        <path d="M20 10 L80 10 L80 110 L50 100 L20 110 Z" fill="currentColor" />
-                        <text x="50" y="65" class="streak-number" text-anchor="middle">0</text>
-                    </svg>
-                </div>
-                <p class="streak-label">Racha</p>
-            </div>
-
-            <div class="nav-actions">
-                <button id="toggle-profile-game-btn" class="btn-secondary">Mi Perfil</button>
-                <button id="logout-btn" class="btn-secondary">Salir</button>
-            </div>
-        </div>
-    </nav>
+    <app-navbar view="game"></app-navbar>
 
     <section class="game-container">
         <div id="tamagotchi-container" class="tamagotchi-container"></div>
