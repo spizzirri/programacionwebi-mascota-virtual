@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { AuthView } from '../src/auth';
+import { AuthView } from '../src/views/auth';
 import * as apiModule from '../src/api';
 
 const __filename = fileURLToPath(import.meta.url);

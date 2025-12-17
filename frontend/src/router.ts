@@ -2,10 +2,10 @@ import gameView from './views/game.html?raw';
 import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
 import noAuthView from './views/401.html?raw';
-import { AuthView } from './auth';
-import { GameView } from './game';
-import { ProfileView } from './profile';
-import { Navbar } from './navbar';
+import { AuthView } from './views/auth';
+import { GameView } from './views/game';
+import { ProfileView } from './views/profile';
+import { Navbar } from './views/navbar';
 import { session } from './session';
 
 const routes = {

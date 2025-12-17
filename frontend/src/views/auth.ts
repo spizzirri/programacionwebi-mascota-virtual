@@ -1,9 +1,9 @@
 // Authentication business logic
 // Manages user authentication flow: login, registration, and form switching
 
-import { api } from './api';
-import { DOMManager } from './dom-manager';
-import { session } from './session';
+import { api } from '../api';
+import { DOMManager } from '../dom-manager';
+import { session } from '../session';
 
 export class AuthView extends DOMManager {
     private loginTab: HTMLButtonElement;

@@ -1,7 +1,7 @@
 // Profile and history page logic
 
-import { api, Answer } from './api';
-import { DOMManager } from './dom-manager';
+import { api, Answer } from '../api';
+import { DOMManager } from '../dom-manager';
 
 export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;

@@ -1,5 +1,5 @@
-import { api } from "./api";
-import { DOMManager } from "./dom-manager";
+import { api } from "../api";
+import { DOMManager } from "../dom-manager";
 
 export class Navbar extends DOMManager {
 

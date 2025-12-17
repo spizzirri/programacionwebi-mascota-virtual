@@ -1,8 +1,8 @@
 // Game logic - questions, answers, and Tamagotchi interaction
 
-import { api, Question } from './api';
-import { DOMManager } from './dom-manager';
-import { Tamagotchi } from './tamagotchi';
+import { api, Question } from '../api';
+import { DOMManager } from '../dom-manager';
+import { Tamagotchi } from '../tamagotchi';
 
 export class GameView extends DOMManager {
     private tamagotchi: Tamagotchi;
