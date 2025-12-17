@@ -1,9 +1,10 @@
+/*
 import { DOMManager } from "./dom-manager";
 
 export interface View {
     destroy(): void;
 }
-/*
+
 export class Lifecycle implements View {
 
     private domManager: DOMManager;
@@ -19,4 +20,4 @@ export class Lifecycle implements View {
         this.activeEventListeners = [];
     }
 }
-    */
+*/
