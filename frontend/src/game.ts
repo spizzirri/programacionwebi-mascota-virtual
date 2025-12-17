@@ -46,7 +46,7 @@ export class GameManager {
             this.currentStreak = profile.streak;
             this.updateStreakDisplay(this.currentStreak);
         } catch (error) {
-            console.error('Error loading user streak:', error);
+            throw new Error('Error loading user streak');
         }
     }
 
@@ -80,7 +80,6 @@ export class GameManager {
             // Re-enable submit button only after question is loaded
             this.submitButton.disabled = false;
         } catch (error) {
-            console.error('Error loading question:', error);
             this.questionText.textContent = 'Error al cargar la pregunta. Por favor, intenta de nuevo.';
             // Re-enable submit button even on error
             this.submitButton.disabled = false;
@@ -139,7 +138,6 @@ export class GameManager {
             this.nextQuestionButton.disabled = false;
             // Keep submit button disabled to prevent resubmission
         } catch (error) {
-            console.error('Error submitting answer:', error);
             alert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
             this.answerInput.disabled = false;
             this.submitButton.disabled = false;

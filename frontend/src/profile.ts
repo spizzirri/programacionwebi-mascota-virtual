@@ -22,7 +22,6 @@ export class ProfileManager {
             this.profileEmail.textContent = profile.email;
             this.profileStreak.textContent = profile.streak.toString();
         } catch (error) {
-            console.error('Error loading profile:', error);
             this.profileEmail.textContent = 'Error';
             this.profileStreak.textContent = '0';
         }
@@ -33,7 +32,6 @@ export class ProfileManager {
             const history = await api.getHistory(50);
             this.renderHistory(history);
         } catch (error) {
-            console.error('Error loading history:', error);
             this.historyContainer.innerHTML = '<p class="loading">Error al cargar el historial</p>';
         }
     }
