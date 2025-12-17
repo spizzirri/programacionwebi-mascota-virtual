@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 describe('Login', () => {
 
   beforeEach(() => {
-    const htmlPath = path.resolve(__dirname, '../index.html');
+    const htmlPath = path.resolve(__dirname, '../src/views/auth.html');
     const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
     document.documentElement.innerHTML = htmlContent;
     jest.clearAllMocks();
@@ -118,7 +118,7 @@ describe('Login', () => {
 describe('Register', () => {
 
   beforeEach(() => {
-    const htmlPath = path.resolve(__dirname, '../index.html');
+    const htmlPath = path.resolve(__dirname, '../src/views/auth.html');
     const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
     document.documentElement.innerHTML = htmlContent;
     jest.clearAllMocks();
