@@ -77,12 +77,12 @@ export class DOMManager {
     }
 
     /**
-     * Gets an element by ID with type safety
+     * Gets an element by selector with type safety
      */
-    protected getElementByIdSafe<T extends HTMLElement>(id: string): T {
-        const element = document.getElementById(id) as T;
+    protected getElementSafe<T extends Element>(selector: string): T {
+        const element = document.querySelector(selector) as T;
         if (!element) {
-            throw new Error(`Element with id "${id}" not found`);
+            throw new Error(`Element with selector "${selector}" not found`);
         }
         return element;
     }
@@ -91,7 +91,7 @@ export class DOMManager {
      * Gets the value from an input element
      */
     protected getInputValue(id: string): string {
-        const input = this.getElementByIdSafe<HTMLInputElement>(id);
+        const input = this.getElementSafe<HTMLInputElement>(`#${id}`);
         return input.value;
     }
 
@@ -122,7 +122,7 @@ export class DOMManager {
      * @returns The cloned content as a DocumentFragment
      */
     protected cloneTemplate(templateId: string): DocumentFragment {
-        const template = this.getElementByIdSafe<HTMLTemplateElement>(templateId);
+        const template = this.getElementSafe<HTMLTemplateElement>(`#${templateId}`);
         return template.content.cloneNode(true) as DocumentFragment;
     }
 

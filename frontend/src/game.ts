@@ -1,9 +1,10 @@
 // Game logic - questions, answers, and Tamagotchi interaction
 
 import { api, Question } from './api';
+import { DOMManager } from './dom-manager';
 import { Tamagotchi } from './tamagotchi';
 
-export class GameManager {
+export class GameView extends DOMManager {
     private tamagotchi: Tamagotchi;
     private currentQuestion: Question | null = null;
     private currentStreak: number = 0;
@@ -19,16 +20,17 @@ export class GameManager {
     private streakDisplay: HTMLElement;
 
     constructor() {
+        super();
         this.tamagotchi = new Tamagotchi('tamagotchi-container');
 
-        this.questionText = document.getElementById('question-text') as HTMLElement;
-        this.answerInput = document.getElementById('answer-input') as HTMLTextAreaElement;
-        this.submitButton = document.getElementById('submit-answer-btn') as HTMLButtonElement;
-        this.feedbackSection = document.getElementById('feedback-section') as HTMLElement;
-        this.feedbackText = document.getElementById('feedback-text') as HTMLElement;
-        this.nextQuestionButton = document.getElementById('next-question-btn') as HTMLButtonElement;
-        this.streakNumber = document.querySelector('.streak-number') as SVGTextElement;
-        this.streakDisplay = document.querySelector('.streak-display') as HTMLElement;
+        this.questionText = this.getElementSafe<HTMLElement>('#question-text');
+        this.answerInput = this.getElementSafe<HTMLTextAreaElement>('#answer-input');
+        this.submitButton = this.getElementSafe<HTMLButtonElement>('#submit-answer-btn');
+        this.feedbackSection = this.getElementSafe<HTMLElement>('#feedback-section');
+        this.feedbackText = this.getElementSafe<HTMLElement>('#feedback-text');
+        this.nextQuestionButton = this.getElementSafe<HTMLButtonElement>('#next-question-btn');
+        this.streakNumber = this.getElementSafe<SVGTextElement>('.streak-number');
+        this.streakDisplay = this.getElementSafe<HTMLElement>('.streak-display');
 
         this.setupEventListeners();
         this.loadQuestion();
@@ -36,8 +38,8 @@ export class GameManager {
     }
 
     private setupEventListeners(): void {
-        this.submitButton.addEventListener('click', () => this.handleSubmitAnswer());
-        this.nextQuestionButton.addEventListener('click', () => this.loadQuestion());
+        this.attachEvent(this.submitButton, 'click', () => this.handleSubmitAnswer());
+        this.attachEvent(this.nextQuestionButton, 'click', () => this.loadQuestion());
     }
 
     private async loadUserStreak(): Promise<void> {
@@ -63,8 +65,11 @@ export class GameManager {
 
         try {
             // Reset UI
-            this.feedbackSection.classList.add('hidden');
-            this.feedbackSection.classList.remove('correct', 'partial', 'incorrect');
+            this.addClass(this.feedbackSection, 'hidden');
+            this.removeClass(this.feedbackSection, 'correct');
+            this.removeClass(this.feedbackSection, 'partial');
+            this.removeClass(this.feedbackSection, 'incorrect');
+
             this.answerInput.value = '';
             this.answerInput.disabled = false;
             this.tamagotchi.setEmotion('neutral');
@@ -75,12 +80,12 @@ export class GameManager {
             // Only update currentQuestion after successful load
             // This ensures currentQuestion always matches what's on screen
             this.currentQuestion = newQuestion;
-            this.questionText.textContent = this.currentQuestion.text;
+            this.setTextContent(this.questionText, this.currentQuestion.text);
 
             // Re-enable submit button only after question is loaded
             this.submitButton.disabled = false;
         } catch (error) {
-            this.questionText.textContent = 'Error al cargar la pregunta. Por favor, intenta de nuevo.';
+            this.setTextContent(this.questionText, 'Error al cargar la pregunta. Por favor, intenta de nuevo.');
             // Re-enable submit button even on error
             this.submitButton.disabled = false;
         } finally {
@@ -104,7 +109,7 @@ export class GameManager {
         // Disable input while processing
         this.answerInput.disabled = true;
         this.submitButton.disabled = true;
-        this.submitButton.textContent = 'Validando...';
+        this.setTextContent(this.submitButton, 'Validando...');
 
         try {
             const result = await api.submitAnswer(
@@ -120,19 +125,19 @@ export class GameManager {
             // Update Tamagotchi emotion
             if (result.rating === 'correct') {
                 this.tamagotchi.setEmotion('happy');
-                this.feedbackSection.classList.add('correct');
+                this.addClass(this.feedbackSection, 'correct');
             } else if (result.rating === 'partial') {
                 this.tamagotchi.setEmotion('neutral');
-                this.feedbackSection.classList.add('partial');
+                this.addClass(this.feedbackSection, 'partial');
             } else {
                 this.tamagotchi.setEmotion('sad');
-                this.feedbackSection.classList.add('incorrect');
+                this.addClass(this.feedbackSection, 'incorrect');
             }
 
             // Show feedback
-            this.feedbackText.textContent = result.feedback;
-            this.feedbackSection.classList.remove('hidden');
-            this.submitButton.textContent = 'Enviar Respuesta';
+            this.setTextContent(this.feedbackText, result.feedback);
+            this.removeClass(this.feedbackSection, 'hidden');
+            this.setTextContent(this.submitButton, 'Enviar Respuesta');
 
             // Enable next question button after feedback is shown
             this.nextQuestionButton.disabled = false;
@@ -141,7 +146,7 @@ export class GameManager {
             alert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
             this.answerInput.disabled = false;
             this.submitButton.disabled = false;
-            this.submitButton.textContent = 'Enviar Respuesta';
+            this.setTextContent(this.submitButton, 'Enviar Respuesta');
         }
     }
 
@@ -149,9 +154,9 @@ export class GameManager {
         this.streakNumber.textContent = streak.toString();
 
         // Add animation
-        this.streakDisplay.classList.remove('streak-updated');
+        this.removeClass(this.streakDisplay, 'streak-updated');
         // Force reflow to restart animation
         void this.streakDisplay.offsetWidth;
-        this.streakDisplay.classList.add('streak-updated');
+        this.addClass(this.streakDisplay, 'streak-updated');
     }
 }

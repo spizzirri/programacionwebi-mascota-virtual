@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { GameManager } from '../src/game';
+import { GameView } from '../src/game';
 import * as apiModule from '../src/api';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,7 +47,7 @@ describe('GameManager', () => {
         const questionSpy = jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue(mockQuestion);
         const profileSpy = jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);
 
-        new GameManager();
+        new GameView();
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -69,7 +69,7 @@ describe('GameManager', () => {
             createdAt: ''
         });
 
-        new GameManager();
+        new GameView();
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -85,7 +85,7 @@ describe('GameManager', () => {
             createdAt: ''
         });
 
-        new GameManager();
+        new GameView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const submitBtn = document.getElementById('submit-answer-btn') as HTMLButtonElement;
@@ -117,7 +117,7 @@ describe('GameManager', () => {
         };
         const submitSpy = jest.spyOn(apiModule.api, 'submitAnswer').mockResolvedValue(mockResponse);
 
-        new GameManager();
+        new GameView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const submitBtn = document.getElementById('submit-answer-btn') as HTMLButtonElement;
@@ -147,7 +147,7 @@ describe('GameManager', () => {
 
         jest.spyOn(apiModule.api, 'submitAnswer').mockRejectedValue(new Error('Submit error'));
 
-        new GameManager();
+        new GameView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const submitBtn = document.getElementById('submit-answer-btn') as HTMLButtonElement;

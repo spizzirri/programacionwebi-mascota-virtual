@@ -1,16 +1,18 @@
 // Profile and history page logic
 
 import { api, Answer } from './api';
+import { DOMManager } from './dom-manager';
 
-export class ProfileManager {
+export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;
     private profileStreak: HTMLElement;
     private historyContainer: HTMLElement;
 
     constructor() {
-        this.profileEmail = document.getElementById('profile-email') as HTMLElement;
-        this.profileStreak = document.getElementById('profile-streak') as HTMLElement;
-        this.historyContainer = document.getElementById('history-container') as HTMLElement;
+        super();
+        this.profileEmail = this.getElementSafe<HTMLElement>('#profile-email');
+        this.profileStreak = this.getElementSafe<HTMLElement>('#profile-streak');
+        this.historyContainer = this.getElementSafe<HTMLElement>('#history-container');
 
         this.loadProfile();
         this.loadHistory();
@@ -19,11 +21,11 @@ export class ProfileManager {
     private async loadProfile(): Promise<void> {
         try {
             const profile = await api.getProfile();
-            this.profileEmail.textContent = profile.email;
-            this.profileStreak.textContent = profile.streak.toString();
+            this.setTextContent(this.profileEmail, profile.email);
+            this.setTextContent(this.profileStreak, profile.streak.toString());
         } catch (error) {
-            this.profileEmail.textContent = 'Error';
-            this.profileStreak.textContent = '0';
+            this.setTextContent(this.profileEmail, 'Error');
+            this.setTextContent(this.profileStreak, '0');
         }
     }
 
@@ -32,54 +34,49 @@ export class ProfileManager {
             const history = await api.getHistory(50);
             this.renderHistory(history);
         } catch (error) {
-            this.historyContainer.innerHTML = '<p class="loading">Error al cargar el historial</p>';
+            this.clearContainer(this.historyContainer);
+            this.appendToContainer(
+                this.historyContainer,
+                this.createElement('p', { class: 'loading' }, 'Error al cargar el historial')
+            );
         }
     }
 
     private renderHistory(history: Answer[]): void {
+        this.clearContainer(this.historyContainer);
+
         if (history.length === 0) {
-            this.historyContainer.innerHTML = '<p class="loading">No hay respuestas todavía</p>';
+            this.appendToContainer(
+                this.historyContainer,
+                this.createElement('p', { class: 'loading' }, 'No hay respuestas todavía')
+            );
             return;
         }
 
-        this.historyContainer.innerHTML = '';
-
         history.forEach((answer) => {
-            const item = document.createElement('div');
-            item.className = `history-item ${answer.rating}`;
+            const item = this.createElement('div', { class: `history-item ${answer.rating}` });
 
-            const header = document.createElement('div');
-            header.className = 'history-item-header';
+            const header = this.createElement('div', { class: 'history-item-header' });
 
-            const rating = document.createElement('span');
-            rating.className = `history-rating ${answer.rating}`;
-            rating.textContent = this.getRatingLabel(answer.rating);
+            const rating = this.createElement('span', { class: `history-rating ${answer.rating}` }, this.getRatingLabel(answer.rating));
 
-            const timestamp = document.createElement('span');
-            timestamp.className = 'history-timestamp';
-            timestamp.textContent = this.formatDate(answer.timestamp);
+            const timestamp = this.createElement('span', { class: 'history-timestamp' }, this.formatDate(answer.timestamp));
 
-            header.appendChild(rating);
-            header.appendChild(timestamp);
+            this.appendToContainer(header, rating);
+            this.appendToContainer(header, timestamp);
 
-            const question = document.createElement('div');
-            question.className = 'history-question';
-            question.textContent = answer.questionText;
+            const question = this.createElement('div', { class: 'history-question' }, answer.questionText);
 
-            const userAnswer = document.createElement('div');
-            userAnswer.className = 'history-answer';
-            userAnswer.textContent = `Tu respuesta: ${answer.userAnswer}`;
+            const userAnswer = this.createElement('div', { class: 'history-answer' }, `Tu respuesta: ${answer.userAnswer}`);
 
-            const feedback = document.createElement('div');
-            feedback.className = 'history-feedback';
-            feedback.textContent = answer.feedback;
+            const feedback = this.createElement('div', { class: 'history-feedback' }, answer.feedback);
 
-            item.appendChild(header);
-            item.appendChild(question);
-            item.appendChild(userAnswer);
-            item.appendChild(feedback);
+            this.appendToContainer(item, header);
+            this.appendToContainer(item, question);
+            this.appendToContainer(item, userAnswer);
+            this.appendToContainer(item, feedback);
 
-            this.historyContainer.appendChild(item);
+            this.appendToContainer(this.historyContainer, item);
         });
     }
 

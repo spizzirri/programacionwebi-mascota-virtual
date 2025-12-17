@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { AuthManager } from '../src/auth';
+import { AuthView } from '../src/auth';
 import * as apiModule from '../src/api';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +19,7 @@ describe('Login', () => {
   });
 
   it('deberia tener los campos del formulario del login vacios y el boton login habilitado al iniciar', () => {
-    new AuthManager();
+    new AuthView();
 
     const emailInput = document.getElementById('login-email') as HTMLInputElement;
     const passwordInput = document.getElementById('login-password') as HTMLInputElement;
@@ -31,7 +31,7 @@ describe('Login', () => {
   });
 
   it('deberia tener el boton de login habilitado cuando el formulario se completa', () => {
-    new AuthManager();
+    new AuthView();
 
     const emailInput = document.getElementById('login-email') as HTMLInputElement;
     const passwordInput = document.getElementById('login-password') as HTMLInputElement;
@@ -56,7 +56,7 @@ describe('Login', () => {
 
     const loginSpy = jest.spyOn(apiModule.api, 'login').mockResolvedValue(mockUser);
 
-    new AuthManager();
+    new AuthView();
 
     const emailInput = document.getElementById('login-email') as HTMLInputElement;
     const passwordInput = document.getElementById('login-password') as HTMLInputElement;
@@ -81,7 +81,7 @@ describe('Login', () => {
 
     const loginSpy = jest.spyOn(apiModule.api, 'login').mockRejectedValue(new Error(errorMessage));
 
-    new AuthManager();
+    new AuthView();
 
     const emailInput = document.getElementById('login-email') as HTMLInputElement;
     const passwordInput = document.getElementById('login-password') as HTMLInputElement;
@@ -101,7 +101,7 @@ describe('Login', () => {
   });
 
   it('deberia limpiar el mensaje de error cuando se cambia de pestaña', () => {
-    new AuthManager();
+    new AuthView();
 
     const errorDiv = document.getElementById('login-error') as HTMLElement;
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
@@ -125,7 +125,7 @@ describe('Register', () => {
   });
 
   it('deberia tener los campos del formulario de registro vacios y el boton registro habilitado al iniciar', () => {
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -140,7 +140,7 @@ describe('Register', () => {
   });
 
   it('deberia tener el boton de registro habilitado cuando el formulario se completa', () => {
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -168,7 +168,7 @@ describe('Register', () => {
 
     const registerSpy = jest.spyOn(apiModule.api, 'register').mockResolvedValue(mockUser);
 
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -196,7 +196,7 @@ describe('Register', () => {
 
     const registerSpy = jest.spyOn(apiModule.api, 'register').mockRejectedValue(new Error(errorMessage));
 
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -219,7 +219,7 @@ describe('Register', () => {
   });
 
   it('deberia mostrar mensaje de error cuando la contraseña es menor a 6 caracteres', async () => {
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -239,7 +239,7 @@ describe('Register', () => {
   });
 
   it('deberia limpiar el mensaje de error cuando se cambia de pestaña', () => {
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
     registerTab.click();
@@ -258,7 +258,7 @@ describe('Register', () => {
 
 describe('Tab switching', () => {
   it('deberia cambiar a formulario de registro cuando se hace click en la pestaña de registro', () => {
-    new AuthManager();
+    new AuthView();
 
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
 
@@ -272,7 +272,7 @@ describe('Tab switching', () => {
   });
 
   it('deberia cambiar a formulario de login cuando se hace click en la pestaña de login', () => {
-    new AuthManager();
+    new AuthView();
 
     const loginTab = document.getElementById('login-tab') as HTMLButtonElement;
     const registerTab = document.getElementById('register-tab') as HTMLButtonElement;

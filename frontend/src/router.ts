@@ -2,26 +2,26 @@ import gameView from './views/game.html?raw';
 import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
 import noAuthView from './views/401.html?raw';
-import { AuthManager } from './auth';
-import { GameManager } from './game';
-import { ProfileManager } from './profile';
+import { AuthView } from './auth';
+import { GameView } from './game';
+import { ProfileView } from './profile';
 import { Navbar } from './navbar';
 import { session } from './session';
 
 const routes = {
     '/': {
         html: authView,
-        init: [() => new AuthManager()],
+        init: [() => new AuthView()],
         guard: () => true
     },
     '/game': {
         html: gameView,
-        init: [() => new GameManager(), () => new Navbar()],
+        init: [() => new GameView(), () => new Navbar()],
         guard: () => session.isAuthenticated()
     },
     '/profile': {
         html: profileView,
-        init: [() => new ProfileManager(), () => new Navbar()],
+        init: [() => new ProfileView(), () => new Navbar()],
         guard: () => session.isAuthenticated()
     }
 };

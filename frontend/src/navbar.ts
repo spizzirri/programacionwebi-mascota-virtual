@@ -9,8 +9,8 @@ export class Navbar extends DOMManager {
     constructor() {
         super();
 
-        this.profileBtn = this.getElementByIdSafe("toggle-profile-game-btn");
-        this.logoutBtn = this.getElementByIdSafe("logout-btn");
+        this.profileBtn = this.getElementSafe<HTMLElement>("#toggle-profile-game-btn");
+        this.logoutBtn = this.getElementSafe<HTMLElement>("#logout-btn");
 
         this.initEventListeners();
     }

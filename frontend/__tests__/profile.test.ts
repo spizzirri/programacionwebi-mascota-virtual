@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { ProfileManager } from '../src/profile';
+import { ProfileView } from '../src/profile';
 import * as apiModule from '../src/api';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,7 +35,7 @@ describe('ProfileManager', () => {
         const profileSpy = jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);
         const historySpy = jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue(mockHistory);
 
-        new ProfileManager();
+        new ProfileView();
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -55,7 +55,7 @@ describe('ProfileManager', () => {
         jest.spyOn(apiModule.api, 'getProfile').mockRejectedValue(new Error('Profile error'));
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
 
-        new ProfileManager();
+        new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const email = document.getElementById('profile-email');
@@ -69,7 +69,7 @@ describe('ProfileManager', () => {
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
         jest.spyOn(apiModule.api, 'getHistory').mockRejectedValue(new Error('History error'));
 
-        new ProfileManager();
+        new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const historyContainer = document.getElementById('history-container');
@@ -80,7 +80,7 @@ describe('ProfileManager', () => {
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
 
-        new ProfileManager();
+        new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const historyContainer = document.getElementById('history-container');
@@ -105,7 +105,7 @@ describe('ProfileManager', () => {
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue(mockHistory);
 
-        new ProfileManager();
+        new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const historyItem = document.querySelector('.history-item');

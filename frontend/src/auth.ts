@@ -5,16 +5,16 @@ import { api } from './api';
 import { DOMManager } from './dom-manager';
 import { session } from './session';
 
-export class AuthManager extends DOMManager {
+export class AuthView extends DOMManager {
     private loginTab: HTMLButtonElement;
     private registerTab: HTMLButtonElement;
     private formsContainer: HTMLElement;
 
     constructor() {
         super();
-        this.loginTab = this.getElementByIdSafe<HTMLButtonElement>('login-tab');
-        this.registerTab = this.getElementByIdSafe<HTMLButtonElement>('register-tab');
-        this.formsContainer = this.getElementByIdSafe<HTMLElement>('forms-container');
+        this.loginTab = this.getElementSafe<HTMLButtonElement>('#login-tab');
+        this.registerTab = this.getElementSafe<HTMLButtonElement>('#register-tab');
+        this.formsContainer = this.getElementSafe<HTMLElement>('#forms-container');
 
         this.initializeAuthInterface();
         this.showLoginForm();
@@ -86,7 +86,7 @@ export class AuthManager extends DOMManager {
      */
     async processLogin(e: Event): Promise<void> {
         e.preventDefault();
-        const errorDisplay = this.getElementByIdSafe<HTMLElement>('login-error');
+        const errorDisplay = this.getElementSafe<HTMLElement>('#login-error');
         this.clearTextContent(errorDisplay);
 
         const email = this.getInputValue('login-email');
@@ -105,7 +105,7 @@ export class AuthManager extends DOMManager {
      */
     async processRegistration(e: Event): Promise<void> {
         e.preventDefault();
-        const errorDisplay = this.getElementByIdSafe<HTMLElement>('register-error');
+        const errorDisplay = this.getElementSafe<HTMLElement>('#register-error');
         this.clearTextContent(errorDisplay);
 
         const email = this.getInputValue('register-email');
