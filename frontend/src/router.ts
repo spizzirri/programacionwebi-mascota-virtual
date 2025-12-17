@@ -35,8 +35,8 @@ function navigateTo(path: string) {
 }
 
 window.addEventListener('navigate-to', ((e: CustomEvent<{ view: string }>) => {
-    window.history.pushState(null, '', `/${e?.detail?.view}`);
-    navigateTo(`/${e?.detail?.view}`);
+    window.history.pushState(null, '', `${e?.detail?.view}`);
+    navigateTo(`${e?.detail?.view}`);
 }) as EventListener);
 
 navigateTo('/');

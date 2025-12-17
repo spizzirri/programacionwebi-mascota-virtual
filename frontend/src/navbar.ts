@@ -16,10 +16,10 @@ export class Navbar extends DOMManager {
 
     private initEventListeners(): void {
         if (window.location.pathname == "/game")
-            this.profileBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "profile" }));
+            this.profileBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "/profile" }));
         else
-            this.profileBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "game" }));
+            this.profileBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "/game" }));
 
-        this.logoutBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "login" }));
+        this.logoutBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "/" }));
     }
 }
