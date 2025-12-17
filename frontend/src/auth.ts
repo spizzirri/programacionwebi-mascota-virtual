@@ -164,6 +164,6 @@ export class AuthManager extends DOMManager {
      * Notifies the application of successful authentication
      */
     notifyAuthenticationSuccess(): void {
-        this.dispatchCustomEvent('auth-success');
+        this.dispatchCustomEvent('navigate-to', { view: 'game' });
     }
 }

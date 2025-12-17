@@ -75,13 +75,8 @@ body::before {
 
 /* Page Management */
 .page {
-  display: none;
   min-height: 100vh;
   animation: fadeIn var(--transition-base);
-}
-
-.page.active {
-  display: block;
 }
 
 @keyframes fadeIn {
