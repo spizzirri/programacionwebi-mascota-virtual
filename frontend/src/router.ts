@@ -7,6 +7,8 @@ import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
 import { session } from './session';
 
+let currentView: (AuthView | GameView | ProfileView)[] = [];
+
 const routes = {
     '/': {
         html: authView,
@@ -29,6 +31,13 @@ async function navigateTo(path: string) {
     const app = document.getElementById('app');
     const route = routes[path as keyof typeof routes];
 
+    currentView.forEach(view => {
+        if (view.destroy) {
+            view.destroy();
+        }
+    });
+    currentView = [];
+
     if (route && route.guard) {
         const isAllowed = route.guard();
 
@@ -36,7 +45,10 @@ async function navigateTo(path: string) {
             app!.innerHTML = route.html;
 
             if (route.init) {
-                route.init.forEach(f => f());
+                route.init.forEach(f => {
+                    const view = f();
+                    currentView.push(view);
+                });
             }
         } else {
             app!.innerHTML = noAuthView;

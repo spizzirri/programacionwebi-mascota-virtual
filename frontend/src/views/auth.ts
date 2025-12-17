@@ -169,4 +169,11 @@ export class AuthView extends DOMManager {
     notifyAuthenticationSuccess(): void {
         this.dispatchCustomEvent('navigate-to', { view: '/game' });
     }
+
+    /**
+     * Clean up resources when the view is destroyed
+     */
+    destroy(): void {
+        super.destroy();
+    }
 }

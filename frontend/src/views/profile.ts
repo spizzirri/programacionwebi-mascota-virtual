@@ -18,6 +18,10 @@ export class ProfileView extends DOMManager {
         this.loadHistory();
     }
 
+    destroy(): void {
+        super.destroy();
+    }
+
     private async loadProfile(): Promise<void> {
         try {
             const profile = await api.getProfile();

@@ -37,6 +37,10 @@ export class GameView extends DOMManager {
         this.loadUserStreak();
     }
 
+    destroy(): void {
+        super.destroy();
+    }
+
     private setupEventListeners(): void {
         this.attachEvent(this.submitButton, 'click', () => this.handleSubmitAnswer());
         this.attachEvent(this.nextQuestionButton, 'click', () => this.loadQuestion());

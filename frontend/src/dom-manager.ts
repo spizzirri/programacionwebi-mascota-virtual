@@ -54,12 +54,37 @@ export class DOMManager {
     /**
      * Attaches an event listener to an element
      */
+    private activeEventListeners: Array<{
+        element: HTMLElement;
+        eventType: string;
+        handler: EventListenerOrEventListenerObject;
+    }> = [];
+
+    /**
+     * Attaches an event listener to an element and tracks it for cleanup
+     */
     protected attachEvent<K extends keyof HTMLElementEventMap>(
         element: HTMLElement,
         eventType: K,
         handler: (event: HTMLElementEventMap[K]) => void
     ): void {
-        element.addEventListener(eventType, handler);
+        element.addEventListener(eventType, handler as EventListener);
+        this.activeEventListeners.push({
+            element,
+            eventType,
+            handler: handler as EventListener
+        });
+    }
+
+    /**
+     * Removes all tracked event listeners and cleans up resources
+     * Should be called when the view is being dismantled
+     */
+    public destroy(): void {
+        this.activeEventListeners.forEach(({ element, eventType, handler }) => {
+            element.removeEventListener(eventType, handler);
+        });
+        this.activeEventListeners = [];
     }
 
     /**
