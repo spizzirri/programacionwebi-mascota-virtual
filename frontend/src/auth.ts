@@ -3,6 +3,7 @@
 
 import { api } from './api';
 import { DOMManager } from './dom-manager';
+import { session } from './session';
 
 export class AuthManager extends DOMManager {
     private loginTab: HTMLButtonElement;
@@ -127,14 +128,16 @@ export class AuthManager extends DOMManager {
      * Authenticates a user with the API
      */
     async authenticateUser(email: string, password: string): Promise<void> {
-        await api.login(email, password);
+        const user = await api.login(email, password);
+        session.setUser(user);
     }
 
     /**
      * Registers a new user with the API
      */
     async registerNewUser(email: string, password: string): Promise<void> {
-        await api.register(email, password);
+        const user = await api.register(email, password);
+        session.setUser(user);
     }
 
     /**

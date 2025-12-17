@@ -1,3 +1,4 @@
+import { api } from "./api";
 import { DOMManager } from "./dom-manager";
 
 export class Navbar extends DOMManager {
@@ -20,6 +21,9 @@ export class Navbar extends DOMManager {
         else
             this.profileBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "/game" }));
 
-        this.logoutBtn?.addEventListener("click", () => this.dispatchCustomEvent("navigate-to", { view: "/" }));
+        this.logoutBtn?.addEventListener("click", async () => {
+            await api.logout();
+            this.dispatchCustomEvent("navigate-to", { view: "/" });
+        });
     }
 }
