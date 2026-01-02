@@ -5,6 +5,9 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "dev": "ts-node-dev --respawn src/main.ts"
@@ -25,7 +28,10 @@
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.17.10",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.10.6",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"

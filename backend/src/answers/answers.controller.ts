@@ -14,8 +14,6 @@ export class AnswersController {
         @Body() body: { questionId: string; questionText: string; userAnswer: string },
         @Session() session: SessionData,
     ) {
-        console.log('📝 Submit answer - Session userId:', session.userId);
-
         if (!session.userId) {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
         }
@@ -35,7 +33,6 @@ export class AnswersController {
                 newStreak: result.newStreak,
             };
         } catch (error) {
-            console.error('❌ Submit answer error:', error.message);
             throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
