@@ -7,6 +7,11 @@ interface ValidationResult {
     feedback: string;
 }
 
+export interface SubmitAnswerResult {
+    answer: Answer;
+    newStreak: number;
+}
+
 @Injectable()
 export class AnswersService {
     private client: GoogleGenAI;
@@ -87,7 +92,7 @@ export class AnswersService {
         questionId: string,
         questionText: string,
         userAnswer: string,
-    ): Promise<{ answer: Answer; newStreak: number }> {
+    ): Promise<SubmitAnswerResult> {
         // Validate answer with Gemini
         const validation = await this.validateAnswer(questionText, userAnswer);
 
