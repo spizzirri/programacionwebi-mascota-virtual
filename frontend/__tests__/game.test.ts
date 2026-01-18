@@ -4,6 +4,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { GameView } from '../src/views/game';
 import * as apiModule from '../src/api';
+import { AppNavbar } from '../src/web-components';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,13 +20,26 @@ jest.mock('../src/tamagotchi', () => {
     };
 });
 
+function inicializarWebComponents() {
+    new AppNavbar();
+}
+
+function cargarHTML(view: string) {
+    const htmlPath = path.resolve(__dirname, `../src/views/${view}.html`);
+    const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+    document.body.innerHTML = htmlContent;
+}
+
 describe('GameManager', () => {
     let alertSpy: jest.SpiedFunction<typeof window.alert>;
 
+    beforeAll(() => {
+        inicializarWebComponents();
+    });
+
     beforeEach(() => {
-        const htmlPath = path.resolve(__dirname, '../src/views/game.html');
-        const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
-        document.body.innerHTML = htmlContent;
+        cargarHTML('game');
+
         jest.clearAllMocks();
         alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => { });
     });
