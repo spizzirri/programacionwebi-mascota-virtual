@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "ESNext",
+        "module": "CommonJS",
         "declaration": true,
         "removeComments": true,
         "emitDecoratorMetadata": true,
@@ -17,7 +17,7 @@
         "strictBindCallApply": false,
         "forceConsistentCasingInFileNames": false,
         "noFallthroughCasesInSwitch": false,
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "esModuleInterop": true
     },
     "include": [
