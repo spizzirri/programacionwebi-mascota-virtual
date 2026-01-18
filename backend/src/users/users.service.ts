@@ -11,7 +11,7 @@ export class UsersService {
             throw new Error('User not found');
         }
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user.toObject();
         return userWithoutPassword;
     }
 

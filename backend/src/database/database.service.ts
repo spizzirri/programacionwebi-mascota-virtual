@@ -1,83 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import Datastore from 'nedb-promises';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from './schemas/user.schema';
+import { Question, QuestionDocument } from './schemas/question.schema';
+import { Answer, AnswerDocument } from './schemas/answer.schema';
 
-export interface User {
-    _id?: string;
-    email: string;
-    password: string;
-    streak: number;
-    createdAt: Date;
-}
-
-export interface Question {
-    _id?: string;
-    text: string;
-    topic: string;
-}
-
-export interface Answer {
-    _id?: string;
-    userId: string;
-    questionId: string;
-    questionText: string;
-    userAnswer: string;
-    rating: 'correct' | 'partial' | 'incorrect';
-    feedback: string;
-    timestamp: Date;
-}
+// Export interfaces for backward compatibility (optional, but good for consumers)
+// Although consumers might want to use the Schema classes directly now.
+// Keeping interfaces to minimize changes in other files, but they align with Schemas.
 
 @Injectable()
 export class DatabaseService {
-    private users: Datastore<User>;
-    private questions: Datastore<Question>;
-    private answers: Datastore<Answer>;
+    constructor(
+        @InjectModel(User.name) private userModel: Model<UserDocument>,
+        @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
+        @InjectModel(Answer.name) private answerModel: Model<AnswerDocument>,
+    ) { }
 
-    constructor() {
-        // In-memory databases
-        this.users = Datastore.create();
-        this.questions = Datastore.create();
-        this.answers = Datastore.create();
+    async createUser(user: Partial<User>): Promise<UserDocument> {
+        const createdUser = new this.userModel(user);
+        return createdUser.save();
     }
 
-    async createUser(user: Omit<User, '_id'>): Promise<User> {
-        const created = await this.users.insert(user);
-        const verify = await this.users.findOne({ _id: created._id });
-        return created;
+    async findUserByEmail(email: string): Promise<UserDocument | null> {
+        return this.userModel.findOne({ email }).exec();
     }
 
-    async findUserByEmail(email: string): Promise<User | null> {
-        return this.users.findOne({ email });
-    }
-
-    async findUserById(id: string): Promise<User | null> {
-        const user = await this.users.findOne({ _id: id });
-        return user;
+    async findUserById(id: string): Promise<UserDocument | null> {
+        return this.userModel.findById(id).exec();
     }
 
     async updateUserStreak(userId: string, streak: number): Promise<void> {
-        await this.users.update({ _id: userId }, { $set: { streak } });
+        await this.userModel.findByIdAndUpdate(userId, { streak }).exec();
     }
 
-    async createQuestion(question: Omit<Question, '_id'>): Promise<Question> {
-        return this.questions.insert(question);
+    async createQuestion(question: Partial<Question>): Promise<QuestionDocument> {
+        const createdQuestion = new this.questionModel(question);
+        return createdQuestion.save();
     }
 
-    async getAllQuestions(): Promise<Question[]> {
-        return this.questions.find({});
+    async getAllQuestions(): Promise<QuestionDocument[]> {
+        return this.questionModel.find().exec();
     }
 
-    async getQuestionById(id: string): Promise<Question | null> {
-        return this.questions.findOne({ _id: id });
+    async getQuestionById(id: string): Promise<QuestionDocument | null> {
+        return this.questionModel.findById(id).exec();
     }
 
-    async createAnswer(answer: Omit<Answer, '_id'>): Promise<Answer> {
-        return this.answers.insert(answer);
+    async createAnswer(answer: Partial<Answer>): Promise<AnswerDocument> {
+        const createdAnswer = new this.answerModel(answer);
+        return createdAnswer.save();
     }
 
-    async getAnswersByUserId(userId: string, limit = 50): Promise<Answer[]> {
-        return this.answers
+    async getAnswersByUserId(userId: string, limit = 50): Promise<AnswerDocument[]> {
+        return this.answerModel
             .find({ userId })
             .sort({ timestamp: -1 })
-            .limit(limit);
+            .limit(limit)
+            .exec();
     }
 }

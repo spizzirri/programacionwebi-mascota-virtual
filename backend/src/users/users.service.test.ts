@@ -8,7 +8,10 @@ describe('UsersService', () => {
     let databaseService: DatabaseService;
 
     beforeEach(() => {
-        databaseService = new DatabaseService();
+        databaseService = {
+            findUserById: jest.fn(),
+            getAnswersByUserId: jest.fn(),
+        } as any;
         service = new UsersService(databaseService);
     });
 
@@ -22,7 +25,10 @@ describe('UsersService', () => {
                 createdAt: new Date()
             };
 
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({
+                ...mockUser,
+                toObject: () => mockUser
+            } as any);
 
             const result = await service.getProfile('user1');
 

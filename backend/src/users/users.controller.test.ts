@@ -11,7 +11,13 @@ describe('UsersController', () => {
     let databaseService: DatabaseService;
 
     beforeEach(() => {
-        databaseService = new DatabaseService();
+        databaseService = {
+            findUserById: jest.fn(),
+            getAnswersByUserId: jest.fn(),
+            // add other methods if controller uses them indirectly via service or if service uses them
+            // Controller uses Service. Service uses DatabaseService.
+            // Service instance is created with mock DatabaseService.
+        } as any;
         service = new UsersService(databaseService);
         controller = new UsersController(service);
     });
