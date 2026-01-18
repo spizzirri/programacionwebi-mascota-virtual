@@ -39,15 +39,9 @@ export class DatabaseService {
         this.answers = Datastore.create();
     }
 
-    // User operations
     async createUser(user: Omit<User, '_id'>): Promise<User> {
         const created = await this.users.insert(user);
-        console.log('💾 User created in DB:', { id: created._id, email: created.email });
-
-        // Verify it was saved
         const verify = await this.users.findOne({ _id: created._id });
-        console.log('🔍 Verification lookup:', verify ? 'Found' : 'NOT FOUND');
-
         return created;
     }
 
@@ -56,14 +50,7 @@ export class DatabaseService {
     }
 
     async findUserById(id: string): Promise<User | null> {
-        console.log('🔍 findUserById called with:', id, 'type:', typeof id);
-        const allUsers = await this.users.find({});
-        console.log('📊 Total users in DB:', allUsers.length);
-        if (allUsers.length > 0) {
-            console.log('📊 User IDs in DB:', allUsers.map(u => ({ id: u._id, type: typeof u._id })));
-        }
         const user = await this.users.findOne({ _id: id });
-        console.log('🔍 findUserById result:', user ? 'FOUND' : 'NOT FOUND');
         return user;
     }
 
@@ -71,7 +58,6 @@ export class DatabaseService {
         await this.users.update({ _id: userId }, { $set: { streak } });
     }
 
-    // Question operations
     async createQuestion(question: Omit<Question, '_id'>): Promise<Question> {
         return this.questions.insert(question);
     }
@@ -84,7 +70,6 @@ export class DatabaseService {
         return this.questions.findOne({ _id: id });
     }
 
-    // Answer operations
     async createAnswer(answer: Omit<Answer, '_id'>): Promise<Answer> {
         return this.answers.insert(answer);
     }
