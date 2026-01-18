@@ -1,38 +1,32 @@
-# You can copy and paste this template into a new `.gitlab-ci.yml` file.
-# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
-#
-# To contribute improvements to CI/CD templates, please follow the Development guide at:
-# https://docs.gitlab.com/development/cicd/templates/
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Nodejs.gitlab-ci.yml
+name: Pruebas unitarias automáticas
+run-name: ${{ github.actor }} está ejecutando pruebas unitarias
+on: [push, pull_request]
+jobs:
+  pruebas_unitarias_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: ./backend
+      - name: Correr pruebas
+        run: npm run test
+        working-directory: ./backend
 
-# Official framework image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/node/tags/
-image: node:latest
-
-# Pick zero or more services to be used on all builds.
-# Only needed when using a docker container to run your tests in.
-# Check out: https://docs.gitlab.com/ee/ci/services/
-#services:
-#  - mysql:latest
-#  - redis:latest
-#  - postgres:latest
-
-# This folder is cached between builds
-# https://docs.gitlab.com/ee/ci/yaml/#cache
-cache:
-  paths:
-    - node_modules/
-
-test_backend:
-  script:
-    - cd backend
-    - npm install
-    - npm run test
-
-test_frontend:
-  script:
-    - cd frontend
-    - npm install
-    - npm run test
+  pruebas_unitarias_frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: ./frontend
+      - name: Correr pruebas
+        run: npm run test
+        working-directory: ./frontend
 
