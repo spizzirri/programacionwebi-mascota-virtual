@@ -16,12 +16,9 @@ export class AuthController {
     ) {
         try {
             const user = await this.authService.register(body.email, body.password);
-            console.log('✅ User registered:', { userId: user._id, email: user.email });
             session.userId = user._id;
-            console.log('✅ Session userId set:', session.userId);
             return { success: true, user };
         } catch (error) {
-            console.error('❌ Registration error:', error.message);
             throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
         }
     }
@@ -33,12 +30,9 @@ export class AuthController {
     ) {
         try {
             const user = await this.authService.login(body.email, body.password);
-            console.log('✅ User logged in:', { userId: user._id, email: user.email });
             session.userId = user._id;
-            console.log('✅ Session userId set:', session.userId);
             return { success: true, user };
         } catch (error) {
-            console.error('❌ Login error:', error.message);
             throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
         }
     }
