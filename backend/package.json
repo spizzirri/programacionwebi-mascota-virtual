@@ -11,7 +11,9 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
-    "dev": "ts-node-dev --respawn src/main.ts"
+    "dev": "ts-node-dev --respawn src/main.ts",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
