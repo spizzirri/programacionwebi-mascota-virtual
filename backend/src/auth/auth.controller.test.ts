@@ -1,21 +1,33 @@
-
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { DatabaseService } from "../database/database.service";
 import { HttpException, HttpStatus } from "@nestjs/common";
 
 describe('AuthController', () => {
 
     let authService: AuthService;
     let controller: AuthController;
-    let databaseService: DatabaseService;
 
-    beforeEach(() => {
-        databaseService = new DatabaseService();
-        authService = new AuthService(databaseService);
-        controller = new AuthController(authService);
-    })
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [AuthController],
+            providers: [
+                {
+                    provide: AuthService,
+                    useValue: {
+                        register: jest.fn(),
+                        login: jest.fn(),
+                        logout: jest.fn(),
+                        getUserById: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
+
+        controller = module.get<AuthController>(AuthController);
+        authService = module.get<AuthService>(AuthService);
+    });
 
     describe('register', () => {
         it('deberia registrar un usuario correctamente y establecer la sesión', async () => {

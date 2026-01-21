@@ -6,7 +6,7 @@ import { DatabaseService, User } from '../database/database.service';
 export class AuthService {
     constructor(private readonly db: DatabaseService) { }
 
-    async register(email: string, password: string): Promise<Omit<User, 'password'>> {
+    async register(email: string, password: string): Promise<Omit<User, 'password'> & { _id: any }> {
         // Check if user already exists
         const existingUser = await this.db.findUserByEmail(email);
         if (existingUser) {
@@ -25,11 +25,11 @@ export class AuthService {
         });
 
         // Return user without password
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user.toObject();
         return userWithoutPassword;
     }
 
-    async login(email: string, password: string): Promise<Omit<User, 'password'>> {
+    async login(email: string, password: string): Promise<Omit<User, 'password'> & { _id: any }> {
         // Find user
         const user = await this.db.findUserByEmail(email);
         if (!user) {
@@ -43,17 +43,17 @@ export class AuthService {
         }
 
         // Return user without password
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user.toObject();
         return userWithoutPassword;
     }
 
-    async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
+    async getUserById(id: string): Promise<(Omit<User, 'password'> & { _id: any }) | null> {
         const user = await this.db.findUserById(id);
         if (!user) {
             return null;
         }
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user.toObject();
         return userWithoutPassword;
     }
 }

@@ -17,7 +17,9 @@ Una aplicación web interactiva que gamifica el aprendizaje de HTML a través de
 ### Backend
 - **NestJS** - Framework Node.js
 - **TypeScript** - Tipado estático
-- **NeDB** - Base de datos NoSQL en memoria
+- **MongoDB** - Base de datos NoSQL persistente
+- **Docker** - Contenedor para base de datos
+- **mongodb-memory-server** - Base de datos NoSQL en memoria (opcional)
 - **Gemini AI** - Validación de respuestas
 - **bcrypt** - Hash de contraseñas
 - **express-session** - Manejo de sesiones
@@ -45,7 +47,10 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env
-# Editar .env y agregar tu GEMINI_API_KEY
+# Editar .env y agregar tu GEMINI_API_KEY y MONGODB_URI (opcional, usa el valor por defecto en Docker)
+
+# Iniciar Base de Datos con Docker
+npm run db:up
 ```
 
 Edita el archivo `.env`:
@@ -139,7 +144,7 @@ kinetic-glenn/
 
 ## 📝 Notas Importantes
 
-- **Base de Datos en Memoria**: Los datos se pierden al reiniciar el servidor. Para producción, migrar a MongoDB u otra base de datos persistente.
+- **Base de Datos**: Se recomienda usar el entorno Docker para persistencia local (`npm run db:up`). Por defecto se utiliza un servidor de MongoDB en memoria (`mongodb-memory-server`) si `USE_IN_MEMORY_DB=true` en el `.env`.
 - **API Key de Gemini**: Necesaria para la validación de respuestas. Sin ella, la aplicación no funcionará correctamente.
 - **Desarrollo**: Esta es una versión de desarrollo. Para producción, configurar HTTPS, variables de entorno seguras, y base de datos persistente.
 

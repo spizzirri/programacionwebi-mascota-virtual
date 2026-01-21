@@ -1,6 +1,9 @@
 name: Pruebas unitarias automáticas
 run-name: ${{ github.actor }} está ejecutando pruebas unitarias
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
 jobs:
   pruebas_unitarias_backend:
     runs-on: ubuntu-latest
@@ -11,6 +14,9 @@ jobs:
           node-version: '20'
       - name: Instalar dependencias
         run: npm install
+        working-directory: ./backend
+      - name: Validar typescript
+        run: npm run type-check
         working-directory: ./backend
       - name: Correr pruebas
         run: npm run test

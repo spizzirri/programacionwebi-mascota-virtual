@@ -1,19 +1,28 @@
-
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
 import { QuestionsController } from "./questions.controller";
 import { QuestionsService } from "./questions.service";
-import { DatabaseService } from "../database/database.service";
 import { HttpException, HttpStatus } from "@nestjs/common";
 
 describe('QuestionsController', () => {
     let controller: QuestionsController;
     let service: QuestionsService;
-    let databaseService: DatabaseService;
 
-    beforeEach(() => {
-        databaseService = new DatabaseService();
-        service = new QuestionsService(databaseService);
-        controller = new QuestionsController(service);
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [QuestionsController],
+            providers: [
+                {
+                    provide: QuestionsService,
+                    useValue: {
+                        getRandomQuestion: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
+
+        controller = module.get<QuestionsController>(QuestionsController);
+        service = module.get<QuestionsService>(QuestionsService);
     });
 
     describe('getRandomQuestion', () => {
