@@ -15,7 +15,7 @@ export class QuestionsController {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
         }
 
-        const question = await this.questionsService.getRandomQuestion();
+        const question = await this.questionsService.getRandomQuestion(session.userId);
         return { question };
     }
 }

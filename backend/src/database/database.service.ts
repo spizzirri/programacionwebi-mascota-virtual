@@ -30,6 +30,13 @@ export class DatabaseService {
         await this.userModel.findByIdAndUpdate(userId, { streak }).exec();
     }
 
+    async assignQuestionToUser(userId: string, questionId: string): Promise<void> {
+        await this.userModel.findByIdAndUpdate(userId, {
+            currentQuestionId: questionId,
+            lastQuestionAssignedAt: new Date(),
+        }).exec();
+    }
+
     async createQuestion(question: Partial<Question>): Promise<QuestionDocument> {
         const createdQuestion = new this.questionModel(question);
         return createdQuestion.save();

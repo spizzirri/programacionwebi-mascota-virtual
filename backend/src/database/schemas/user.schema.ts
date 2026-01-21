@@ -18,6 +18,12 @@ export class User {
     @Prop({ default: 0 })
     streak: number;
 
+    @Prop()
+    currentQuestionId?: string;
+
+    @Prop()
+    lastQuestionAssignedAt?: Date;
+
     @Prop({ default: Date.now })
     createdAt: Date;
 }
