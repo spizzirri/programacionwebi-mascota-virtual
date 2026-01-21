@@ -5,12 +5,6 @@ import { User, UserDocument } from './schemas/user.schema';
 import { Question, QuestionDocument } from './schemas/question.schema';
 import { Answer, AnswerDocument } from './schemas/answer.schema';
 
-export { User, UserDocument, Question, QuestionDocument, Answer, AnswerDocument };
-
-// Export interfaces for backward compatibility (optional, but good for consumers)
-// Although consumers might want to use the Schema classes directly now.
-// Keeping interfaces to minimize changes in other files, but they align with Schemas.
-
 @Injectable()
 export class DatabaseService {
     constructor(

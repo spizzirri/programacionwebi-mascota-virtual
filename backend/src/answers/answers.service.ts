@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
-import { DatabaseService, Answer } from '../database/database.service';
+import { DatabaseService } from '../database/database.service';
+import { Answer } from '../database/schemas/answer.schema';
 
 interface ValidationResult {
     rating: 'correct' | 'partial' | 'incorrect';

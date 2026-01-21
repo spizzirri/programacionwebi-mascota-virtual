@@ -1,6 +1,6 @@
-import { Question } from '../database/database.service';
+import { QuestionBase } from '../database/schemas/question.schema';
 
-export const questionsData: Omit<Question, '_id'>[] = [
+export const questionsData: QuestionBase[] = [
     // 1. Fundamentos Web y Arquitectura (20 Preguntas)
     { text: '¿Por qué es importante entender la diferencia entre Internet y la World Wide Web al desarrollar aplicaciones web?', topic: 'introduccion al desarrollo web' },
     { text: '¿Cuál es la ventaja de la arquitectura cliente-servidor en el desarrollo web moderno?', topic: 'introduccion al desarrollo web' },

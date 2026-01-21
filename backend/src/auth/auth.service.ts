@@ -1,12 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { hash, compare } from 'bcrypt';
-import { DatabaseService, User } from '../database/database.service';
+import { DatabaseService } from '../database/database.service';
+import { SafeUser } from '../database/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
     constructor(private readonly db: DatabaseService) { }
 
-    async register(email: string, password: string): Promise<Omit<User, 'password'> & { _id: any }> {
+    async register(email: string, password: string): Promise<SafeUser> {
         // Check if user already exists
         const existingUser = await this.db.findUserByEmail(email);
         if (existingUser) {
@@ -29,7 +30,7 @@ export class AuthService {
         return userWithoutPassword;
     }
 
-    async login(email: string, password: string): Promise<Omit<User, 'password'> & { _id: any }> {
+    async login(email: string, password: string): Promise<SafeUser> {
         // Find user
         const user = await this.db.findUserByEmail(email);
         if (!user) {
@@ -47,7 +48,7 @@ export class AuthService {
         return userWithoutPassword;
     }
 
-    async getUserById(id: string): Promise<(Omit<User, 'password'> & { _id: any }) | null> {
+    async getUserById(id: string): Promise<SafeUser | null> {
         const user = await this.db.findUserById(id);
         if (!user) {
             return null;

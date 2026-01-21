@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DatabaseService, Question } from '../database/database.service';
+import { DatabaseService } from '../database/database.service';
+import { Question } from '../database/schemas/question.schema';
 import { questionsData } from './questions.data';
 
 @Injectable()

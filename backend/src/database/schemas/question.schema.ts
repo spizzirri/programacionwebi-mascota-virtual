@@ -3,6 +3,8 @@ import { HydratedDocument } from 'mongoose';
 
 export type QuestionDocument = HydratedDocument<Question>;
 
+export type QuestionBase = Omit<Question, '_id'>;
+
 @Schema()
 export class Question {
     @Prop({ required: true })

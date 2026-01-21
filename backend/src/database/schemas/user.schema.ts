@@ -3,6 +3,10 @@ import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
+export interface SafeUser extends Omit<User, 'password'> {
+    _id: any;
+}
+
 @Schema()
 export class User {
     @Prop({ required: true, unique: true })
