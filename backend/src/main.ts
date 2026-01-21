@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import session from 'express-session';
 import dotenv from 'dotenv';
+import MongoStore from 'connect-mongo';
 
 // Load environment variables
 dotenv.config();
@@ -27,9 +28,22 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization'],
     });
 
+    // Configure session store
+    let sessionStore;
+    if (process.env.USE_IN_MEMORY_DB !== 'true') {
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tamagotchi';
+        console.log(`Using MongoDB session store with URI: ${mongoUri}`);
+        sessionStore = MongoStore.create({
+            mongoUrl: mongoUri,
+            collectionName: 'sessions',
+            ttl: 24 * 60 * 60, // 24 hours
+        });
+    }
+
     // Configure session
     app.use(
         session({
+            store: sessionStore,
             secret: process.env.SESSION_SECRET || 'tamagotchi-secret-key-change-in-production',
             resave: false,
             saveUninitialized: false,
