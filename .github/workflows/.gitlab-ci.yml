@@ -12,6 +12,9 @@ jobs:
       - name: Instalar dependencias
         run: npm install
         working-directory: ./backend
+      - name: Validar typescript
+        run: npm run type-check
+        working-directory: ./backend
       - name: Correr pruebas
         run: npm run test
         working-directory: ./backend

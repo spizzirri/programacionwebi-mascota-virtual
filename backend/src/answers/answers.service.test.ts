@@ -1,4 +1,5 @@
-import { describe, it, expect, jest } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, beforeAll, afterAll } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
 import { AnswersService } from "./answers.service";
 import { DatabaseService } from "../database/database.service";
 
@@ -11,33 +12,49 @@ jest.mock('@google/genai', () => {
 });
 
 describe('AnswersService', () => {
+    let service: AnswersService;
+    let databaseService: DatabaseService;
+
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                AnswersService,
+                {
+                    provide: DatabaseService,
+                    useValue: {
+                        findUserById: jest.fn(),
+                        updateUserStreak: jest.fn(),
+                        createAnswer: jest.fn(),
+                        getAnswersByUserId: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
+
+        service = module.get<AnswersService>(AnswersService);
+        databaseService = module.get<DatabaseService>(DatabaseService);
+    });
 
     describe('submitAnswer', () => {
         it('deberia lanzar una excepcion si el usuario no es encontrado', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
-
-            jest.spyOn(answersService, 'validateAnswer').mockResolvedValue({
+            jest.spyOn(service, 'validateAnswer').mockResolvedValue({
                 rating: 'correct',
                 feedback: 'Good job'
             });
 
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            (databaseService.findUserById as any).mockResolvedValue(null);
 
-            await expect(answersService.submitAnswer('user123', 'q1', 'Question?', 'Answer')).rejects.toThrow('User not found');
+            await expect(service.submitAnswer('user123', 'q1', 'Question?', 'Answer')).rejects.toThrow('User not found');
         });
 
         it('deberia incrementar la racha en 1 cuando la respuesta es correcta', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
-
-            jest.spyOn(answersService, 'validateAnswer').mockResolvedValue({
+            jest.spyOn(service, 'validateAnswer').mockResolvedValue({
                 rating: 'correct',
                 feedback: 'Excellent'
             });
 
             const mockUser = { _id: 'user123', email: 'test@test.com', password: 'pwd', streak: 5, createdAt: new Date() };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
             const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
             const createAnswerSpy = jest.spyOn(databaseService, 'createAnswer').mockResolvedValue({
                 userId: 'user123',
@@ -47,13 +64,13 @@ describe('AnswersService', () => {
                 rating: 'correct',
                 feedback: 'Excellent',
                 timestamp: new Date()
-            });
+            } as any);
 
-            const result = await answersService.submitAnswer('user123', 'q1', 'Question?', 'Answer');
+            const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Answer');
 
             expect(result.newStreak).toBe(6);
-            expect(updateStreakSpy).toHaveBeenCalledWith('user123', 6);
-            expect(createAnswerSpy).toHaveBeenCalledWith({
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 6);
+            expect(databaseService.createAnswer).toHaveBeenCalledWith({
                 userId: 'user123',
                 questionId: 'q1',
                 questionText: 'Question?',
@@ -65,16 +82,13 @@ describe('AnswersService', () => {
         });
 
         it('deberia incrementar la racha en 0.5 cuando la respuesta es parcial', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
-
-            jest.spyOn(answersService, 'validateAnswer').mockResolvedValue({
+            jest.spyOn(service, 'validateAnswer').mockResolvedValue({
                 rating: 'partial',
                 feedback: 'Okay but...'
             });
 
             const mockUser = { _id: 'user123', email: 'test@test.com', password: 'pwd', streak: 5, createdAt: new Date() };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
             const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
             jest.spyOn(databaseService, 'createAnswer').mockResolvedValue({
                 userId: 'user123',
@@ -84,25 +98,22 @@ describe('AnswersService', () => {
                 rating: 'partial',
                 feedback: 'Okay but...',
                 timestamp: new Date()
-            });
+            } as any);
 
-            const result = await answersService.submitAnswer('user123', 'q1', 'Question?', 'Answer');
+            const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Answer');
 
             expect(result.newStreak).toBe(5.5);
-            expect(updateStreakSpy).toHaveBeenCalledWith('user123', 5.5);
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 5.5);
         });
 
         it('deberia reiniciar la racha a 0 cuando la respuesta es incorrecta', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
-
-            jest.spyOn(answersService, 'validateAnswer').mockResolvedValue({
+            jest.spyOn(service, 'validateAnswer').mockResolvedValue({
                 rating: 'incorrect',
                 feedback: 'Wrong'
             });
 
             const mockUser = { _id: 'user123', email: 'test@test.com', password: 'pwd', streak: 5, createdAt: new Date() };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
             const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
             jest.spyOn(databaseService, 'createAnswer').mockResolvedValue({
                 userId: 'user123',
@@ -112,12 +123,12 @@ describe('AnswersService', () => {
                 rating: 'incorrect',
                 feedback: 'Wrong',
                 timestamp: new Date()
-            });
+            } as any);
 
-            const result = await answersService.submitAnswer('user123', 'q1', 'Question?', 'Wrong');
+            const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Wrong');
 
             expect(result.newStreak).toBe(0);
-            expect(updateStreakSpy).toHaveBeenCalledWith('user123', 0);
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 0);
         });
     });
 
@@ -137,18 +148,14 @@ describe('AnswersService', () => {
             process.env = { ...originalEnv, GEMINI_API_KEY: 'test-key' };
         });
 
-        it('deberia lanzar error si GEMINI_API_KEY no esta configurada', async () => {
-            delete process.env.GEMINI_API_KEY;
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
+        it('deberia lanzar error si Gemini client no esta configurado', async () => {
+            (service as any).client = undefined;
 
-            await expect(answersService.validateAnswer('q', 'a'))
+            await expect(service.validateAnswer('q', 'a'))
                 .rejects.toThrow('Gemini API not configured');
         });
 
         it('deberia retornar rating y feedback cuando la API responde correctamente', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: JSON.stringify({
@@ -156,13 +163,13 @@ describe('AnswersService', () => {
                     feedback: 'Muy bien'
                 })
             });
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
             };
 
-            const result = await answersService.validateAnswer('q', 'a');
+            const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'correct',
                 feedback: 'Muy bien'
@@ -170,14 +177,12 @@ describe('AnswersService', () => {
         });
 
         it('deberia enviar el prompt correcto a la API', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: JSON.stringify({ rating: 'correct', feedback: 'ok' })
             });
 
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
@@ -186,7 +191,7 @@ describe('AnswersService', () => {
             const questionText = '¿Qué es HTML?';
             const userAnswer = 'Es un lenguaje de marcado.';
 
-            await answersService.validateAnswer(questionText, userAnswer);
+            await service.validateAnswer(questionText, userAnswer);
 
             const expectedPrompt = `Eres un profesor de Programación Web I evaluando la respuesta de un estudiante.
         El nivel de la materia es básico, para principiantes que nunca han programado paginas web antes, por lo que no se espera que la respuesta sea compleja con un alto nivel de detalle.
@@ -212,19 +217,17 @@ describe('AnswersService', () => {
         });
 
         it('deberia limpiar bloques de codigo markdown de la respuesta', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: '```json\n{"rating": "partial", "feedback": "Regular"}\n```'
             });
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
             };
 
-            const result = await answersService.validateAnswer('q', 'a');
+            const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'partial',
                 feedback: 'Regular'
@@ -232,17 +235,15 @@ describe('AnswersService', () => {
         });
 
         it('deberia retornar fallback si la respuesta de la API no tiene texto', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({});
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
             };
 
-            const result = await answersService.validateAnswer('q', 'a');
+            const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'partial',
                 feedback: 'No se pudo validar la respuesta automáticamente.'
@@ -250,19 +251,17 @@ describe('AnswersService', () => {
         });
 
         it('deberia retornar fallback si el JSON es invalido', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: 'invalid json'
             });
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
             };
 
-            const result = await answersService.validateAnswer('q', 'a');
+            const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'partial',
                 feedback: 'No se pudo validar la respuesta automáticamente.'
@@ -270,17 +269,15 @@ describe('AnswersService', () => {
         });
 
         it('deberia retornar fallback si la API falla', async () => {
-            const databaseService = new DatabaseService();
-            const answersService = new AnswersService(databaseService);
 
             const mockGenerateContent = jest.fn<any>().mockRejectedValue(new Error('API failure'));
-            (answersService as any).client = {
+            (service as any).client = {
                 models: {
                     generateContent: mockGenerateContent
                 }
             };
 
-            const result = await answersService.validateAnswer('q', 'a');
+            const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'partial',
                 feedback: 'No se pudo validar la respuesta automáticamente.'

@@ -1,27 +1,51 @@
+import { describe, it, expect, jest, beforeEach, beforeAll } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
+import type { AuthService as AuthServiceType } from './auth.service';
+import type { DatabaseService as DatabaseServiceType } from '../database/database.service';
 
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-
-// Define mocks before importing modules to be tested
 jest.unstable_mockModule('bcrypt', () => ({
     hash: jest.fn(),
     compare: jest.fn(),
 }));
 
-// Dynamic imports to ensure mocks are applied
-const bcrypt = await import('bcrypt');
-const { AuthService } = await import('./auth.service');
-const { DatabaseService } = await import('../database/database.service');
+let bcrypt: any;
+let AuthService: any;
+let DatabaseService: any;
+
+beforeAll(async () => {
+    bcrypt = await import('bcrypt');
+    const authMod = await import('./auth.service');
+    AuthService = authMod.AuthService;
+    const dbMod = await import('../database/database.service');
+    DatabaseService = dbMod.DatabaseService;
+});
 
 describe('AuthService', () => {
+    let service: AuthServiceType;
+    let databaseService: DatabaseServiceType;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                AuthService,
+                {
+                    provide: DatabaseService,
+                    useValue: {
+                        findUserByEmail: jest.fn(),
+                        findUserById: jest.fn(),
+                        createUser: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
+
+        service = module.get<AuthServiceType>(AuthService);
+        databaseService = module.get<DatabaseServiceType>(DatabaseService);
         jest.clearAllMocks();
     });
 
     describe('register', () => {
         it('deberia lanzar error si el usuario ya existe', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
 
             jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
                 _id: 'existing',
@@ -29,14 +53,12 @@ describe('AuthService', () => {
                 password: 'hashed',
                 streak: 0,
                 createdAt: new Date()
-            });
+            } as any);
 
-            await expect(authService.register('exist@test.com', 'pass')).rejects.toThrow('User already exists');
+            await expect(service.register('exist@test.com', 'pass')).rejects.toThrow('User already exists');
         });
 
         it('deberia hashear la contraseña y crear el usuario si no existe', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
             const now = new Date();
 
             jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(null);
@@ -51,9 +73,12 @@ describe('AuthService', () => {
                 createdAt: now
             };
 
-            const createUserSpy = jest.spyOn(databaseService, 'createUser').mockResolvedValue(createdUser);
+            const createUserSpy = jest.spyOn(databaseService, 'createUser').mockResolvedValue({
+                ...createdUser,
+                toObject: () => createdUser
+            } as any);
 
-            const result = await authService.register('new@test.com', 'plain-password');
+            const result = await service.register('new@test.com', 'plain-password');
 
             expect(bcrypt.hash).toHaveBeenCalledWith('plain-password', 10);
             expect(createUserSpy).toHaveBeenCalledWith({
@@ -74,18 +99,13 @@ describe('AuthService', () => {
 
     describe('login', () => {
         it('deberia lanzar UnauthorizedException si el usuario no existe', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
-
             jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(null);
 
-            await expect(authService.login('wrong@test.com', 'pass'))
+            await expect(service.login('wrong@test.com', 'pass'))
                 .rejects.toThrow('Invalid credentials');
         });
 
         it('deberia lanzar UnauthorizedException si la contraseña es incorrecta', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
 
             const mockUser = {
                 _id: 'user1',
@@ -95,19 +115,20 @@ describe('AuthService', () => {
                 createdAt: new Date()
             };
 
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
+                ...mockUser,
+                toObject: () => mockUser
+            } as any);
 
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
-            await expect(authService.login('test@test.com', 'wrong-pass'))
+            await expect(service.login('test@test.com', 'wrong-pass'))
                 .rejects.toThrow('Invalid credentials');
 
             expect(bcrypt.compare).toHaveBeenCalledWith('wrong-pass', 'hashed-real-password');
         });
 
         it('deberia retornar el usuario sin contraseña si el login es exitoso', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
             const now = new Date();
 
             const mockUser = {
@@ -118,11 +139,14 @@ describe('AuthService', () => {
                 createdAt: now
             };
 
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
+                ...mockUser,
+                toObject: () => mockUser
+            } as any);
 
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
 
-            const result = await authService.login('test@test.com', 'correct-pass');
+            const result = await service.login('test@test.com', 'correct-pass');
 
             expect(result).toEqual({
                 _id: 'user1',
@@ -136,18 +160,13 @@ describe('AuthService', () => {
 
     describe('getUserById', () => {
         it('deberia retornar null si el usuario no existe', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
-
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
 
-            const result = await authService.getUserById('nonexistent');
+            const result = await service.getUserById('nonexistent');
             expect(result).toBeNull();
         });
 
         it('deberia retornar el usuario sin contraseña si existe', async () => {
-            const databaseService = new DatabaseService();
-            const authService = new AuthService(databaseService);
             const now = new Date();
 
             const mockUser = {
@@ -158,9 +177,12 @@ describe('AuthService', () => {
                 createdAt: now
             };
 
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({
+                ...mockUser,
+                toObject: () => mockUser
+            } as any);
 
-            const result = await authService.getUserById('user1');
+            const result = await service.getUserById('user1');
 
             expect(result).toEqual({
                 _id: 'user1',

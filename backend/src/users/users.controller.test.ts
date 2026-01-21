@@ -1,33 +1,39 @@
-
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
-import { DatabaseService } from "../database/database.service";
 import { HttpException, HttpStatus } from "@nestjs/common";
+import { Types } from "mongoose";
+import { UserDocument } from "../database/schemas/user.schema";
 
 describe('UsersController', () => {
     let controller: UsersController;
     let service: UsersService;
-    let databaseService: DatabaseService;
 
-    beforeEach(() => {
-        databaseService = {
-            findUserById: jest.fn(),
-            getAnswersByUserId: jest.fn(),
-            // add other methods if controller uses them indirectly via service or if service uses them
-            // Controller uses Service. Service uses DatabaseService.
-            // Service instance is created with mock DatabaseService.
-        } as any;
-        service = new UsersService(databaseService);
-        controller = new UsersController(service);
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [UsersController],
+            providers: [
+                {
+                    provide: UsersService,
+                    useValue: {
+                        getProfile: jest.fn(),
+                        getHistory: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
+
+        controller = module.get<UsersController>(UsersController);
+        service = module.get<UsersService>(UsersService);
     });
 
     describe('getProfile', () => {
         it('deberia retornar el perfil si el usuario esta autenticado', async () => {
-            const session: any = { userId: 'user1' };
-            const mockProfile = { _id: 'user1', email: 'test@test.com', streak: 5, createdAt: new Date() };
+            const session: any = { userId: '507f1f77bcf86cd799439011' };
+            const mockProfile: Partial<UserDocument> = { _id: new Types.ObjectId("507f1f77bcf86cd799439011"), email: 'test@test.com', streak: 5, createdAt: new Date() };
 
-            jest.spyOn(service, 'getProfile').mockResolvedValue(mockProfile);
+            jest.spyOn(service, 'getProfile').mockResolvedValue(mockProfile as any);
 
             const result = await controller.getProfile(session);
 
