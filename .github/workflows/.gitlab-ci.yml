@@ -1,6 +1,9 @@
 name: Pruebas unitarias automáticas
 run-name: ${{ github.actor }} está ejecutando pruebas unitarias
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
 jobs:
   pruebas_unitarias_backend:
     runs-on: ubuntu-latest
