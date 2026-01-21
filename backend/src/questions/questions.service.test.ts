@@ -55,10 +55,6 @@ describe('QuestionsService', () => {
             ];
             jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
 
-            // Mock Math.random to return something predictable only because logic depends on it
-            // However, since we just check if it returns *one of* the questions, strict equality on the result object is enough if we trust array access.
-            // Let's just check it returns one of them.
-
             const result = await service.getRandomQuestion();
 
             expect(mockQuestions).toContain(result);

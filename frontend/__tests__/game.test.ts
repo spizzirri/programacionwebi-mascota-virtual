@@ -9,7 +9,6 @@ import { AppNavbar } from '../src/web-components';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Mock Tamagotchi class
 jest.mock('../src/tamagotchi', () => {
     return {
         Tamagotchi: jest.fn().mockImplementation(() => {

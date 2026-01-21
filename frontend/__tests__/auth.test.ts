@@ -230,7 +230,7 @@ describe('Register', () => {
     const registerButton = document.getElementById('register-button') as HTMLButtonElement;
 
     emailInput.value = 'test@example.com';
-    passwordInput.value = '12345'; // Solo 5 caracteres
+    passwordInput.value = '12345';
 
     registerButton.click();
 
