@@ -7,7 +7,7 @@ import { SafeUser } from '../database/schemas/user.schema';
 export class AuthService {
     constructor(private readonly db: DatabaseService) { }
 
-    async register(email: string, password: string): Promise<SafeUser> {
+    async register(email: string, password: string, role: string): Promise<SafeUser> {
         const existingUser = await this.db.findUserByEmail(email);
         if (existingUser) {
             throw new Error('User already exists');
@@ -17,6 +17,7 @@ export class AuthService {
         const user = await this.db.createUser({
             email,
             password: hashedPassword,
+            role,
             streak: 0,
             createdAt: new Date(),
         });

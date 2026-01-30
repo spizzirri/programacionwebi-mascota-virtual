@@ -49,10 +49,10 @@ async function apiRequest(
 
 export const api = {
     // Auth endpoints
-    async register(email: string, password: string): Promise<User> {
+    async register(email: string, password: string, role: string): Promise<User> {
         const data = await apiRequest('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, role }),
         });
         return data.user!;
     },

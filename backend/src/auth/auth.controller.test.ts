@@ -31,9 +31,9 @@ describe('AuthController', () => {
 
     describe('register', () => {
         it('deberia registrar un usuario correctamente y establecer la sesión', async () => {
-            const body = { email: 'test@test.com', password: 'password123' };
+            const body = { email: 'test@test.com', password: 'password123', role: 'STUDENT' };
             const session: any = {};
-            const mockUser = { _id: 'user123', email: 'test@test.com', streak: 0, createdAt: new Date() };
+            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'register').mockResolvedValue(mockUser);
 
@@ -41,11 +41,11 @@ describe('AuthController', () => {
 
             expect(result).toEqual({ success: true, user: mockUser });
             expect(session.userId).toBe('user123');
-            expect(authService.register).toHaveBeenCalledWith(body.email, body.password);
+            expect(authService.register).toHaveBeenCalledWith(body.email, body.password, body.role);
         });
 
         it('deberia lanzar HttpException con BAD_REQUEST si el servicio falla (ej. usuario ya existe)', async () => {
-            const body = { email: 'existing@test.com', password: 'password123' };
+            const body = { email: 'existing@test.com', password: 'password123', role: 'STUDENT' };
             const session: any = {};
 
             jest.spyOn(authService, 'register').mockRejectedValue(new Error('User already exists'));
@@ -61,7 +61,7 @@ describe('AuthController', () => {
         it('deberia loguear un usuario correctamente y establecer la sesión', async () => {
             const body = { email: 'test@test.com', password: 'password123' };
             const session: any = {};
-            const mockUser = { _id: 'user123', email: 'test@test.com', streak: 0, createdAt: new Date() };
+            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
 
@@ -99,7 +99,7 @@ describe('AuthController', () => {
     describe('getCurrentUser', () => {
         it('deberia retornar el usuario si la sesión es valida', async () => {
             const session: any = { userId: 'user123' };
-            const mockUser = { _id: 'user123', email: 'test@test.com', streak: 0, createdAt: new Date() };
+            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(mockUser);
 

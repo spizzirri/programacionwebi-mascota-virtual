@@ -15,6 +15,9 @@ export class User {
     @Prop({ required: true })
     password: string;
 
+    @Prop({ required: true, enum: ['PROFESSOR', 'STUDENT'] })
+    role: string;
+
     @Prop({ default: 0 })
     streak: number;
 

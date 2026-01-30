@@ -22,10 +22,11 @@ describe('DatabaseService', () => {
     });
 
     describe('User Operations', () => {
-        it('deberia crear y encontrar un usuario por ID', async () => {
+        it('deberia crear un usuario con rol STUDENT y encontrarlo por ID', async () => {
             const userData = {
                 email: 'test@test.com',
                 password: 'hashedpassword',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: new Date()
             };
@@ -39,10 +40,41 @@ describe('DatabaseService', () => {
             expect(found?._id.toString()).toEqual(created._id.toString());
         });
 
+        it('deberia crear un usuario con rol PROFESSOR y encontrarlo por ID', async () => {
+            const userData = {
+                email: 'professor@test.com',
+                password: 'hashedpassword',
+                role: 'PROFESSOR',
+                streak: 0,
+                createdAt: new Date()
+            };
+
+            const created = await service.createUser(userData);
+            expect(created._id).toBeDefined();
+            expect(created.email).toBe(userData.email);
+
+            const found = await service.findUserById(created._id.toString());
+            expect(found?.email).toBe(created.email);
+            expect(found?._id.toString()).toEqual(created._id.toString());
+        });
+
+        it('deberia lanzar error si el rol no es STUDENT o PROFESSOR', async () => {
+            const userData = {
+                email: 'invalid-role@test.com',
+                password: 'hashedpassword',
+                role: 'INVALID',
+                streak: 0,
+                createdAt: new Date()
+            };
+
+            await expect(service.createUser(userData)).rejects.toThrow();
+        });
+
         it('deberia encontrar un usuario por email', async () => {
             const userData = {
                 email: 'findme@test.com',
                 password: 'pwd',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: new Date()
             };
@@ -66,6 +98,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'streak@test.com',
                 password: 'pwd',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: new Date()
             };
@@ -76,6 +109,19 @@ describe('DatabaseService', () => {
 
             const updated = await service.findUserById(created._id.toString());
             expect(updated?.streak).toBe(5);
+        });
+
+        it('deberia lanzar error al crear usuario duplicado', async () => {
+            const userData = {
+                email: 'duplicate@test.com',
+                password: 'pwd',
+                role: 'STUDENT',
+                streak: 0,
+                createdAt: new Date()
+            };
+
+            await service.createUser(userData);
+            await expect(service.createUser(userData)).rejects.toThrow();
         });
     });
 

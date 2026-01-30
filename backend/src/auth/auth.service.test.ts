@@ -51,11 +51,12 @@ describe('AuthService', () => {
                 _id: 'existing',
                 email: 'exist@test.com',
                 password: 'hashed',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: new Date()
             } as any);
 
-            await expect(service.register('exist@test.com', 'pass')).rejects.toThrow('User already exists');
+            await expect(service.register('exist@test.com', 'pass', 'STUDENT')).rejects.toThrow('User already exists');
         });
 
         it('deberia hashear la contraseña y crear el usuario si no existe', async () => {
@@ -69,6 +70,7 @@ describe('AuthService', () => {
                 _id: 'new-user',
                 email: 'new@test.com',
                 password: 'hashed-password',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: now
             };
@@ -78,18 +80,20 @@ describe('AuthService', () => {
                 toObject: () => createdUser
             } as any);
 
-            const result = await service.register('new@test.com', 'plain-password');
+            const result = await service.register('new@test.com', 'plain-password', 'STUDENT');
 
             expect(bcrypt.hash).toHaveBeenCalledWith('plain-password', 10);
             expect(createUserSpy).toHaveBeenCalledWith({
                 email: 'new@test.com',
                 password: 'hashed-password',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: expect.any(Date)
             });
             expect(result).toEqual({
                 _id: 'new-user',
                 email: 'new@test.com',
+                role: 'STUDENT',
                 streak: 0,
                 createdAt: now
             });

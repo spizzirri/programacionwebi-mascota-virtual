@@ -110,6 +110,7 @@ export class AuthView extends DOMManager {
 
         const email = this.getInputValue('register-email');
         const password = this.getInputValue('register-password');
+        const role = (this.getElementSafe<HTMLInputElement>('input[name="role"]:checked')).value;
 
         if (!this.validatePassword(password)) {
             this.setTextContent(errorDisplay, 'La contraseña debe tener al menos 6 caracteres');
@@ -117,7 +118,7 @@ export class AuthView extends DOMManager {
         }
 
         try {
-            await this.registerNewUser(email, password);
+            await this.registerNewUser(email, password, role);
             this.notifyAuthenticationSuccess();
         } catch (error) {
             this.displayRegistrationError(errorDisplay, error);
@@ -135,8 +136,8 @@ export class AuthView extends DOMManager {
     /**
      * Registers a new user with the API
      */
-    async registerNewUser(email: string, password: string): Promise<void> {
-        const user = await api.register(email, password);
+    async registerNewUser(email: string, password: string, role: string): Promise<void> {
+        const user = await api.register(email, password, role);
         session.setUser(user);
     }
 

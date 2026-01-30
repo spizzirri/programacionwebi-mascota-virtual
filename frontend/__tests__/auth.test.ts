@@ -155,9 +155,10 @@ describe('Register', () => {
     expect(button.disabled).toBe(false);
   });
 
-  it('deberia llamar a api.register y enviar usuario y contraseña cuando se presiona en crear cuenta', async () => {
+  it('deberia llamar a api.register y enviar usuario, contraseña y rol cuando se presiona en crear cuenta', async () => {
     const testEmail = 'newuser@example.com';
     const testPassword = 'password123';
+    const testRole = 'STUDENT';
 
     const mockUser = {
       _id: '456',
@@ -177,6 +178,10 @@ describe('Register', () => {
     const passwordInput = document.getElementById('register-password') as HTMLInputElement;
     const registerButton = document.getElementById('register-button') as HTMLButtonElement;
 
+    // Verify default role is STUDENT
+    const studentRadio = document.querySelector('input[name="role"][value="STUDENT"]') as HTMLInputElement;
+    expect(studentRadio.checked).toBe(true);
+
     emailInput.value = testEmail;
     passwordInput.value = testPassword;
 
@@ -185,7 +190,43 @@ describe('Register', () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(registerSpy).toHaveBeenCalledTimes(1);
-    expect(registerSpy).toHaveBeenCalledWith(testEmail, testPassword);
+    expect(registerSpy).toHaveBeenCalledWith(testEmail, testPassword, testRole);
+    registerSpy.mockRestore();
+  });
+
+  it('deberia permitir seleccionar rol PROFESSOR y enviarlo en el registro', async () => {
+    const testEmail = 'prof@example.com';
+    const testPassword = 'password123';
+    const testRole = 'PROFESSOR';
+
+    const mockUser = {
+      _id: '789',
+      email: testEmail,
+      streak: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    const registerSpy = jest.spyOn(apiModule.api, 'register').mockResolvedValue(mockUser);
+
+    new AuthView();
+
+    const registerTab = document.getElementById('register-tab') as HTMLButtonElement;
+    registerTab.click();
+
+    const emailInput = document.getElementById('register-email') as HTMLInputElement;
+    const passwordInput = document.getElementById('register-password') as HTMLInputElement;
+    const registerButton = document.getElementById('register-button') as HTMLButtonElement;
+    const professorRadio = document.querySelector('input[name="role"][value="PROFESSOR"]') as HTMLInputElement;
+
+    professorRadio.checked = true;
+    emailInput.value = testEmail;
+    passwordInput.value = testPassword;
+
+    registerButton.click();
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(registerSpy).toHaveBeenCalledWith(testEmail, testPassword, testRole);
     registerSpy.mockRestore();
   });
 
@@ -212,7 +253,7 @@ describe('Register', () => {
     registerButton.click();
 
     await new Promise(resolve => setTimeout(resolve, 50));
-    expect(registerSpy).toHaveBeenCalledWith(testEmail, testPassword);
+    expect(registerSpy).toHaveBeenCalledWith(testEmail, testPassword, 'STUDENT');
     expect(errorDiv.textContent).toBe(errorMessage);
 
     registerSpy.mockRestore();

@@ -11,11 +11,11 @@ export class AuthController {
 
     @Post('register')
     async register(
-        @Body() body: { email: string; password: string },
+        @Body() body: { email: string; password: string; role: string },
         @Session() session: SessionData,
     ) {
         try {
-            const user = await this.authService.register(body.email, body.password);
+            const user = await this.authService.register(body.email, body.password, body.role);
             session.userId = user._id;
             return { success: true, user };
         } catch (error) {
