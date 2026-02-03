@@ -19,6 +19,10 @@ describe('UsersController', () => {
                     useValue: {
                         getProfile: jest.fn(),
                         getHistory: jest.fn(),
+                        getAllUsers: jest.fn(),
+                        createUser: jest.fn(),
+                        updateUser: jest.fn(),
+                        deleteUser: jest.fn(),
                     },
                 },
             ],
@@ -89,6 +93,76 @@ describe('UsersController', () => {
             await expect(controller.getHistory(session)).rejects.toThrow(
                 new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
             );
+        });
+    });
+
+    describe('getAllUsers', () => {
+        it('deberia retornar todos los usuarios si el usuario es PROFESSOR', async () => {
+            const session: any = { userId: 'admin1' };
+            const mockAdmin = { role: 'PROFESSOR' };
+            const mockUsers = [{ email: 'user1@test.com' }, { email: 'user2@test.com' }];
+
+            jest.spyOn(service, 'getProfile').mockResolvedValue(mockAdmin as any);
+            jest.spyOn(service, 'getAllUsers').mockResolvedValue(mockUsers as any);
+
+            const result = await controller.getAllUsers(session);
+
+            expect(result).toEqual({ users: mockUsers });
+            expect(service.getAllUsers).toHaveBeenCalled();
+        });
+
+        it('deberia lanzar HttpException FORBIDDEN si el usuario no es PROFESSOR', async () => {
+            const session: any = { userId: 'student1' };
+            const mockStudent = { role: 'STUDENT' };
+
+            jest.spyOn(service, 'getProfile').mockResolvedValue(mockStudent as any);
+
+            await expect(controller.getAllUsers(session)).rejects.toThrow(
+                new HttpException('Forbidden: Only professors can access this resource', HttpStatus.FORBIDDEN)
+            );
+        });
+
+        it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en sesion', async () => {
+            const session: any = {};
+
+            await expect(controller.getAllUsers(session)).rejects.toThrow(
+                new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
+            );
+        });
+    });
+
+    describe('createUser', () => {
+        it('deberia permitir a un PROFESSOR crear un usuario', async () => {
+            const session: any = { userId: 'admin1' };
+            const mockUser = { email: 'new@test.com' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(service, 'createUser').mockResolvedValue(mockUser as any);
+
+            const result = await controller.createUser(session, mockUser);
+            expect(result).toEqual({ user: mockUser });
+        });
+    });
+
+    describe('updateUser', () => {
+        it('deberia permitir a un PROFESSOR actualizar un usuario', async () => {
+            const session: any = { userId: 'admin1' };
+            const mockUser = { email: 'updated@test.com' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(service, 'updateUser').mockResolvedValue(mockUser as any);
+
+            const result = await controller.updateUser(session, 'u1', mockUser);
+            expect(result).toEqual({ user: mockUser });
+        });
+    });
+
+    describe('deleteUser', () => {
+        it('deberia permitir a un PROFESSOR eliminar un usuario', async () => {
+            const session: any = { userId: 'admin1' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(service, 'deleteUser').mockResolvedValue(undefined);
+
+            const result = await controller.deleteUser(session, 'u1');
+            expect(result).toEqual({ success: true });
         });
     });
 });

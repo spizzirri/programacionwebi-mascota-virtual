@@ -1,5 +1,3 @@
-// Profile and history page logic
-
 import { api, Answer } from '../api';
 import { DOMManager } from '../dom-manager';
 
@@ -7,6 +5,7 @@ export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;
     private profileStreak: HTMLElement;
     private historyContainer: HTMLElement;
+    private targetUserId: string | null = null;
 
     constructor() {
         super();
@@ -18,13 +17,20 @@ export class ProfileView extends DOMManager {
         this.loadHistory();
     }
 
+    public setParams(params: Record<string, string>): void {
+        if (params.id) {
+            this.targetUserId = params.id;
+            this.refresh();
+        }
+    }
+
     destroy(): void {
         super.destroy();
     }
 
     private async loadProfile(): Promise<void> {
         try {
-            const profile = await api.getProfile();
+            const profile = await api.getProfile(this.targetUserId || undefined);
             this.setTextContent(this.profileEmail, profile.email);
             this.setTextContent(this.profileStreak, profile.streak.toString());
         } catch (error) {
@@ -35,7 +41,7 @@ export class ProfileView extends DOMManager {
 
     private async loadHistory(): Promise<void> {
         try {
-            const history = await api.getHistory(50);
+            const history = await api.getHistory(50, this.targetUserId || undefined);
             this.renderHistory(history);
         } catch (error) {
             this.clearContainer(this.historyContainer);

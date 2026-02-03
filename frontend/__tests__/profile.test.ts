@@ -18,7 +18,7 @@ describe('ProfileManager', () => {
     });
 
     it('deberia cargar el perfil y el historial al iniciar', async () => {
-        const mockProfile = { email: 'test@test.com', streak: 10, _id: '', createdAt: '' };
+        const mockProfile: apiModule.User = { email: 'test@test.com', streak: 10, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null };
         const mockHistory: apiModule.Answer[] = [
             {
                 _id: '',
@@ -40,7 +40,7 @@ describe('ProfileManager', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(profileSpy).toHaveBeenCalledTimes(1);
-        expect(historySpy).toHaveBeenCalledWith(50);
+        expect(historySpy).toHaveBeenCalledWith(50, undefined);
 
         const email = document.getElementById('profile-email');
         const streak = document.getElementById('profile-streak');
@@ -66,7 +66,7 @@ describe('ProfileManager', () => {
     });
 
     it('deberia manejar error al cargar historial', async () => {
-        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
         jest.spyOn(apiModule.api, 'getHistory').mockRejectedValue(new Error('History error'));
 
         new ProfileView();
@@ -77,7 +77,7 @@ describe('ProfileManager', () => {
     });
 
     it('deberia mostrar mensaje cuando no hay historial', async () => {
-        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
 
         new ProfileView();
@@ -102,7 +102,7 @@ describe('ProfileManager', () => {
             }
         ];
 
-        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '' });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue(mockHistory);
 
         new ProfileView();

@@ -16,6 +16,7 @@ describe('UsersService', () => {
                     useValue: {
                         findUserById: jest.fn(),
                         getAnswersByUserId: jest.fn(),
+                        findAllUsers: jest.fn(),
                     },
                 },
             ],
@@ -76,6 +77,25 @@ describe('UsersService', () => {
             await service.getHistory('user1');
 
             expect(databaseService.getAnswersByUserId).toHaveBeenCalledWith('user1', 50);
+        });
+    });
+
+    describe('getAllUsers', () => {
+        it('deberia retornar todos los usuarios sin contraseña', async () => {
+            const mockUsers = [
+                { email: 'u1@t.com', password: 'pw1', toObject: function () { return this; } },
+                { email: 'u2@t.com', password: 'pw2', toObject: function () { return this; } }
+            ];
+
+            jest.spyOn(databaseService, 'findAllUsers').mockResolvedValue(mockUsers as any);
+
+            const result = await service.getAllUsers();
+
+            expect(result).toHaveLength(2);
+            expect(result[0].email).toBe('u1@t.com');
+            expect((result[0] as any).password).toBeUndefined();
+            expect(result[1].email).toBe('u2@t.com');
+            expect((result[1] as any).password).toBeUndefined();
         });
     });
 });

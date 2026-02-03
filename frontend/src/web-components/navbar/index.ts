@@ -1,4 +1,5 @@
 import { api } from "../../api";
+import { session } from "../../session";
 
 export class AppNavbar extends HTMLElement {
     constructor() {
@@ -7,9 +8,14 @@ export class AppNavbar extends HTMLElement {
 
     connectedCallback() {
         const currentView = this.getAttribute("view") || "game";
-        const title = currentView === "profile" ? "📊 Mi Perfil" : "🎮 Tamagotchi HTML";
+        const title = currentView === "profile" ? "📊 Mi Perfil" :
+            currentView === "admin" ? "👥 Admin de Usuarios" : "🎮 Tamagotchi HTML";
         const btnText = currentView === "profile" ? "Volver al Juego" : "Mi Perfil";
         const navigateTo = currentView === "profile" ? "/game" : "/profile";
+
+        const user = session.getUser();
+        const showAdminBtn = user?.role === 'PROFESSOR';
+        const isAdminView = currentView === 'admin';
 
         this.innerHTML = `
             <nav class="navbar">
@@ -29,12 +35,23 @@ export class AppNavbar extends HTMLElement {
                     ` : ''}
 
                     <div class="nav-actions">
+                        ${showAdminBtn ? `
+                            <button id="admin-nav-btn" class="btn-secondary" ${isAdminView ? 'disabled' : ''}>
+                                ${isAdminView ? 'Admin Activo' : 'Admin de Usuarios'}
+                            </button>
+                        ` : ''}
                         <button id="nav-action-btn" class="btn-secondary">${btnText}</button>
                         <button id="logout-btn" class="btn-secondary">Salir</button>
                     </div>
                 </div>
             </nav>
         `;
+
+        this.querySelector("#admin-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", {
+                detail: { view: "/admin-users" }
+            }));
+        });
 
         this.querySelector("#nav-action-btn")?.addEventListener("click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", {

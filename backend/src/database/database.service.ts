@@ -62,4 +62,16 @@ export class DatabaseService {
             .limit(limit)
             .exec();
     }
+
+    async findAllUsers(): Promise<UserDocument[]> {
+        return this.userModel.find().exec();
+    }
+
+    async deleteUser(id: string): Promise<void> {
+        await this.userModel.findByIdAndDelete(id).exec();
+    }
+
+    async updateUser(id: string, data: Partial<User>): Promise<UserDocument | null> {
+        return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+    }
 }

@@ -5,7 +5,11 @@ const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VIT
 interface User {
     _id: string;
     email: string;
+    role: 'PROFESSOR' | 'STUDENT';
     streak: number;
+    currentQuestionId: string | null;
+    lastQuestionAssignedAt: string | null;
+    password?: string;
     createdAt: string;
 }
 
@@ -102,16 +106,43 @@ export const api = {
     },
 
     // Users endpoints
-    async getProfile(): Promise<User> {
-        const data = await apiRequest('/users/profile');
+    async getProfile(userId?: string): Promise<User> {
+        const endpoint = userId ? `/users/${userId}/profile` : '/users/profile';
+        const data = await apiRequest(endpoint);
         return data.profile!;
     },
 
-    async getHistory(limit = 50): Promise<Answer[]> {
-        const data = await apiRequest(
-            `/users/history?limit=${limit}`
-        );
+    async getHistory(limit = 50, userId?: string): Promise<Answer[]> {
+        const endpoint = userId
+            ? `/users/${userId}/history?limit=${limit}`
+            : `/users/history?limit=${limit}`;
+        const data = await apiRequest(endpoint);
         return data.history!;
+    },
+
+    async getAllUsers(): Promise<(User & { currentQuestionText: string })[]> {
+        const data = await apiRequest('/users');
+        return data.users!;
+    },
+
+    async createUser(user: Partial<User>): Promise<User> {
+        const data = await apiRequest('/users', {
+            method: 'POST',
+            body: JSON.stringify(user),
+        });
+        return data.user!;
+    },
+
+    async updateUser(id: string, user: Partial<User>): Promise<User> {
+        const data = await apiRequest(`/users/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(user),
+        });
+        return data.user!;
+    },
+
+    async deleteUser(id: string): Promise<void> {
+        await apiRequest(`/users/${id}`, { method: 'DELETE' });
     },
 };
 

@@ -1,13 +1,15 @@
 import gameView from './views/game.html?raw';
 import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
+import adminUsersView from './views/admin-users.html?raw';
 import noAuthView from './views/401.html?raw';
 import { AuthView } from './views/auth';
 import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
+import { AdminUsersView } from './views/admin-users';
 import { session } from './session';
 
-let currentView: (AuthView | GameView | ProfileView)[] = [];
+let currentView: (AuthView | GameView | ProfileView | AdminUsersView)[] = [];
 
 const routes = {
     '/': {
@@ -24,12 +26,27 @@ const routes = {
         html: profileView,
         init: [() => new ProfileView()],
         guard: () => session.isAuthenticated()
+    },
+    '/admin-users': {
+        html: adminUsersView,
+        init: [() => new AdminUsersView()],
+        guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
     }
 };
 
 async function navigateTo(path: string) {
     const app = document.getElementById('app');
-    const route = routes[path as keyof typeof routes];
+
+    let route = routes[path as keyof typeof routes];
+    let params: Record<string, string> = {};
+
+    if (!route) {
+        const profileMatch = path.match(/^\/profile\/([^/]+)$/);
+        if (profileMatch) {
+            route = routes['/profile'];
+            params.id = profileMatch[1];
+        }
+    }
 
     currentView.forEach(view => {
         if (view.destroy) {
@@ -47,6 +64,9 @@ async function navigateTo(path: string) {
             if (route.init) {
                 route.init.forEach(f => {
                     const view = f();
+                    if ((view as any).setParams) {
+                        (view as any).setParams(params);
+                    }
                     currentView.push(view);
                 });
             }

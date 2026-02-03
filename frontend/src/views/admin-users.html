@@ -1,0 +1,81 @@
+<div class="profile-container">
+    <app-navbar view="admin"></app-navbar>
+
+    <main class="profile-main">
+        <section class="profile-card">
+            <div class="profile-header">
+                <div class="header-with-action">
+                    <div>
+                        <h1>👥 Administración de Usuarios</h1>
+                        <p class="profile-subtitle">Gestiona los usuarios de la plataforma</p>
+                    </div>
+                    <button id="add-user-btn" class="btn-primary">➕ Agregar Usuario</button>
+                </div>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Racha</th>
+                            <th>Pregunta Actual</th>
+                            <th>Fecha Asignación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr>
+                            <td colspan="6" class="loading">Cargando usuarios...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="user-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">Agregar Usuario</h2>
+            <form id="user-form">
+                <input type="hidden" id="user-id">
+                <div class="form-group">
+                    <label for="user-email">Email</label>
+                    <input type="email" id="user-email" required placeholder="email@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="user-password">Contraseña (vacío para no cambiar en edición)</label>
+                    <input type="password" id="user-password" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Rol</label>
+                    <select id="user-role" required>
+                        <option value="STUDENT">Estudiante</option>
+                        <option value="PROFESSOR">Profesor</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="close-modal" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Confirmar Eliminación</h2>
+            <p>¿Estás seguro de que deseas eliminar al usuario <span id="delete-user-email"
+                    style="font-weight: bold;"></span>?</p>
+            <p style="color: var(--accent-error); font-size: 0.9rem; margin-top: 0.5rem;">Esta acción no se puede
+                deshacer.</p>
+            <div class="modal-actions">
+                <button id="close-delete-modal" class="btn-secondary">Cancelar</button>
+                <button id="confirm-delete" class="btn-primary"
+                    style="background: var(--accent-error);">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
