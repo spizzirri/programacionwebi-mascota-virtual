@@ -10,7 +10,7 @@ export class AppNavbar extends HTMLElement {
         const currentView = this.getAttribute("view") || "game";
         const title = currentView === "profile" ? "📊 Mi Perfil" :
             currentView === "admin" ? "👥 Admin de Usuarios" : "🎮 Tamagotchi HTML";
-        const btnText = currentView === "profile" ? "Volver al Juego" : "Mi Perfil";
+        const btnText = currentView !== "game" ? "Volver al Juego" : "Mi Perfil";
         const navigateTo = currentView === "profile" ? "/game" : "/profile";
 
         const user = session.getUser();
