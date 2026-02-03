@@ -1,5 +1,3 @@
-// Game logic - questions, answers, and Tamagotchi interaction
-
 import { api, Question } from '../api';
 import { DOMManager } from '../dom-manager';
 import { Tamagotchi } from '../tamagotchi';
@@ -57,46 +55,47 @@ export class GameView extends DOMManager {
     }
 
     private async loadQuestion(): Promise<void> {
-        // Prevent concurrent question loading
         if (this.isLoadingQuestion) {
             console.log('Already loading a question, ignoring duplicate request');
             return;
         }
 
-        // Set loading flag and disable button immediately
         this.isLoadingQuestion = true;
         this.nextQuestionButton.disabled = true;
 
         try {
-            // Reset UI
             this.addClass(this.feedbackSection, 'hidden');
             this.removeClass(this.feedbackSection, 'correct');
             this.removeClass(this.feedbackSection, 'partial');
             this.removeClass(this.feedbackSection, 'incorrect');
 
+            const answerSection = this.getElementSafe<HTMLElement>('.answer-section');
+            this.removeClass(answerSection, 'hidden');
+
             this.answerInput.value = '';
             this.answerInput.disabled = false;
             this.tamagotchi.setEmotion('neutral');
 
-            // Load new question
-            const newQuestion = await api.getRandomQuestion();
+            const response = await api.getRandomQuestion();
 
-            // Only update currentQuestion after successful load
-            // This ensures currentQuestion always matches what's on screen
-            this.currentQuestion = newQuestion;
+            if (response.hasAnswered) {
+                this.currentQuestion = response.question;
+                this.setTextContent(this.questionText, 'Ya has respondido la pregunta del día, vuelve mañana');
+                this.addClass(answerSection, 'hidden');
+                this.nextQuestionButton.disabled = true;
+                return;
+            }
+
+            this.currentQuestion = response.question;
             this.setTextContent(this.questionText, this.currentQuestion.text);
 
-            // Re-enable submit button only after question is loaded
             this.submitButton.disabled = false;
         } catch (error) {
             this.setTextContent(this.questionText, 'Error al cargar la pregunta. Por favor, intenta de nuevo.');
-            // Re-enable submit button even on error
             this.submitButton.disabled = false;
         } finally {
-            // Always reset loading flag
             this.isLoadingQuestion = false;
         }
-        // Note: nextQuestionButton stays disabled until user submits an answer
     }
 
     private async handleSubmitAnswer(): Promise<void> {
@@ -110,7 +109,6 @@ export class GameView extends DOMManager {
             return;
         }
 
-        // Disable input while processing
         this.answerInput.disabled = true;
         this.submitButton.disabled = true;
         this.setTextContent(this.submitButton, 'Validando...');
@@ -122,11 +120,9 @@ export class GameView extends DOMManager {
                 userAnswer
             );
 
-            // Update streak
             this.currentStreak = result.newStreak;
             this.updateStreakDisplay(result.newStreak);
 
-            // Update Tamagotchi emotion
             if (result.rating === 'correct') {
                 this.tamagotchi.setEmotion('happy');
                 this.addClass(this.feedbackSection, 'correct');
@@ -138,14 +134,10 @@ export class GameView extends DOMManager {
                 this.addClass(this.feedbackSection, 'incorrect');
             }
 
-            // Show feedback
             this.setTextContent(this.feedbackText, result.feedback);
             this.removeClass(this.feedbackSection, 'hidden');
             this.setTextContent(this.submitButton, 'Enviar Respuesta');
-
-            // Enable next question button after feedback is shown
             this.nextQuestionButton.disabled = false;
-            // Keep submit button disabled to prevent resubmission
         } catch (error) {
             alert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
             this.answerInput.disabled = false;
@@ -157,9 +149,7 @@ export class GameView extends DOMManager {
     private updateStreakDisplay(streak: number): void {
         this.streakNumber.textContent = streak.toString();
 
-        // Add animation
         this.removeClass(this.streakDisplay, 'streak-updated');
-        // Force reflow to restart animation
         void this.streakDisplay.offsetWidth;
         this.addClass(this.streakDisplay, 'streak-updated');
     }

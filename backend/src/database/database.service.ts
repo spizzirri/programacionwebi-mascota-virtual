@@ -63,6 +63,22 @@ export class DatabaseService {
             .exec();
     }
 
+    async getAnswerForQuestionToday(userId: string, questionId: string): Promise<AnswerDocument | null> {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        return this.answerModel.findOne({
+            userId,
+            questionId,
+            timestamp: {
+                $gte: today,
+                $lt: tomorrow,
+            },
+        }).exec();
+    }
+
     async findAllUsers(): Promise<UserDocument[]> {
         return this.userModel.find().exec();
     }

@@ -23,29 +23,32 @@ export class QuestionsService implements OnModuleInit {
         }
     }
 
-    async getRandomQuestion(userId: string): Promise<Question> {
+    async getRandomQuestion(userId: string): Promise<{ question: Question; hasAnswered: boolean }> {
         const user = await this.db.findUserById(userId);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        let currentQuestion: Question | null = null;
 
         if (user?.currentQuestionId && user?.lastQuestionAssignedAt) {
             const assignmentDate = new Date(user.lastQuestionAssignedAt);
             assignmentDate.setHours(0, 0, 0, 0);
 
             if (assignmentDate.getTime() === today.getTime()) {
-                const existingQuestion = await this.db.getQuestionById(user.currentQuestionId);
-                if (existingQuestion) {
-                    return existingQuestion;
-                }
+                currentQuestion = await this.db.getQuestionById(user.currentQuestionId);
             }
         }
 
-        const questions = await this.db.getAllQuestions();
-        const randomIndex = Math.floor(Math.random() * questions.length);
-        const question = questions[randomIndex];
+        if (!currentQuestion) {
+            const questions = await this.db.getAllQuestions();
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            currentQuestion = questions[randomIndex];
 
-        await this.db.assignQuestionToUser(userId, (question as any)._id.toString());
+            await this.db.assignQuestionToUser(userId, (currentQuestion as any)._id.toString());
+        }
 
-        return question;
+        const hasAnswered = !!(await this.db.getAnswerForQuestionToday(userId, (currentQuestion as any)._id.toString()));
+
+        return { question: currentQuestion, hasAnswered };
     }
 }

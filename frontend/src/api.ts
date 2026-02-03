@@ -79,9 +79,9 @@ export const api = {
     },
 
     // Questions endpoints
-    async getRandomQuestion(): Promise<Question> {
+    async getRandomQuestion(): Promise<{ question: Question; hasAnswered: boolean }> {
         const data = await apiRequest('/questions/random');
-        return data.question!;
+        return data;
     },
 
     // Answers endpoints

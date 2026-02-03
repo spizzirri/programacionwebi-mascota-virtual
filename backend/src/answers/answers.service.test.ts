@@ -26,6 +26,7 @@ describe('AnswersService', () => {
                         updateUserStreak: jest.fn(),
                         createAnswer: jest.fn(),
                         getAnswersByUserId: jest.fn(),
+                        getAnswerForQuestionToday: jest.fn(),
                     },
                 },
             ],
@@ -36,12 +37,20 @@ describe('AnswersService', () => {
     });
 
     describe('submitAnswer', () => {
+        it('deberia lanzar una excepcion si el usuario ya respondio hoy', async () => {
+            (databaseService.getAnswerForQuestionToday as any).mockResolvedValue({ _id: 'a1' });
+
+            await expect(service.submitAnswer('user123', 'q1', 'Question?', 'Answer'))
+                .rejects.toThrow('Ya has respondido la pregunta del día, vuelve mañana');
+        });
+
         it('deberia lanzar una excepcion si el usuario no es encontrado', async () => {
             jest.spyOn(service, 'validateAnswer').mockResolvedValue({
                 rating: 'correct',
                 feedback: 'Good job'
             });
 
+            (databaseService.getAnswerForQuestionToday as any).mockResolvedValue(null);
             (databaseService.findUserById as any).mockResolvedValue(null);
 
             await expect(service.submitAnswer('user123', 'q1', 'Question?', 'Answer')).rejects.toThrow('User not found');
@@ -55,6 +64,7 @@ describe('AnswersService', () => {
 
             const mockUser = { _id: 'user123', email: 'test@test.com', password: 'pwd', streak: 5, createdAt: new Date() };
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
             const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
             const createAnswerSpy = jest.spyOn(databaseService, 'createAnswer').mockResolvedValue({
                 userId: 'user123',

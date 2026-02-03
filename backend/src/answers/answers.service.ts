@@ -91,6 +91,11 @@ export class AnswersService {
         questionText: string,
         userAnswer: string,
     ): Promise<SubmitAnswerResult> {
+        const existingAnswer = await this.db.getAnswerForQuestionToday(userId, questionId);
+        if (existingAnswer) {
+            throw new Error('Ya has respondido la pregunta del día, vuelve mañana');
+        }
+
         const validation = await this.validateAnswer(questionText, userAnswer);
         const user = await this.db.findUserById(userId);
         if (!user) {
