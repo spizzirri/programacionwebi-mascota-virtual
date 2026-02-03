@@ -51,13 +51,16 @@ describe('GameManager', () => {
         };
 
         const mockProfile = {
+            _id: 'user123',
             email: 'test@test.com',
+            role: 'STUDENT' as const,
             streak: 5,
-            _id: '',
-            createdAt: ''
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            createdAt: new Date().toISOString()
         };
 
-        const questionSpy = jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue(mockQuestion);
+        const questionSpy = jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
         const profileSpy = jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);
 
         new GameView();
@@ -77,10 +80,14 @@ describe('GameManager', () => {
     it('deberia manejar el error al cargar la pregunta', async () => {
         jest.spyOn(apiModule.api, 'getRandomQuestion').mockRejectedValue(new Error('Network error'));
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({
-            email: 'test', streak: 0,
-            _id: '',
+            _id: '123',
+            email: 'test',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
             createdAt: ''
-        });
+        } as any);
 
         new GameView();
 
@@ -91,12 +98,17 @@ describe('GameManager', () => {
     });
 
     it('deberia mostrar alerta si se intenta enviar respuesta vacia', async () => {
-        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ _id: '1', text: 'Q', topic: 'Topic' });
+        const mockQuestion = { _id: '1', text: 'Q', topic: 'Topic' };
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({
-            email: 'test', streak: 0,
-            _id: '',
+            _id: '123',
+            email: 'test',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
             createdAt: ''
-        });
+        } as any);
 
         new GameView();
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -112,12 +124,16 @@ describe('GameManager', () => {
 
     it('deberia enviar la respuesta y actualizar la UI cuando es correcta', async () => {
         const mockQuestion = { _id: 'q1', text: 'Question', topic: 'Topic' };
-        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue(mockQuestion);
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({
-            email: 'test', streak: 0,
-            _id: '',
+            _id: '123',
+            email: 'test',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
             createdAt: ''
-        });
+        } as any);
 
         const mockResponse: {
             rating: 'correct' | 'partial' | 'incorrect';
@@ -150,13 +166,17 @@ describe('GameManager', () => {
     });
 
     it('deberia manejar errores al enviar respuesta', async () => {
-        const mockQuestion = { _id: 'q1', text: 'Question', topic: 'Topic', options: [], correctAnswer: 'Answer' };
-        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue(mockQuestion);
+        const mockQuestion = { _id: 'q1', text: 'Question', topic: 'Topic' };
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({
-            email: 'test', streak: 0,
-            _id: '',
+            _id: '123',
+            email: 'test',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
             createdAt: ''
-        });
+        } as any);
 
         jest.spyOn(apiModule.api, 'submitAnswer').mockRejectedValue(new Error('Submit error'));
 

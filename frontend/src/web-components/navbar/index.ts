@@ -11,7 +11,7 @@ export class AppNavbar extends HTMLElement {
         const title = currentView === "profile" ? "📊 Mi Perfil" :
             currentView === "admin" ? "👥 Admin de Usuarios" : "🎮 Tamagotchi HTML";
         const btnText = currentView !== "game" ? "Volver al Juego" : "Mi Perfil";
-        const navigateTo = currentView === "profile" ? "/game" : "/profile";
+        const navigateTo = currentView !== "game" ? "/game" : "/profile";
 
         const user = session.getUser();
         const showAdminBtn = user?.role === 'PROFESSOR';

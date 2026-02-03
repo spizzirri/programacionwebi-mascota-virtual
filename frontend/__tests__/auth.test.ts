@@ -51,6 +51,9 @@ describe('Login', () => {
       _id: '123',
       email: testEmail,
       streak: 0,
+      role: 'STUDENT' as const,
+      currentQuestionId: null,
+      lastQuestionAssignedAt: null,
       createdAt: new Date().toISOString(),
     };
 
@@ -164,6 +167,9 @@ describe('Register', () => {
       _id: '456',
       email: testEmail,
       streak: 0,
+      role: 'STUDENT' as const,
+      currentQuestionId: null,
+      lastQuestionAssignedAt: null,
       createdAt: new Date().toISOString(),
     };
 
@@ -203,6 +209,9 @@ describe('Register', () => {
       _id: '789',
       email: testEmail,
       streak: 0,
+      role: 'PROFESSOR' as const,
+      currentQuestionId: null,
+      lastQuestionAssignedAt: null,
       createdAt: new Date().toISOString(),
     };
 

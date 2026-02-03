@@ -29,12 +29,13 @@ describe('QuestionsController', () => {
         it('deberia retornar una pregunta si el usuario esta autenticado', async () => {
             const session: any = { userId: 'user123' };
             const mockQuestion = { _id: '1', text: 'Question?', topic: 'HTML' };
+            const mockResponse = { question: mockQuestion, hasAnswered: false };
 
-            jest.spyOn(service, 'getRandomQuestion').mockResolvedValue(mockQuestion);
+            jest.spyOn(service, 'getRandomQuestion').mockResolvedValue(mockResponse as any);
 
             const result = await controller.getRandomQuestion(session);
 
-            expect(result).toEqual({ question: mockQuestion });
+            expect(result).toEqual(mockResponse);
             expect(service.getRandomQuestion).toHaveBeenCalled();
         });
 

@@ -17,6 +17,10 @@ describe('UsersService', () => {
                         findUserById: jest.fn(),
                         getAnswersByUserId: jest.fn(),
                         findAllUsers: jest.fn(),
+                        getAllQuestions: jest.fn(),
+                        createUser: jest.fn(),
+                        updateUser: jest.fn(),
+                        deleteUser: jest.fn(),
                     },
                 },
             ],
@@ -81,21 +85,46 @@ describe('UsersService', () => {
     });
 
     describe('getAllUsers', () => {
-        it('deberia retornar todos los usuarios sin contraseña', async () => {
+        it('deberia retornar todos los usuarios sin contraseña y con el texto de la pregunta actual', async () => {
             const mockUsers = [
-                { email: 'u1@t.com', password: 'pw1', toObject: function () { return this; } },
-                { email: 'u2@t.com', password: 'pw2', toObject: function () { return this; } }
+                { _id: 'u1', email: 'u1@t.com', password: 'pw1', currentQuestionId: 'q1', toObject: function () { return this; } },
+                { _id: 'u2', email: 'u2@t.com', password: 'pw2', toObject: function () { return this; } }
+            ];
+            const mockQuestions = [
+                { _id: 'q1', text: 'Question 1' }
             ];
 
             jest.spyOn(databaseService, 'findAllUsers').mockResolvedValue(mockUsers as any);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions as any);
 
             const result = await service.getAllUsers();
 
             expect(result).toHaveLength(2);
             expect(result[0].email).toBe('u1@t.com');
+            expect(result[0].currentQuestionText).toBe('Question 1');
             expect((result[0] as any).password).toBeUndefined();
             expect(result[1].email).toBe('u2@t.com');
+            expect(result[1].currentQuestionText).toBe('-');
             expect((result[1] as any).password).toBeUndefined();
+        });
+    });
+
+    describe('user management', () => {
+        it('deberia llamar a createUser', async () => {
+            const data = { email: 'new@t.com', password: '123' };
+            await service.createUser(data);
+            expect(databaseService.createUser).toHaveBeenCalled();
+        });
+
+        it('deberia llamar a updateUser', async () => {
+            const data = { email: 'upd@t.com' };
+            await service.updateUser('1', data);
+            expect(databaseService.updateUser).toHaveBeenCalledWith('1', data);
+        });
+
+        it('deberia llamar a deleteUser', async () => {
+            await service.deleteUser('1');
+            expect(databaseService.deleteUser).toHaveBeenCalledWith('1');
         });
     });
 });
