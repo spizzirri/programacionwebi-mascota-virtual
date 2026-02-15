@@ -7,7 +7,6 @@
     <section class="auth-container">
         <nav class="auth-tabs">
             <button id="login-tab" class="tab-button active">Iniciar Sesión</button>
-            <button id="register-tab" class="tab-button">Registrarse</button>
         </nav>
 
         <article id="forms-container"></article>
@@ -29,24 +28,5 @@
         </form>
     </template>
 
-    <template id="register-form-template">
-        <form id="register-form" class="register-form active">
-            <label class="form-group" for="register-email">Email
-                <input type="email" id="register-email" required placeholder="tu@email.com">
-            </label>
-            <label class="form-group" for="register-password">Contraseña
-                <input type="password" id="register-password" required placeholder="••••••••">
-            </label>
-            <section class="radio-group">
-                <label>
-                    <input type="radio" name="role" value="STUDENT" checked> Estudiante
-                </label>
-                <label>
-                    <input type="radio" name="role" value="PROFESSOR"> Profesor
-                </label>
-            </section>
-            <button type="submit" id="register-button" class="btn-primary">Crear Cuenta</button>
-            <p id="register-error" class="error-message"></p>
-        </form>
-    </template>
+
 </main>
