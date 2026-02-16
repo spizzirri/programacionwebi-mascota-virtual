@@ -8,14 +8,15 @@ export class QuestionsService implements OnModuleInit {
     constructor(private readonly db: DatabaseService) { }
 
     async onModuleInit() {
-        // Seed questions on startup
-        await this.seedQuestions();
+        if (process.env.USE_IN_MEMORY_DB === 'true') {
+            await this.seedQuestions();
+        }
     }
 
-    private async seedQuestions() {
+    public async seedQuestions() {
         const existingQuestions = await this.db.getAllQuestions();
         if (existingQuestions.length > 0) {
-            return; // Already seeded
+            return;
         }
 
         for (const question of questionsData) {

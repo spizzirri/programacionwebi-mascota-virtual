@@ -5,6 +5,8 @@ import { User, UserSchema } from './schemas/user.schema';
 import { Question, QuestionSchema } from './schemas/question.schema';
 import { Answer, AnswerSchema } from './schemas/answer.schema';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { DatabaseController } from './database.controller';
+import { QuestionsService } from '../questions/questions.service';
 
 @Global()
 @Module({
@@ -32,7 +34,8 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
             { name: Answer.name, schema: AnswerSchema },
         ]),
     ],
-    providers: [DatabaseService],
+    controllers: [DatabaseController],
+    providers: [DatabaseService, QuestionsService],
     exports: [DatabaseService],
 })
 export class DatabaseModule { }

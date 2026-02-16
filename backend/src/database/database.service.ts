@@ -90,4 +90,12 @@ export class DatabaseService {
     async updateUser(id: string, data: Partial<User>): Promise<UserDocument | null> {
         return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
     }
+
+    async updateQuestion(id: string, data: Partial<Question>): Promise<QuestionDocument | null> {
+        return this.questionModel.findByIdAndUpdate(id, data, { new: true }).exec();
+    }
+
+    async deleteQuestion(id: string): Promise<void> {
+        await this.questionModel.findByIdAndDelete(id).exec();
+    }
 }
