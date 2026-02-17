@@ -1,28 +1,29 @@
-/* Import modern font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Import UNLaM Font */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
 
-/* CSS Variables - Design System */
+/* CSS Variables - UNLaM Inspired Design System */
 :root {
-  /* Colors - Vibrant Dark Theme */
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #151b2e;
-  --bg-card: rgba(30, 41, 66, 0.6);
-  --bg-glass: rgba(255, 255, 255, 0.05);
+  /* Colors - Light Theme */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f7f5;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(15, 153, 119, 0.05);
 
-  --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
+  --accent-primary: #0f9977;
+  /* UNLaM Green */
+  --accent-secondary: #0d8063;
   --accent-success: #10b981;
   --accent-warning: #f59e0b;
   --accent-error: #ef4444;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #111111;
+  --text-secondary: #696969;
+  --text-muted: #888888;
 
-  --border-color: rgba(148, 163, 184, 0.1);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --border-color: rgba(15, 153, 119, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -31,10 +32,10 @@
   --spacing-lg: 2rem;
   --spacing-xl: 3rem;
 
-  /* Border Radius */
-  --radius-sm: 0.5rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.5rem;
+  /* Border Radius - Sharp corners like UNLaM */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -50,8 +51,8 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 50%, #0f1729 100%);
+  font-family: 'Open Sans', Arial, sans-serif;
+  background: linear-gradient(135deg, #e8f5f2 0%, #ffffff 100%);
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
@@ -66,8 +67,8 @@ body::before {
   width: 100%;
   height: 100%;
   background:
-    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 20% 30%, rgba(15, 153, 119, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(15, 153, 119, 0.03) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
@@ -232,10 +233,7 @@ body::before {
 .auth-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -447,10 +445,7 @@ body::before {
 
 .nav-content h2 {
   font-size: 1.5rem;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
 }
 
 .nav-actions {
@@ -497,7 +492,7 @@ body::before {
 .streak-number {
   font-size: 40px;
   font-weight: 700;
-  fill: white;
+  fill: var(--text-primary);
 }
 
 .streak-label {
