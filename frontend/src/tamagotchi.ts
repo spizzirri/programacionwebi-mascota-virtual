@@ -23,6 +23,9 @@ export class Tamagotchi {
     private render(): void {
         const svg = this.createSVG();
         this.container.innerHTML = '';
+        this.container.style.display = 'flex';
+        this.container.style.justifyContent = 'center';
+        this.container.style.alignItems = 'center';
         this.container.appendChild(svg);
     }
 
@@ -30,158 +33,106 @@ export class Tamagotchi {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', '0 0 200 200');
         svg.setAttribute('class', 'tamagotchi-svg');
+        svg.setAttribute('width', '300');
+        svg.setAttribute('height', '300');
 
-        // Body
-        const body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        body.setAttribute('cx', '100');
-        body.setAttribute('cy', '110');
-        body.setAttribute('rx', '70');
-        body.setAttribute('ry', '80');
-        body.setAttribute('fill', '#6366f1');
-        svg.appendChild(body);
+        // Main Green Circle
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', '100');
+        bg.setAttribute('cy', '100');
+        bg.setAttribute('r', '95');
+        bg.setAttribute('fill', '#4caf50');
+        svg.appendChild(bg);
 
-        // Head
-        const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        head.setAttribute('cx', '100');
-        head.setAttribute('cy', '60');
-        head.setAttribute('r', '50');
-        head.setAttribute('fill', '#8b5cf6');
-        svg.appendChild(head);
+        // Bird Body (White)
+        const birdGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+        // Head/Body white base
+        const whiteBase = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        whiteBase.setAttribute('d', 'M 35,103 C 35,65 65,35 103,35 C 130,35 155,60 165,85 L 165,105 L 140,105 C 140,125 120,145 95,145 C 70,145 50,125 50,105 L 35,105 Z');
+        whiteBase.setAttribute('fill', 'white');
+        birdGroup.appendChild(whiteBase);
+
+        // Tail/Wing curve (white)
+        const tail = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tail.setAttribute('d', 'M 165,105 A 65,65 0 0,1 100,170 A 65,65 0 0,1 35,105 L 52,105 A 48,48 0 0,0 100,153 A 48,48 0 0,0 148,105 Z');
+        tail.setAttribute('fill', 'white');
+        birdGroup.appendChild(tail);
+
+        // Three green lines on the head
+        for (let i = 0; i < 3; i++) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const offset = (i + 1) * 12;
+            line.setAttribute('d', `M ${95 + offset},41 Q ${140 + offset},45 ${155},${80 + offset}`);
+            line.setAttribute('stroke', '#4caf50');
+            line.setAttribute('stroke-width', '8');
+            line.setAttribute('fill', 'none');
+            line.setAttribute('stroke-linecap', 'round');
+            birdGroup.appendChild(line);
+        }
+
+        svg.appendChild(birdGroup);
 
         // Eyes
-        const leftEye = this.createEye(75, 55);
-        const rightEye = this.createEye(125, 55);
+        const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        leftEye.setAttribute('cx', '75');
+        leftEye.setAttribute('cy', '95');
+        leftEye.setAttribute('r', '7');
+        leftEye.setAttribute('fill', '#1a1a1b');
         svg.appendChild(leftEye);
+
+        const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        rightEye.setAttribute('cx', '115');
+        rightEye.setAttribute('cy', '95');
+        rightEye.setAttribute('r', '7');
+        rightEye.setAttribute('fill', '#1a1a1b');
         svg.appendChild(rightEye);
 
-        // Mouth based on emotion
+        // Mouth
         const mouth = this.createMouth();
         svg.appendChild(mouth);
-
-        // Cheeks (for happy emotion)
-        if (this.currentEmotion === 'happy') {
-            const leftCheek = this.createCheek(60, 70);
-            const rightCheek = this.createCheek(140, 70);
-            svg.appendChild(leftCheek);
-            svg.appendChild(rightCheek);
-        }
-
-        // Tears (for sad emotion)
-        if (this.currentEmotion === 'sad') {
-            const leftTear = this.createTear(70, 75);
-            const rightTear = this.createTear(130, 75);
-            svg.appendChild(leftTear);
-            svg.appendChild(rightTear);
-        }
-
-        // Arms
-        const leftArm = this.createArm(40, 120, -20);
-        const rightArm = this.createArm(160, 120, 20);
-        svg.appendChild(leftArm);
-        svg.appendChild(rightArm);
-
-        // Feet
-        const leftFoot = this.createFoot(70, 180);
-        const rightFoot = this.createFoot(130, 180);
-        svg.appendChild(leftFoot);
-        svg.appendChild(rightFoot);
 
         return svg;
     }
 
-    private createEye(cx: number, cy: number): SVGElement {
-        const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye.setAttribute('cx', cx.toString());
-        eye.setAttribute('cy', cy.toString());
-        eye.setAttribute('r', '8');
-        eye.setAttribute('fill', '#ffffff');
-
-        const pupil = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        pupil.setAttribute('cx', cx.toString());
-        pupil.setAttribute('cy', cy.toString());
-        pupil.setAttribute('r', '4');
-        pupil.setAttribute('fill', '#0a0e1a');
-
-        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        group.appendChild(eye);
-        group.appendChild(pupil);
-
-        return group;
-    }
-
     private createMouth(): SVGElement {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('stroke', '#ffffff');
-        path.setAttribute('stroke-width', '3');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke-linecap', 'round');
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 
-        switch (this.currentEmotion) {
-            case 'happy':
-                // Smile
-                path.setAttribute('d', 'M 75 75 Q 100 90 125 75');
-                break;
-            case 'sad':
-                // Frown
-                path.setAttribute('d', 'M 75 85 Q 100 70 125 85');
-                break;
-            case 'neutral':
-            default:
-                // Straight line
-                path.setAttribute('d', 'M 80 80 L 120 80');
-                break;
+        if (this.currentEmotion === 'happy') {
+            // Open happy mouth
+            const mouth = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            mouth.setAttribute('d', 'M 85,115 Q 100,145 115,115 L 115,115 Q 100,125 85,115 Z');
+            mouth.setAttribute('fill', '#3c2a2e');
+            g.appendChild(mouth);
+
+            // Tongue
+            const tongue = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            tongue.setAttribute('d', 'M 92,130 Q 100,138 108,130');
+            tongue.setAttribute('stroke', '#e91e63');
+            tongue.setAttribute('stroke-width', '4');
+            tongue.setAttribute('fill', 'none');
+            tongue.setAttribute('stroke-linecap', 'round');
+            g.appendChild(tongue);
+        } else if (this.currentEmotion === 'sad') {
+            // Sad mouth (frown)
+            const mouth = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            mouth.setAttribute('d', 'M 85,125 Q 100,110 115,125');
+            mouth.setAttribute('stroke', '#1a1a1b');
+            mouth.setAttribute('stroke-width', '4');
+            mouth.setAttribute('fill', 'none');
+            mouth.setAttribute('stroke-linecap', 'round');
+            g.appendChild(mouth);
+        } else {
+            // Standby/Neutral (slight smile)
+            const mouth = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            mouth.setAttribute('d', 'M 85,115 Q 100,125 115,115');
+            mouth.setAttribute('stroke', '#1a1a1b');
+            mouth.setAttribute('stroke-width', '3');
+            mouth.setAttribute('fill', 'none');
+            mouth.setAttribute('stroke-linecap', 'round');
+            g.appendChild(mouth);
         }
 
-        return path;
-    }
-
-    private createCheek(cx: number, cy: number): SVGElement {
-        const cheek = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        cheek.setAttribute('cx', cx.toString());
-        cheek.setAttribute('cy', cy.toString());
-        cheek.setAttribute('r', '8');
-        cheek.setAttribute('fill', '#ec4899');
-        cheek.setAttribute('opacity', '0.6');
-        return cheek;
-    }
-
-    private createTear(cx: number, cy: number): SVGElement {
-        const tear = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        tear.setAttribute('d', `M ${cx} ${cy} Q ${cx - 2} ${cy + 8} ${cx} ${cy + 12} Q ${cx + 2} ${cy + 8} ${cx} ${cy}`);
-        tear.setAttribute('fill', '#60a5fa');
-        tear.setAttribute('opacity', '0.8');
-
-        // Animate tear
-        const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animateTransform');
-        animate.setAttribute('attributeName', 'transform');
-        animate.setAttribute('type', 'translate');
-        animate.setAttribute('from', '0 0');
-        animate.setAttribute('to', '0 10');
-        animate.setAttribute('dur', '1s');
-        animate.setAttribute('repeatCount', 'indefinite');
-        tear.appendChild(animate);
-
-        return tear;
-    }
-
-    private createArm(cx: number, cy: number, rotation: number): SVGElement {
-        const arm = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        arm.setAttribute('cx', cx.toString());
-        arm.setAttribute('cy', cy.toString());
-        arm.setAttribute('rx', '15');
-        arm.setAttribute('ry', '35');
-        arm.setAttribute('fill', '#6366f1');
-        arm.setAttribute('transform', `rotate(${rotation} ${cx} ${cy})`);
-        return arm;
-    }
-
-    private createFoot(cx: number, cy: number): SVGElement {
-        const foot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        foot.setAttribute('cx', cx.toString());
-        foot.setAttribute('cy', cy.toString());
-        foot.setAttribute('rx', '20');
-        foot.setAttribute('ry', '12');
-        foot.setAttribute('fill', '#8b5cf6');
-        return foot;
+        return g;
     }
 }
