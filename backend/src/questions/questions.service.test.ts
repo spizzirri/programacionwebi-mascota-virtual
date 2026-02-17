@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuestionsService } from "./questions.service";
 import { DatabaseService } from "../database/database.service";
@@ -29,24 +29,42 @@ describe('QuestionsService', () => {
         databaseService = module.get<DatabaseService>(DatabaseService);
     });
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('onModuleInit', () => {
-        it('deberia sembrar preguntas si la base de datos esta vacia', async () => {
+
+        it('deberia sembrar preguntas si la base de datos esta vacia y se levanta la base de datos en memoria', async () => {
             jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
             const createQuestionSpy = jest.spyOn(databaseService, 'createQuestion').mockResolvedValue({} as any);
 
+            jest.replaceProperty(process, 'env', { USE_IN_MEMORY_DB: 'true' });
             await service.onModuleInit();
 
             expect(databaseService.getAllQuestions).toHaveBeenCalled();
             expect(createQuestionSpy).toHaveBeenCalled();
         });
 
-        it('no deberia sembrar preguntas si la base de datos ya tiene preguntas', async () => {
+        it('no deberia sembrar preguntas si la base de datos ya tiene preguntas y se levanta la base de datos en memoria', async () => {
             jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([{ _id: '1', text: 'q1', topic: 't1' }] as any);
             const createQuestionSpy = jest.spyOn(databaseService, 'createQuestion');
 
+            jest.replaceProperty(process, 'env', { USE_IN_MEMORY_DB: 'true' });
             await service.onModuleInit();
 
             expect(databaseService.getAllQuestions).toHaveBeenCalled();
+            expect(createQuestionSpy).not.toHaveBeenCalled();
+        });
+
+        it('no deberia sembrar preguntas si la base de datos esta vacia y no se levanta la base de datos en memoria', async () => {
+            const getAllQuestionsSpy = jest.spyOn(databaseService, 'getAllQuestions');
+            const createQuestionSpy = jest.spyOn(databaseService, 'createQuestion');
+
+            jest.replaceProperty(process, 'env', { USE_IN_MEMORY_DB: 'false' });
+            await service.onModuleInit();
+
+            expect(getAllQuestionsSpy).not.toHaveBeenCalled();
             expect(createQuestionSpy).not.toHaveBeenCalled();
         });
     });
