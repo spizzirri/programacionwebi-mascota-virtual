@@ -9,19 +9,6 @@ interface SessionData {
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-    @Post('register')
-    async register(
-        @Body() body: { email: string; password: string; role: string },
-        @Session() session: SessionData,
-    ) {
-        try {
-            const user = await this.authService.register(body.email, body.password, body.role);
-            session.userId = user._id;
-            return { success: true, user };
-        } catch (error) {
-            throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-        }
-    }
 
     @Post('login')
     async login(

@@ -1,21 +1,27 @@
-# Backend Tamagotchi - Gestión de Preguntas
+# Backend Tamagotchi - Gestión de Peguntas y Usuarios
 
-## Autenticación y Roles
+## Autenticación y Seguridad
 
-La aplicación utiliza dos roles principales: **PROFESSOR** y **STUDENT**. La gestión de preguntas está restringida exclusivamente a usuarios con el rol **PROFESSOR**.
+La aplicación utiliza un modelo de seguridad híbrido para proteger sus recursos:
 
-## Endpoints de Autenticación
+1.  **Vía Web (Sesión):** Utiliza cookies de sesión. Las operaciones sensibles están restringidas a usuarios con el rol **PROFESSOR**.
+2.  **Vía API Directa (API Key):** Para herramientas externas o scripts, se puede utilizar un encabezado `x-api-key` que coincida con la `API_KEY` configurada en el servidor.
 
-### Registrar Usuario
+---
 
-Permite crear una nueva cuenta. Es necesario especificar el rol.
+## Endpoints de Usuarios
 
-**Endpoint:** `POST /auth/register`
+### Registrar / Crear Usuario
 
-**Ejemplo de Petición (Profesor):**
+Permite crear una nueva cuenta. Se requiere privilegios de **PROFESSOR** (vía sesión) o una **API_KEY** válida.
+
+**Endpoint:** `POST /users`
+
+**Ejemplo de Petición (vía API con API Key):**
 ```bash
-curl -X POST http://localhost:3000/auth/register \
+curl -X POST http://localhost:3000/users \
      -H "Content-Type: application/json" \
+     -H "x-api-key: tu_api_key_aqui" \
      -d '{
        "email": "profesor@ejemplo.com",
        "password": "mi-password-seguro",
@@ -23,22 +29,11 @@ curl -X POST http://localhost:3000/auth/register \
      }'
 ```
 
-**Ejemplo de Petición (Estudiante):**
-```bash
-curl -X POST http://localhost:3000/auth/register \
-     -H "Content-Type: application/json" \
-     -d '{
-       "email": "estudiante@ejemplo.com",
-       "password": "password-estudiante",
-       "role": "STUDENT"
-     }'
-```
-
 ---
 
 ### Iniciar Sesión (Login)
 
-Inicia sesión para obtener la cookie de sesión necesaria para otros endpoints.
+Inicia sesión para obtener la cookie de sesión necesaria para navegar por la web.
 
 **Endpoint:** `POST /auth/login`
 
@@ -52,56 +47,36 @@ curl -v -X POST http://localhost:3000/auth/login \
      }'
 ```
 
+**Nota:** El login exitoso devolverá una cabecera `set-cookie: connect.sid=...` que debe usarse en peticiones subsecuentes si no se usa la API Key.
+
 ---
 
-### Cerrar Sesión (Logout)
+### Gestión de Usuarios (ABMC)
 
-Invalida la sesión actual.
+Todos estos endpoints requieren ser **PROFESSOR** (sesión) o enviar la **API_KEY**.
 
-**Endpoint:** `POST /auth/logout`
+- `GET /users`: Listar todos los usuarios.
+- `GET /users/:id/profile`: Ver perfil de un usuario específico.
+- `PATCH /users/:id`: Actualizar datos de un usuario.
+- `DELETE /users/:id`: Eliminar un usuario.
 
-**Ejemplo de Petición:**
+**Ejemplo de Listado (vía Sesión):**
 ```bash
-curl -X POST http://localhost:3000/auth/logout -H "Cookie: connect.sid=..."
+curl http://localhost:3000/users -H "Cookie: connect.sid=..."
 ```
 
 ---
 
-### Obtener Perfil Actual (Me)
+## Resumen de Uso
 
-Retorna la información del usuario autenticado actualmente.
+Todos los endpoints protegidos (Gestión de Usuarios y Preguntas) aceptan **CUALQUIERA** de estas dos formas de autenticación:
 
-**Endpoint:** `GET /auth/me`
+1.  **Cabecera de API Key:** `-H "x-api-key: tu_api_key"`
+2.  **Cookie de Sesión:** `-H "Cookie: connect.sid=..."` (Requiere login previo)
 
-**Ejemplo de Petición:**
-```bash
-curl -X GET http://localhost:3000/auth/me -H "Cookie: connect.sid=..."
-```
+---
 
-## Cómo obtener la Cookie de Autenticación
-
-Para probar estos endpoints con herramientas como `curl`, necesitas obtener la cookie de sesión (`connect.sid`).
-
-1. **Iniciar Sesión:**
-   Realiza una petición al endpoint de login con las credenciales de un usuario con rol **PROFESSOR**.
-
-   ```bash
-   curl -v -X POST http://localhost:3000/auth/login \
-        -H "Content-Type: application/json" \
-        -d '{
-          "email": "profesor@ejemplo.com",
-          "password": "tu-contraseña"
-        }'
-   ```
-
-2. **Extraer la Cookie:**
-   En la respuesta (gracias al flag `-v`), busca la cabecera `set-cookie`. Se verá algo como esto:
-   `set-cookie: connect.sid=s%3A...; Path=/; HttpOnly`
-
-3. **Usar la Cookie:**
-   Copia el valor `connect.sid=...` y úsalo en las siguientes peticiones como una cabecera `Cookie`.
-
-## Endpoints
+## Endpoints de Preguntas
 
 ### Carga Inicial de Preguntas (Seeding)
 
@@ -111,7 +86,7 @@ Carga las preguntas por defecto desde `questions.data.ts` en la base de datos si
 
 **Ejemplo de Petición:**
 ```bash
-curl -X POST http://localhost:3000/database/seed-questions -H "Cookie: connect.sid=..."
+curl -X POST http://localhost:3000/database/seed-questions -H "x-api-key: tu_api_key_aqui"
 ```
 
 **Respuesta:**
@@ -131,7 +106,7 @@ Retorna una lista de todas las preguntas en la base de datos.
 
 **Ejemplo de Petición:**
 ```bash
-curl -G http://localhost:3000/questions -H "Cookie: connect.sid=..."
+curl -G http://localhost:3000/questions -H "x-api-key: tu_api_key_aqui"
 ```
 
 **Respuesta:**
@@ -160,7 +135,7 @@ Crea una nueva pregunta.
 ```bash
 curl -X POST http://localhost:3000/questions \
      -H "Content-Type: application/json" \
-     -H "Cookie: connect.sid=..." \
+     -H "x-api-key: tu_api_key_aqui" \
      -d '{
        "text": "¿Nueva Pregunta?",
        "options": ["A", "B", "C"],
@@ -193,7 +168,7 @@ Actualiza una pregunta existente por su ID.
 ```bash
 curl -X PATCH http://localhost:3000/questions/65c... \
      -H "Content-Type: application/json" \
-     -H "Cookie: connect.sid=..." \
+     -H "x-api-key: tu_api_key_aqui" \
      -d '{
        "text": "¿Texto de la pregunta actualizado?"
      }'
@@ -209,7 +184,7 @@ Elimina una pregunta por su ID.
 
 **Ejemplo de Petición:**
 ```bash
-curl -X DELETE http://localhost:3000/questions/65c... -H "Cookie: connect.sid=..."
+curl -X DELETE http://localhost:3000/questions/65c... -H "x-api-key: tu_api_key_aqui"
 ```
 
 **Respuesta:**

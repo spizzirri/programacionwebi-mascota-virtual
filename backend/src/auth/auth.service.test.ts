@@ -41,65 +41,13 @@ describe('AuthService', () => {
 
         service = module.get<AuthServiceType>(AuthService);
         databaseService = module.get<DatabaseServiceType>(DatabaseService);
+
+        process.env.REGISTRATION_SECRET = 'student-secret';
+        process.env.ADMIN_SECRET = 'admin-secret';
+
         jest.clearAllMocks();
     });
 
-    describe('register', () => {
-        it('deberia lanzar error si el usuario ya existe', async () => {
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                _id: 'existing',
-                email: 'exist@test.com',
-                password: 'hashed',
-                role: 'STUDENT',
-                streak: 0,
-                createdAt: new Date()
-            } as any);
-
-            await expect(service.register('exist@test.com', 'pass', 'STUDENT')).rejects.toThrow('User already exists');
-        });
-
-        it('deberia hashear la contraseña y crear el usuario si no existe', async () => {
-            const now = new Date();
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(null);
-
-            (bcrypt.hash as jest.Mock).mockReturnValue(Promise.resolve('hashed-password'));
-
-            const createdUser = {
-                _id: 'new-user',
-                email: 'new@test.com',
-                password: 'hashed-password',
-                role: 'STUDENT',
-                streak: 0,
-                createdAt: now
-            };
-
-            const createUserSpy = jest.spyOn(databaseService, 'createUser').mockResolvedValue({
-                ...createdUser,
-                toObject: () => createdUser
-            } as any);
-
-            const result = await service.register('new@test.com', 'plain-password', 'STUDENT');
-
-            expect(bcrypt.hash).toHaveBeenCalledWith('plain-password', 10);
-            expect(createUserSpy).toHaveBeenCalledWith({
-                email: 'new@test.com',
-                password: 'hashed-password',
-                role: 'STUDENT',
-                streak: 0,
-                createdAt: expect.any(Date)
-            });
-            expect(result).toEqual({
-                _id: 'new-user',
-                email: 'new@test.com',
-                role: 'STUDENT',
-                streak: 0,
-                createdAt: now
-            });
-            expect((result as any).password).toBeUndefined();
-        });
-    });
 
     describe('login', () => {
         it('deberia lanzar UnauthorizedException si el usuario no existe', async () => {

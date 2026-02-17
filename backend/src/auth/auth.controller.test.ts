@@ -29,33 +29,6 @@ describe('AuthController', () => {
         authService = module.get<AuthService>(AuthService);
     });
 
-    describe('register', () => {
-        it('deberia registrar un usuario correctamente y establecer la sesión', async () => {
-            const body = { email: 'test@test.com', password: 'password123', role: 'STUDENT' };
-            const session: any = {};
-            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
-
-            jest.spyOn(authService, 'register').mockResolvedValue(mockUser);
-
-            const result = await controller.register(body, session);
-
-            expect(result).toEqual({ success: true, user: mockUser });
-            expect(session.userId).toBe('user123');
-            expect(authService.register).toHaveBeenCalledWith(body.email, body.password, body.role);
-        });
-
-        it('deberia lanzar HttpException con BAD_REQUEST si el servicio falla (ej. usuario ya existe)', async () => {
-            const body = { email: 'existing@test.com', password: 'password123', role: 'STUDENT' };
-            const session: any = {};
-
-            jest.spyOn(authService, 'register').mockRejectedValue(new Error('User already exists'));
-
-            await expect(controller.register(body, session)).rejects.toThrow(
-                new HttpException('User already exists', HttpStatus.BAD_REQUEST)
-            );
-            expect(session.userId).toBeUndefined();
-        });
-    });
 
     describe('login', () => {
         it('deberia loguear un usuario correctamente y establecer la sesión', async () => {

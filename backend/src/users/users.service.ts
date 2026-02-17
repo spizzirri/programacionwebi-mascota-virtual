@@ -37,6 +37,10 @@ export class UsersService {
     }
 
     async createUser(data: any) {
+        if (!data.role) {
+            throw new Error('Role is required');
+        }
+
         if (data.password) {
             data.password = await hash(data.password, 10);
         }

@@ -111,35 +111,63 @@ describe('UsersController', () => {
             expect(service.getAllUsers).toHaveBeenCalled();
         });
 
-        it('deberia lanzar HttpException FORBIDDEN si el usuario no es PROFESSOR', async () => {
+        it('deberia retornar todos los usuarios si se provee un API KEY valido', async () => {
+            const session: any = {};
+            const mockUsers = [{ email: 'user1@test.com' }];
+            process.env.API_KEY = 'valid-key';
+
+            jest.spyOn(service, 'getAllUsers').mockResolvedValue(mockUsers as any);
+
+            const result = await controller.getAllUsers(session, 'valid-key');
+
+            expect(result).toEqual({ users: mockUsers });
+        });
+
+        it('deberia lanzar HttpException FORBIDDEN si el usuario no es PROFESSOR y no hay API KEY', async () => {
             const session: any = { userId: 'student1' };
             const mockStudent = { role: 'STUDENT' };
 
             jest.spyOn(service, 'getProfile').mockResolvedValue(mockStudent as any);
 
             await expect(controller.getAllUsers(session)).rejects.toThrow(
-                new HttpException('Forbidden: Only professors can access this resource', HttpStatus.FORBIDDEN)
+                new HttpException('Forbidden: Invalid session or API Key', HttpStatus.FORBIDDEN)
             );
         });
 
-        it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en sesion', async () => {
+        it('deberia lanzar HttpException FORBIDDEN si no hay userId en sesion ni API KEY', async () => {
             const session: any = {};
 
             await expect(controller.getAllUsers(session)).rejects.toThrow(
-                new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
+                new HttpException('Forbidden: Invalid session or API Key', HttpStatus.FORBIDDEN)
             );
         });
     });
 
     describe('createUser', () => {
-        it('deberia permitir a un PROFESSOR crear un usuario', async () => {
+        it('deberia permitir crear un usuario si es PROFESSOR', async () => {
             const session: any = { userId: 'admin1' };
+            const body = { email: 'new@test.com', password: '123', role: 'STUDENT' };
             const mockUser = { email: 'new@test.com' };
+
             jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
             jest.spyOn(service, 'createUser').mockResolvedValue(mockUser as any);
 
-            const result = await controller.createUser(session, mockUser);
+            const result = await controller.createUser(body, session);
             expect(result).toEqual({ user: mockUser });
+            expect(service.createUser).toHaveBeenCalledWith(body);
+        });
+
+        it('deberia permitir crear un usuario con API KEY', async () => {
+            const body = { email: 'new@test.com', role: 'STUDENT' };
+            process.env.API_KEY = 'test-key';
+
+            await controller.createUser(body, {}, 'test-key');
+            expect(service.createUser).toHaveBeenCalled();
+        });
+
+        it('deberia fallar si no es profesor ni tiene api key', async () => {
+            const body = { email: 'new@test.com' };
+            await expect(controller.createUser(body, {})).rejects.toThrow(HttpException);
         });
     });
 

@@ -1,11 +1,27 @@
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, beforeAll } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from "./users.service";
-import { DatabaseService } from "../database/database.service";
+import type { UsersService as UsersServiceType } from "./users.service";
+import type { DatabaseService as DatabaseServiceType } from "../database/database.service";
+
+jest.unstable_mockModule('bcrypt', () => ({
+    hash: jest.fn(),
+}));
+
+let bcrypt: any;
+let UsersService: any;
+let DatabaseService: any;
+
+beforeAll(async () => {
+    bcrypt = await import('bcrypt');
+    const userMod = await import('./users.service');
+    UsersService = userMod.UsersService;
+    const dbMod = await import('../database/database.service');
+    DatabaseService = dbMod.DatabaseService;
+});
 
 describe('UsersService', () => {
-    let service: UsersService;
-    let databaseService: DatabaseService;
+    let service: UsersServiceType;
+    let databaseService: DatabaseServiceType;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -26,8 +42,12 @@ describe('UsersService', () => {
             ],
         }).compile();
 
-        service = module.get<UsersService>(UsersService);
-        databaseService = module.get<DatabaseService>(DatabaseService);
+        service = module.get<UsersServiceType>(UsersService);
+        databaseService = module.get<DatabaseServiceType>(DatabaseService);
+
+        process.env.REGISTRATION_SECRET = 'student-secret';
+        process.env.ADMIN_SECRET = 'admin-secret';
+        jest.clearAllMocks();
     });
 
     describe('getProfile', () => {
@@ -109,22 +129,35 @@ describe('UsersService', () => {
         });
     });
 
-    describe('user management', () => {
-        it('deberia llamar a createUser', async () => {
-            const data = { email: 'new@t.com', password: '123' };
-            await service.createUser(data);
-            expect(databaseService.createUser).toHaveBeenCalled();
+    describe('createUser', () => {
+        it('deberia registrar un STUDENT correctamente con el secreto', async () => {
+            const data = { email: 'new@t.com', password: '123', role: 'STUDENT' };
+            (bcrypt.hash as jest.Mock).mockResolvedValue('hashed' as never);
+            jest.spyOn(databaseService, 'createUser').mockResolvedValue({ ...data, password: 'hashed' } as any);
+
+            const result = await service.createUser(data);
+            expect(result).toBeDefined();
+            expect(bcrypt.hash).toHaveBeenCalledWith('123', 10);
+            expect(databaseService.createUser).toHaveBeenCalledWith({ ...data, password: 'hashed' });
         });
 
-        it('deberia llamar a updateUser', async () => {
-            const data = { email: 'upd@t.com' };
-            await service.updateUser('1', data);
-            expect(databaseService.updateUser).toHaveBeenCalledWith('1', data);
-        });
+        it('deberia registrar un PROFESSOR correctamente', async () => {
+            const data = { email: 'admin@t.com', password: '123', role: 'PROFESSOR' };
+            jest.spyOn(databaseService, 'createUser').mockResolvedValue(data as any);
 
-        it('deberia llamar a deleteUser', async () => {
-            await service.deleteUser('1');
-            expect(databaseService.deleteUser).toHaveBeenCalledWith('1');
+            const result = await service.createUser(data);
+            expect(result).toBeDefined();
         });
+    });
+
+    it('deberia llamar a updateUser', async () => {
+        const data = { email: 'upd@t.com' };
+        await service.updateUser('1', data);
+        expect(databaseService.updateUser).toHaveBeenCalledWith('1', data);
+    });
+
+    it('deberia llamar a deleteUser', async () => {
+        await service.deleteUser('1');
+        expect(databaseService.deleteUser).toHaveBeenCalledWith('1');
     });
 });

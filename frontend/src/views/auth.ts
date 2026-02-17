@@ -38,7 +38,6 @@ export class AuthView extends DOMManager {
     renderLoginForm(): void {
         this.clearContainer(this.formsContainer);
 
-        // Clone the login form template from HTML
         const form = this.cloneTemplateElement<HTMLFormElement>('login-form-template');
 
         this.attachEvent(form, 'submit', (e) => this.processLogin(e));
@@ -73,18 +72,18 @@ export class AuthView extends DOMManager {
     }
 
     /**
+     * Notifies the application of successful authentication
+     */
+    notifyAuthenticationSuccess(): void {
+        this.dispatchCustomEvent('navigate-to', { view: '/game' });
+    }
+
+    /**
      * Displays login error message
      */
     displayLoginError(errorElement: HTMLElement, error: unknown): void {
         const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
         this.setTextContent(errorElement, message);
-    }
-
-    /**
-     * Notifies the application of successful authentication
-     */
-    notifyAuthenticationSuccess(): void {
-        this.dispatchCustomEvent('navigate-to', { view: '/game' });
     }
 
     /**

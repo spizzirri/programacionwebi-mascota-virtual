@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body, Headers } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 interface SessionData {
@@ -38,44 +38,38 @@ export class UsersController {
     }
 
     @Get()
-    async getAllUsers(@Session() session: SessionData) {
-        if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
-        }
-
-        const currentUser = await this.usersService.getProfile(session.userId);
-        if (currentUser.role !== 'PROFESSOR') {
-            throw new HttpException('Forbidden: Only professors can access this resource', HttpStatus.FORBIDDEN);
-        }
-
+    async getAllUsers(@Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
+        await this.validateAccess(session, apiKey);
         const users = await this.usersService.getAllUsers();
         return { users };
     }
 
     @Post()
-    async createUser(@Session() session: SessionData, @Body() body: any) {
-        this.checkProfessor(session);
+    async createUser(@Body() body: any, @Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
+        console.log(session);
+        console.log(apiKey);
+        await this.validateAccess(session, apiKey);
         const user = await this.usersService.createUser(body);
         return { user };
     }
 
     @Patch(':id')
-    async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any) {
-        this.checkProfessor(session);
+    async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any, @Headers('x-api-key') apiKey?: string) {
+        await this.validateAccess(session, apiKey);
         const user = await this.usersService.updateUser(id, body);
         return { user };
     }
 
     @Delete(':id')
-    async deleteUser(@Session() session: SessionData, @Param('id') id: string) {
-        this.checkProfessor(session);
+    async deleteUser(@Session() session: SessionData, @Param('id') id: string, @Headers('x-api-key') apiKey?: string) {
+        await this.validateAccess(session, apiKey);
         await this.usersService.deleteUser(id);
         return { success: true };
     }
 
     @Get(':id/profile')
-    async getUserProfile(@Session() session: SessionData, @Param('id') id: string) {
-        this.checkProfessor(session);
+    async getUserProfile(@Session() session: SessionData, @Param('id') id: string, @Headers('x-api-key') apiKey?: string) {
+        await this.validateAccess(session, apiKey);
         const profile = await this.usersService.getProfile(id);
         return { profile };
     }
@@ -84,21 +78,33 @@ export class UsersController {
     async getUserHistory(
         @Session() session: SessionData,
         @Param('id') id: string,
+        @Headers('x-api-key') apiKey?: string,
         @Query('limit') limit?: string,
     ) {
-        this.checkProfessor(session);
+        await this.validateAccess(session, apiKey);
         const parsedLimit = limit ? parseInt(limit, 10) : 50;
         const history = await this.usersService.getHistory(id, parsedLimit);
         return { history };
     }
 
-    private async checkProfessor(session: SessionData) {
-        if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+    private async validateAccess(session: SessionData, apiKey?: string) {
+        // 1. Check API KEY first (Programmatic access)
+        if (apiKey && process.env.API_KEY && apiKey === process.env.API_KEY) {
+            return; // Authorized
         }
-        const currentUser = await this.usersService.getProfile(session.userId);
-        if (currentUser.role !== 'PROFESSOR') {
-            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+
+        // 2. Check Session (Web access)
+        if (session.userId) {
+            try {
+                const currentUser = await this.usersService.getProfile(session.userId);
+                if (currentUser.role === 'PROFESSOR') {
+                    return; // Authorized
+                }
+            } catch (e) {
+                // User not found or other error
+            }
         }
+
+        throw new HttpException('Forbidden: Invalid session or API Key', HttpStatus.FORBIDDEN);
     }
 }
