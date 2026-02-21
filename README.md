@@ -2,16 +2,25 @@
 
 ## Inicio y Parada del Proyecto
 
-### Backend
-Para el backend, navega a la carpeta `/backend`:
-- **Iniciar base de datos (Docker):** `npm run db:up`
-- **Frenar base de datos:** `npm run db:down`
-- **Iniciar servidor (Desarrollo):** `npm run dev`
+El proyecto está configurado como un monorepo utilizando **npm workspaces**. Esto significa que puedes iniciar tanto el frontend como el backend simultáneamente desde la raíz del proyecto.
+
+### Todas las aplicaciones a la vez
+Para iniciar tanto el frontend como el backend concurrentemente, sitúate en la **raíz del proyecto** y ejecuta:
+- **Instalar dependencias globales:** `npm install`
+- **Iniciar frontend y backend concurrentemente:** `npm run dev`
+
+### Por separado
+
+#### Backend
+Para el backend, navega a la carpeta `/backend` o usa los comandos de npm workspaces desde la raíz:
+- **Iniciar base de datos (Docker):** `npm run db:up` (o `npm run db:up --workspace=backend` desde la raíz)
+- **Frenar base de datos:** `npm run db:down` (o `npm run db:down --workspace=backend` desde la raíz)
+- **Iniciar servidor (Desarrollo):** `npm run dev` (o `npm run dev:backend` desde la raíz)
 - **Iniciar servidor (Producción):** `node dist/main.js` (requiere `npm run build`)
 
-### Frontend
-Para el frontend, navega a la carpeta `/frontend`:
-- **Iniciar aplicación:** `npm run dev`
+#### Frontend
+Para el frontend, navega a la carpeta `/frontend` o usa los comandos de npm workspaces desde la raíz:
+- **Iniciar aplicación:** `npm run dev` (o `npm run dev:frontend` desde la raíz)
 
 ---
 
