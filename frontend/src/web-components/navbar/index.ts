@@ -39,8 +39,15 @@ export class AppNavbar extends HTMLElement {
                             <button id="admin-nav-btn" class="btn-secondary" ${isAdminView ? 'disabled' : ''}>
                                 ${isAdminView ? 'Admin Activo' : 'Admin de Usuarios'}
                             </button>
-                        ` : ''}
-                        <button id="nav-action-btn" class="btn-secondary">${btnText}</button>
+                            <button id="profile-nav-btn" class="btn-secondary" ${currentView === 'profile' ? 'disabled' : ''}>
+                                ${currentView === 'profile' ? 'Perfil Activo' : 'Mi Perfil'}
+                            </button>
+                            <button id="game-nav-btn" class="btn-secondary" ${currentView === 'game' ? 'disabled' : ''}>
+                                ${currentView === 'game' ? 'Juego Activo' : 'Volver al Juego'}
+                            </button>
+                        ` : `
+                            <button id="nav-action-btn" class="btn-secondary">${btnText}</button>
+                        `}
                         <button id="logout-btn" class="btn-secondary">Salir</button>
                     </div>
                 </div>
@@ -53,6 +60,18 @@ export class AppNavbar extends HTMLElement {
             }));
         });
 
+        this.querySelector("#profile-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", {
+                detail: { view: "/profile" }
+            }));
+        });
+
+        this.querySelector("#game-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", {
+                detail: { view: "/game" }
+            }));
+        });
+
         this.querySelector("#nav-action-btn")?.addEventListener("click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", {
                 detail: { view: navigateTo }
@@ -60,6 +79,7 @@ export class AppNavbar extends HTMLElement {
         });
 
         this.querySelector("#logout-btn")?.addEventListener("click", async () => {
+
             await api.logout();
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/" } }));
         });
