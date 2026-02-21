@@ -26,8 +26,12 @@ export class DatabaseService {
         return this.userModel.findById(id).exec();
     }
 
-    async updateUserStreak(userId: string, streak: number): Promise<void> {
-        await this.userModel.findByIdAndUpdate(userId, { streak }).exec();
+    async updateUserStreak(userId: string, streak: number, updateLastCorrectDate = false): Promise<void> {
+        const updateData: any = { streak };
+        if (updateLastCorrectDate) {
+            updateData.lastQuestionAnsweredCorrectly = new Date();
+        }
+        await this.userModel.findByIdAndUpdate(userId, updateData).exec();
     }
 
     async assignQuestionToUser(userId: string, questionId: string): Promise<void> {

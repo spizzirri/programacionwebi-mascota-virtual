@@ -79,7 +79,7 @@ describe('AnswersService', () => {
             const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Answer');
 
             expect(result.newStreak).toBe(6);
-            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 6);
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 6, true);
             expect(databaseService.createAnswer).toHaveBeenCalledWith({
                 userId: 'user123',
                 questionId: 'q1',
@@ -113,7 +113,7 @@ describe('AnswersService', () => {
             const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Answer');
 
             expect(result.newStreak).toBe(5.5);
-            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 5.5);
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 5.5, true);
         });
 
         it('deberia reiniciar la racha a 0 cuando la respuesta es incorrecta', async () => {
@@ -138,7 +138,7 @@ describe('AnswersService', () => {
             const result = await service.submitAnswer('user123', 'q1', 'Question?', 'Wrong');
 
             expect(result.newStreak).toBe(0);
-            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 0);
+            expect(databaseService.updateUserStreak).toHaveBeenCalledWith('user123', 0, false);
         });
     });
 

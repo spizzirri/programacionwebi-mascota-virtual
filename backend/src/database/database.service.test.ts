@@ -109,6 +109,25 @@ describe('DatabaseService', () => {
 
             const updated = await service.findUserById(created._id.toString());
             expect(updated?.streak).toBe(5);
+            expect(updated?.lastQuestionAnsweredCorrectly).toBeUndefined();
+        });
+
+        it('deberia actualizar la racha del usuario y la fecha si se pasa updateLastCorrectDate', async () => {
+            const userData = {
+                email: 'streak-date@test.com',
+                password: 'pwd',
+                role: 'STUDENT',
+                streak: 0,
+                createdAt: new Date()
+            };
+
+            const created = await service.createUser(userData);
+
+            await service.updateUserStreak(created._id.toString(), 2, true);
+
+            const updated = await service.findUserById(created._id.toString());
+            expect(updated?.streak).toBe(2);
+            expect(updated?.lastQuestionAnsweredCorrectly).toBeDefined();
         });
 
         it('deberia lanzar error al crear usuario duplicado', async () => {

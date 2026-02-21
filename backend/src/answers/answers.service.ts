@@ -112,7 +112,8 @@ export class AnswersService {
             newStreak = 0;
         }
 
-        await this.db.updateUserStreak(userId, newStreak);
+        const updateLastCorrectDate = validation.rating === 'correct' || validation.rating === 'partial';
+        await this.db.updateUserStreak(userId, newStreak, updateLastCorrectDate);
 
         const answer = await this.db.createAnswer({
             userId,

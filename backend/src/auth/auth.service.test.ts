@@ -34,6 +34,7 @@ describe('AuthService', () => {
                         findUserByEmail: jest.fn(),
                         findUserById: jest.fn(),
                         createUser: jest.fn(),
+                        updateUserStreak: jest.fn(),
                     },
                 },
             ],
@@ -107,6 +108,69 @@ describe('AuthService', () => {
                 createdAt: now
             });
             expect((result as any).password).toBeUndefined();
+        });
+
+        it('deberia reiniciar la racha a 0 si la ultima respuesta correcta fue antes de ayer a las 00:00', async () => {
+            const now = new Date();
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0, 0, 0, 0);
+
+            // lastQuestionAnsweredCorrectly es hace 2 dias (antes de yesterday)
+            const missedDay = new Date(startOfToday);
+            missedDay.setDate(missedDay.getDate() - 2);
+
+            const mockUser = {
+                _id: 'user1',
+                email: 'test@test.com',
+                password: 'hashed-real-password',
+                streak: 5,
+                lastQuestionAnsweredCorrectly: missedDay,
+                createdAt: now
+            };
+
+            const userDoc: any = { ...mockUser };
+            userDoc.toObject = () => userDoc;
+            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(userDoc);
+
+            const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+            (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
+
+            const result = await service.login('test@test.com', 'correct-pass');
+
+            expect(updateStreakSpy).toHaveBeenCalledWith('user1', 0);
+            expect(result.streak).toBe(0);
+        });
+
+        it('no deberia reiniciar la racha si la ultima respuesta correcta fue ayer', async () => {
+            const now = new Date();
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0, 0, 0, 0);
+
+            // yesterday at 23:00 (still valid to not reset)
+            const yesterdayValid = new Date(startOfToday);
+            yesterdayValid.setDate(yesterdayValid.getDate() - 1);
+            yesterdayValid.setHours(23, 0, 0, 0);
+
+            const mockUser = {
+                _id: 'user2',
+                email: 'test2@test.com',
+                password: 'hashed-real-password',
+                streak: 3,
+                lastQuestionAnsweredCorrectly: yesterdayValid,
+                createdAt: now
+            };
+
+            const userDoc: any = { ...mockUser };
+            userDoc.toObject = () => userDoc;
+            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(userDoc);
+
+            const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+            (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
+
+            const result = await service.login('test2@test.com', 'correct-pass');
+
+            expect(updateStreakSpy).not.toHaveBeenCalled();
+            expect(result.streak).toBe(3);
         });
     });
 

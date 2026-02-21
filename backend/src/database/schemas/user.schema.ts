@@ -27,6 +27,9 @@ export class User {
     @Prop()
     lastQuestionAssignedAt?: Date;
 
+    @Prop()
+    lastQuestionAnsweredCorrectly?: Date;
+
     @Prop({ default: Date.now })
     createdAt: Date;
 }
