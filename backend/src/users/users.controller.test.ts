@@ -63,6 +63,49 @@ describe('UsersController', () => {
         });
     });
 
+    describe('updateProfilePassword', () => {
+        it('deberia actualizar la contrasena si el usuario esta autenticado', async () => {
+            const session: any = { userId: '507f1f77bcf86cd799439011' };
+            const body = { password: 'newPassword123' };
+
+            jest.spyOn(service, 'updateUser').mockResolvedValue({} as any);
+
+            const result = await controller.updateProfilePassword(session, body);
+
+            expect(result).toEqual({ success: true });
+            expect(service.updateUser).toHaveBeenCalledWith('507f1f77bcf86cd799439011', { password: 'newPassword123' });
+        });
+
+        it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en sesion', async () => {
+            const session: any = {};
+            const body = { password: 'newPassword123' };
+
+            await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
+                new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
+            );
+        });
+
+        it('deberia lanzar HttpException BAD_REQUEST si no se provee la contrasena', async () => {
+            const session: any = { userId: '507f1f77bcf86cd799439011' };
+            const body = {};
+
+            await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
+                new HttpException('Password is required', HttpStatus.BAD_REQUEST)
+            );
+        });
+
+        it('deberia lanzar HttpException INTERNAL_SERVER_ERROR si el servicio falla', async () => {
+            const session: any = { userId: '507f1f77bcf86cd799439011' };
+            const body = { password: 'newPassword123' };
+
+            jest.spyOn(service, 'updateUser').mockRejectedValue(new Error('Database error'));
+
+            await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
+                new HttpException('Database error', HttpStatus.INTERNAL_SERVER_ERROR)
+            );
+        });
+    });
+
     describe('getHistory', () => {
         it('deberia retornar el historial si el usuario esta autenticado', async () => {
             const session: any = { userId: 'user1' };

@@ -5,6 +5,10 @@ export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;
     private profileStreak: HTMLElement;
     private historyContainer: HTMLElement;
+    private passwordForm: HTMLFormElement;
+    private newPasswordInput: HTMLInputElement;
+    private confirmPasswordInput: HTMLInputElement;
+    private passwordSection: HTMLElement;
     private targetUserId: string | null = null;
 
     constructor() {
@@ -12,9 +16,37 @@ export class ProfileView extends DOMManager {
         this.profileEmail = this.getElementSafe<HTMLElement>('#profile-email');
         this.profileStreak = this.getElementSafe<HTMLElement>('#profile-streak');
         this.historyContainer = this.getElementSafe<HTMLElement>('#history-container');
+        this.passwordForm = this.getElementSafe<HTMLFormElement>('#password-form');
+        this.newPasswordInput = this.getElementSafe<HTMLInputElement>('#new-password');
+        this.confirmPasswordInput = this.getElementSafe<HTMLInputElement>('#confirm-password');
+        this.passwordSection = this.getElementSafe<HTMLElement>('#password-change-section');
 
+        this.setupEventListeners();
         this.loadProfile();
         this.loadHistory();
+    }
+
+    private setupEventListeners(): void {
+        this.passwordForm.addEventListener('submit', (e) => this.handlePasswordSubmit(e));
+    }
+
+    private async handlePasswordSubmit(e: Event): Promise<void> {
+        e.preventDefault();
+        const password = this.newPasswordInput.value;
+        const confirm = this.confirmPasswordInput.value;
+
+        if (password !== confirm) {
+            alert('Las contraseñas no coinciden');
+            return;
+        }
+
+        try {
+            await api.updateProfilePassword(password);
+            alert('Contraseña actualizada con éxito');
+            this.passwordForm.reset();
+        } catch (error) {
+            alert('Error al actualizar la contraseña: ' + (error as Error).message);
+        }
     }
 
     public setParams(params: Record<string, string>): void {
@@ -33,6 +65,13 @@ export class ProfileView extends DOMManager {
             const profile = await api.getProfile(this.targetUserId || undefined);
             this.setTextContent(this.profileEmail, profile.email);
             this.setTextContent(this.profileStreak, profile.streak.toString());
+
+            // Solo mostrar el formulario de cambio de contraseña si es el perfil propio
+            if (this.targetUserId) {
+                this.passwordSection.classList.add('hidden');
+            } else {
+                this.passwordSection.classList.remove('hidden');
+            }
         } catch (error) {
             this.setTextContent(this.profileEmail, 'Error');
             this.setTextContent(this.profileStreak, '0');

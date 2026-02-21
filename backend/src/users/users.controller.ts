@@ -23,6 +23,24 @@ export class UsersController {
         }
     }
 
+    @Patch('profile/password')
+    async updateProfilePassword(@Session() session: SessionData, @Body() body: any) {
+        if (!session.userId) {
+            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+        }
+
+        if (!body.password) {
+            throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            const user = await this.usersService.updateUser(session.userId, { password: body.password });
+            return { success: true };
+        } catch (error) {
+            throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @Get('history')
     async getHistory(
         @Session() session: SessionData,

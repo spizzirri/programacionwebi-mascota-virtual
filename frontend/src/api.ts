@@ -143,6 +143,13 @@ export const api = {
     async deleteUser(id: string): Promise<void> {
         await apiRequest(`/users/${id}`, { method: 'DELETE' });
     },
+
+    async updateProfilePassword(password: string): Promise<void> {
+        await apiRequest('/users/profile/password', {
+            method: 'PATCH',
+            body: JSON.stringify({ password }),
+        });
+    },
 };
 
 export type { User, Question, Answer };

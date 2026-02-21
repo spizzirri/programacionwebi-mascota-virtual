@@ -115,4 +115,63 @@ describe('ProfileManager', () => {
         expect(historyItem?.querySelector('.history-feedback')?.textContent).toBe('F1');
         expect(historyItem?.querySelector('.history-timestamp')?.textContent).toBe('Hace un momento');
     });
+
+    it('deberia mostrar el formulario de contraseña solo en el perfil propio', async () => {
+        const mockProfile: apiModule.User = { email: 'test', streak: 0, _id: 'my-id', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null };
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);
+        jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
+
+        const view = new ProfileView();
+
+        // Perfil propio (targetUserId es null)
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const passwordSection = document.getElementById('password-change-section');
+        expect(passwordSection?.classList.contains('hidden')).toBe(false);
+
+        // Perfil ajeno
+        view.setParams({ id: 'other-id' });
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(passwordSection?.classList.contains('hidden')).toBe(true);
+    });
+
+    it('deberia validar que las contraseñas coincidan', async () => {
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
+        jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
+        const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => { });
+
+        new ProfileView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const newPwd = document.getElementById('new-password') as HTMLInputElement;
+        const confirmPwd = document.getElementById('confirm-password') as HTMLInputElement;
+        const form = document.getElementById('password-form') as HTMLFormElement;
+
+        newPwd.value = 'pass1';
+        confirmPwd.value = 'pass2';
+
+        form.dispatchEvent(new Event('submit'));
+
+        expect(alertSpy).toHaveBeenCalledWith('Las contraseñas no coinciden');
+    });
+
+    it('deberia llamar a api.updateProfilePassword al enviar el formulario correctamente', async () => {
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
+        jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
+        const updateSpy = jest.spyOn(apiModule.api, 'updateProfilePassword').mockResolvedValue(undefined);
+        jest.spyOn(window, 'alert').mockImplementation(() => { });
+
+        new ProfileView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const newPwd = document.getElementById('new-password') as HTMLInputElement;
+        const confirmPwd = document.getElementById('confirm-password') as HTMLInputElement;
+        const form = document.getElementById('password-form') as HTMLFormElement;
+
+        newPwd.value = 'secret123';
+        confirmPwd.value = 'secret123';
+
+        form.dispatchEvent(new Event('submit'));
+
+        expect(updateSpy).toHaveBeenCalledWith('secret123');
+    });
 });
