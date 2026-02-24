@@ -86,7 +86,6 @@ export const api = {
     // Answers endpoints
     async submitAnswer(
         questionId: string,
-        questionText: string,
         userAnswer: string
     ): Promise<{
         rating: 'correct' | 'partial' | 'incorrect';
@@ -95,7 +94,7 @@ export const api = {
     }> {
         const data = await apiRequest('/answers/submit', {
             method: 'POST',
-            body: JSON.stringify({ questionId, questionText, userAnswer }),
+            body: JSON.stringify({ questionId, userAnswer }),
         });
         return {
             rating: data.rating!,
@@ -144,10 +143,10 @@ export const api = {
         await apiRequest(`/users/${id}`, { method: 'DELETE' });
     },
 
-    async updateProfilePassword(password: string): Promise<void> {
+    async updateProfilePassword(currentPassword: string, newPassword: string): Promise<void> {
         await apiRequest('/users/profile/password', {
             method: 'PATCH',
-            body: JSON.stringify({ password }),
+            body: JSON.stringify({ currentPassword, newPassword }),
         });
     },
 };

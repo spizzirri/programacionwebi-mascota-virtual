@@ -51,11 +51,14 @@ describe('AuthService', () => {
 
 
     describe('login', () => {
-        it('deberia lanzar UnauthorizedException si el usuario no existe', async () => {
+        it('deberia lanzar UnauthorizedException si el usuario no existe (mitigacion de timing attack)', async () => {
             jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(null);
+            (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('wrong@test.com', 'pass'))
                 .rejects.toThrow('Invalid credentials');
+
+            expect(bcrypt.compare).toHaveBeenCalled();
         });
 
         it('deberia lanzar UnauthorizedException si la contraseña es incorrecta', async () => {

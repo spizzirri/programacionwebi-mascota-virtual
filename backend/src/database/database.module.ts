@@ -15,7 +15,11 @@ import { QuestionsService } from '../questions/questions.service';
             useFactory: async () => {
                 if (process.env.USE_IN_MEMORY_DB === 'true') {
                     console.log('Starting MongoDB in-memory server...');
-                    const mongod = await MongoMemoryServer.create();
+                    const mongod = await MongoMemoryServer.create({
+                        binary: {
+                            version: '6.0.11',
+                        },
+                    });
                     const uri = mongod.getUri();
                     console.log(`MongoDB in-memory server started at ${uri}`);
                     return {

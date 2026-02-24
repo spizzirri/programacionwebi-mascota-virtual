@@ -1,5 +1,5 @@
 
-import { describe, it, expect, beforeEach, afterAll, beforeAll } from "@jest/globals";
+import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseModule } from './database.module';
 import { DatabaseService } from "./database.service";
@@ -15,10 +15,12 @@ describe('DatabaseService', () => {
         }).compile();
 
         service = module.get<DatabaseService>(DatabaseService);
-    });
+    }, 30000);
 
     afterAll(async () => {
-        await module.close();
+        if (module) {
+            await module.close();
+        }
     });
 
     describe('User Operations', () => {
@@ -26,7 +28,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'test@test.com',
                 password: 'hashedpassword',
-                role: 'STUDENT',
+                role: 'STUDENT' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -44,7 +46,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'professor@test.com',
                 password: 'hashedpassword',
-                role: 'PROFESSOR',
+                role: 'PROFESSOR' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -62,7 +64,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'invalid-role@test.com',
                 password: 'hashedpassword',
-                role: 'INVALID',
+                role: 'INVALID' as any,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -74,7 +76,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'findme@test.com',
                 password: 'pwd',
-                role: 'STUDENT',
+                role: 'STUDENT' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -98,7 +100,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'streak@test.com',
                 password: 'pwd',
-                role: 'STUDENT',
+                role: 'STUDENT' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -116,7 +118,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'streak-date@test.com',
                 password: 'pwd',
-                role: 'STUDENT',
+                role: 'STUDENT' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -134,7 +136,7 @@ describe('DatabaseService', () => {
             const userData = {
                 email: 'duplicate@test.com',
                 password: 'pwd',
-                role: 'STUDENT',
+                role: 'STUDENT' as const,
                 streak: 0,
                 createdAt: new Date()
             };
@@ -196,7 +198,7 @@ describe('DatabaseService', () => {
                     questionId: `q${i}`,
                     questionText: '?',
                     userAnswer: `A${i}`,
-                    rating: 'correct',
+                    rating: 'correct' as const,
                     feedback: 'ok',
                     timestamp: new Date(Date.now() + i * 1000)
                 });
@@ -208,4 +210,3 @@ describe('DatabaseService', () => {
         });
     });
 });
-

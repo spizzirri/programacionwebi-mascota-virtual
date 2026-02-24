@@ -6,6 +6,7 @@ export class ProfileView extends DOMManager {
     private profileStreak: HTMLElement;
     private historyContainer: HTMLElement;
     private passwordForm: HTMLFormElement;
+    private currentPasswordInput: HTMLInputElement;
     private newPasswordInput: HTMLInputElement;
     private confirmPasswordInput: HTMLInputElement;
     private passwordSection: HTMLElement;
@@ -17,6 +18,7 @@ export class ProfileView extends DOMManager {
         this.profileStreak = this.getElementSafe<HTMLElement>('#profile-streak');
         this.historyContainer = this.getElementSafe<HTMLElement>('#history-container');
         this.passwordForm = this.getElementSafe<HTMLFormElement>('#password-form');
+        this.currentPasswordInput = this.getElementSafe<HTMLInputElement>('#current-password');
         this.newPasswordInput = this.getElementSafe<HTMLInputElement>('#new-password');
         this.confirmPasswordInput = this.getElementSafe<HTMLInputElement>('#confirm-password');
         this.passwordSection = this.getElementSafe<HTMLElement>('#password-change-section');
@@ -32,16 +34,17 @@ export class ProfileView extends DOMManager {
 
     private async handlePasswordSubmit(e: Event): Promise<void> {
         e.preventDefault();
-        const password = this.newPasswordInput.value;
+        const currentPassword = this.currentPasswordInput.value;
+        const newPassword = this.newPasswordInput.value;
         const confirm = this.confirmPasswordInput.value;
 
-        if (password !== confirm) {
+        if (newPassword !== confirm) {
             alert('Las contraseñas no coinciden');
             return;
         }
 
         try {
-            await api.updateProfilePassword(password);
+            await api.updateProfilePassword(currentPassword, newPassword);
             alert('Contraseña actualizada con éxito');
             this.passwordForm.reset();
         } catch (error) {

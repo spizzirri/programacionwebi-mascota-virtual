@@ -29,15 +29,17 @@ export class UsersController {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
         }
 
-        if (!body.password) {
-            throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+        const { currentPassword, newPassword } = body;
+
+        if (!currentPassword || !newPassword) {
+            throw new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST);
         }
 
         try {
-            const user = await this.usersService.updateUser(session.userId, { password: body.password });
+            await this.usersService.updateProfilePassword(session.userId, currentPassword, newPassword);
             return { success: true };
         } catch (error) {
-            throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -64,17 +66,30 @@ export class UsersController {
 
     @Post()
     async createUser(@Body() body: any, @Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
-        console.log(session);
-        console.log(apiKey);
         await this.validateAccess(session, apiKey);
-        const user = await this.usersService.createUser(body);
+
+        // Filter allowed fields for creation
+        const { email, password, role } = body;
+        const userData = { email, password, role };
+
+        const user = await this.usersService.createUser(userData);
         return { user };
     }
 
     @Patch(':id')
     async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any, @Headers('x-api-key') apiKey?: string) {
         await this.validateAccess(session, apiKey);
-        const user = await this.usersService.updateUser(id, body);
+
+        // Filter allowed fields for update
+        const allowedFields = ['email', 'password', 'role', 'streak', 'currentQuestionId', 'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly'];
+        const updateData: any = {};
+        for (const field of allowedFields) {
+            if (body[field] !== undefined) {
+                updateData[field] = body[field];
+            }
+        }
+
+        const user = await this.usersService.updateUser(id, updateData);
         return { user };
     }
 

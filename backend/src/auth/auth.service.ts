@@ -10,12 +10,13 @@ export class AuthService {
 
     async login(email: string, password: string): Promise<SafeUser> {
         const user = await this.db.findUserByEmail(email);
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
 
-        const isPasswordValid = await compare(password, user.password);
-        if (!isPasswordValid) {
+        // Constant-time check mitigation
+        const dummyHash = '$2b$10$fV2sc6eY0V8fW.K0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X'; // A valid-looking bcrypt hash
+        const hashToCompare = user ? user.password : dummyHash;
+        const isPasswordValid = await compare(password, hashToCompare);
+
+        if (!user || !isPasswordValid) {
             throw new UnauthorizedException('Invalid credentials');
         }
 

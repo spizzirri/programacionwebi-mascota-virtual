@@ -159,7 +159,7 @@ describe('GameManager', () => {
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(submitSpy).toHaveBeenCalledWith(mockQuestion._id, mockQuestion.text, 'My Answer');
+        expect(submitSpy).toHaveBeenCalledWith(mockQuestion._id, 'My Answer');
         expect(feedbackSection.classList.contains('hidden')).toBe(false);
         expect(feedbackSection.classList.contains('correct')).toBe(true);
         expect(feedbackText.textContent).toBe(mockResponse.feedback);

@@ -5,6 +5,7 @@ import type { DatabaseService as DatabaseServiceType } from "../database/databas
 
 jest.unstable_mockModule('bcrypt', () => ({
     hash: jest.fn(),
+    compare: jest.fn(),
 }));
 
 let bcrypt: any;
@@ -154,6 +155,33 @@ describe('UsersService', () => {
         const data = { email: 'upd@t.com' };
         await service.updateUser('1', data);
         expect(databaseService.updateUser).toHaveBeenCalledWith('1', data);
+    });
+
+    describe('updateProfilePassword', () => {
+        it('deberia actualizar la contraseña si la actual es correcta', async () => {
+            const mockUser = { _id: 'u1', password: 'hashed-old' };
+            const toObject = () => mockUser;
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ ...mockUser, toObject } as any);
+            (bcrypt.compare as jest.Mock).mockResolvedValue(true as never);
+            (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-new' as never);
+            jest.spyOn(databaseService, 'updateUser').mockResolvedValue({} as any);
+
+            await service.updateProfilePassword('u1', 'old', 'new');
+
+            expect(bcrypt.compare).toHaveBeenCalledWith('old', 'hashed-old');
+            expect(bcrypt.hash).toHaveBeenCalledWith('new', 10);
+            expect(databaseService.updateUser).toHaveBeenCalledWith('u1', { password: 'hashed-new' });
+        });
+
+        it('deberia lanzar error si la contraseña actual es incorrecta', async () => {
+            const mockUser = { _id: 'u1', password: 'hashed-old' };
+            const toObject = () => mockUser;
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ ...mockUser, toObject } as any);
+            (bcrypt.compare as jest.Mock).mockResolvedValue(false as never);
+
+            await expect(service.updateProfilePassword('u1', 'wrong', 'new'))
+                .rejects.toThrow('La contraseña actual es incorrecta');
+        });
     });
 
     it('deberia llamar a deleteUser', async () => {

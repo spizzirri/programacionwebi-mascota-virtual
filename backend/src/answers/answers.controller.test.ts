@@ -26,12 +26,12 @@ describe('AnswersController', () => {
     });
 
     it('deberia lanzar una excepcion si no llega la sesión del usuario', async () => {
-        const sampleBody = { questionId: '1', questionText: 'question', userAnswer: 'answer' };
+        const sampleBody = { questionId: '1', userAnswer: 'answer' };
         await expect(controller.submitAnswer(sampleBody, {})).rejects.toThrow();
     });
 
     it('deberia lanzar una excepcion si no llega el id del usuario en la sesión', async () => {
-        const sampleBody = { questionId: '1', questionText: 'question', userAnswer: 'answer' };
+        const sampleBody = { questionId: '1', userAnswer: 'answer' };
         await expect(controller.submitAnswer(sampleBody, { userId: null } as any)).rejects.toThrow();
     });
 
@@ -58,7 +58,7 @@ describe('AnswersController', () => {
 
         (service.submitAnswer as any).mockResolvedValue(sampleResponse);
 
-        const answerResult = await controller.submitAnswer({ questionId: '1', questionText: 'question', userAnswer: 'answer' }, { userId: '1' });
+        const answerResult = await controller.submitAnswer({ questionId: '1', userAnswer: 'answer' }, { userId: '1' });
         expect(answerResult).toEqual(expectedResponse);
     });
 });
