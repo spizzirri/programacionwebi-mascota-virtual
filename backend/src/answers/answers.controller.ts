@@ -11,7 +11,7 @@ export class AnswersController {
 
     @Post('submit')
     async submitAnswer(
-        @Body() body: { questionId: string; questionText: string; userAnswer: string },
+        @Body() body: { questionId: string; userAnswer: string },
         @Session() session: SessionData,
     ) {
         if (!session.userId) {
@@ -22,7 +22,6 @@ export class AnswersController {
             const result = await this.answersService.submitAnswer(
                 session.userId,
                 body.questionId,
-                body.questionText,
                 body.userAnswer,
             );
 

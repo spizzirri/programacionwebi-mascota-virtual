@@ -4,12 +4,16 @@ import { AppModule } from './app.module';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
+import helmet from 'helmet';
 
 // Load environment variables
 dotenv.config();
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+    // Security headers
+    app.use(helmet());
 
     app.set('trust proxy', 1);
 
@@ -41,12 +45,18 @@ async function bootstrap() {
     }
 
     // Configure session
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret && process.env.NODE_ENV === 'production') {
+        throw new Error('SESSION_SECRET must be set in production');
+    }
+
     app.use(
         session({
             store: sessionStore,
-            secret: process.env.SESSION_SECRET || 'tamagotchi-secret-key-change-in-production',
+            secret: sessionSecret || 'tamagotchi-secret-key-development-only',
             resave: false,
             saveUninitialized: false,
+            name: 'tamagotchi.sid', // Custom session cookie name
             cookie: {
                 maxAge: 24 * 60 * 60 * 1000, // 24 hours
                 httpOnly: true,

@@ -22,6 +22,7 @@ describe('UsersController', () => {
                         getAllUsers: jest.fn(),
                         createUser: jest.fn(),
                         updateUser: jest.fn(),
+                        updateProfilePassword: jest.fn(),
                         deleteUser: jest.fn(),
                     },
                 },
@@ -64,16 +65,16 @@ describe('UsersController', () => {
     });
 
     describe('updateProfilePassword', () => {
-        it('deberia actualizar la contrasena si el usuario esta autenticado', async () => {
+        it('deberia actualizar la contrasena si el usuario esta autenticado y provee ambas contrasenas', async () => {
             const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const body = { password: 'newPassword123' };
+            const body = { currentPassword: 'oldPassword', newPassword: 'newPassword123' };
 
-            jest.spyOn(service, 'updateUser').mockResolvedValue({} as any);
+            jest.spyOn(service, 'updateProfilePassword').mockResolvedValue({} as any);
 
             const result = await controller.updateProfilePassword(session, body);
 
             expect(result).toEqual({ success: true });
-            expect(service.updateUser).toHaveBeenCalledWith('507f1f77bcf86cd799439011', { password: 'newPassword123' });
+            expect(service.updateProfilePassword).toHaveBeenCalledWith('507f1f77bcf86cd799439011', 'oldPassword', 'newPassword123');
         });
 
         it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en sesion', async () => {
@@ -85,23 +86,23 @@ describe('UsersController', () => {
             );
         });
 
-        it('deberia lanzar HttpException BAD_REQUEST si no se provee la contrasena', async () => {
+        it('deberia lanzar HttpException BAD_REQUEST si no se provee la contrasena actual o la nueva', async () => {
             const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const body = {};
+            const body = { newPassword: '123' }; // Falta current
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
-                new HttpException('Password is required', HttpStatus.BAD_REQUEST)
+                new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST)
             );
         });
 
-        it('deberia lanzar HttpException INTERNAL_SERVER_ERROR si el servicio falla', async () => {
+        it('deberia lanzar HttpException BAD_REQUEST si el servicio falla (e.g. contrasena actual incorrecta)', async () => {
             const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const body = { password: 'newPassword123' };
+            const body = { currentPassword: 'wrong', newPassword: 'new' };
 
-            jest.spyOn(service, 'updateUser').mockRejectedValue(new Error('Database error'));
+            jest.spyOn(service, 'updateProfilePassword').mockRejectedValue(new Error('La contraseña actual es incorrecta'));
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
-                new HttpException('Database error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new HttpException('La contraseña actual es incorrecta', HttpStatus.BAD_REQUEST)
             );
         });
     });
@@ -197,7 +198,7 @@ describe('UsersController', () => {
 
             const result = await controller.createUser(body, session);
             expect(result).toEqual({ user: mockUser });
-            expect(service.createUser).toHaveBeenCalledWith(body);
+            expect(service.createUser).toHaveBeenCalledWith({ email: 'new@test.com', password: '123', role: 'STUDENT' });
         });
 
         it('deberia permitir crear un usuario con API KEY', async () => {

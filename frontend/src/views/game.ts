@@ -116,7 +116,6 @@ export class GameView extends DOMManager {
         try {
             const result = await api.submitAnswer(
                 this.currentQuestion._id,
-                this.currentQuestion.text,
                 userAnswer
             );
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { hash } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -52,6 +52,21 @@ export class UsersService {
             data.password = await hash(data.password, 10);
         }
         return this.db.updateUser(id, data);
+    }
+
+    async updateProfilePassword(userId: string, currentPassword: string, newPassword: string) {
+        const user = await this.db.findUserById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const isPasswordValid = await compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            throw new Error('La contraseña actual es incorrecta');
+        }
+
+        const hashedPassword = await hash(newPassword, 10);
+        return this.db.updateUser(userId, { password: hashedPassword });
     }
 
     async deleteUser(id: string) {

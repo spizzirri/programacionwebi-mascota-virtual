@@ -163,15 +163,17 @@ describe('ProfileManager', () => {
         new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
+        const currentPwd = document.getElementById('current-password') as HTMLInputElement;
         const newPwd = document.getElementById('new-password') as HTMLInputElement;
         const confirmPwd = document.getElementById('confirm-password') as HTMLInputElement;
         const form = document.getElementById('password-form') as HTMLFormElement;
 
+        currentPwd.value = 'oldPassword';
         newPwd.value = 'secret123';
         confirmPwd.value = 'secret123';
 
         form.dispatchEvent(new Event('submit'));
 
-        expect(updateSpy).toHaveBeenCalledWith('secret123');
+        expect(updateSpy).toHaveBeenCalledWith('oldPassword', 'secret123');
     });
 });
