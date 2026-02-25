@@ -24,7 +24,7 @@ export class QuestionsService implements OnModuleInit {
         }
     }
 
-    async getRandomQuestion(userId: string): Promise<{ question: Question; hasAnswered: boolean }> {
+    async getRandomQuestion(userId: string): Promise<{ question: Question; hasAnswered: boolean; answerId?: string; rating?: string }> {
         const user = await this.db.findUserById(userId);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -48,8 +48,35 @@ export class QuestionsService implements OnModuleInit {
             await this.db.assignQuestionToUser(userId, (currentQuestion as any)._id.toString());
         }
 
-        const hasAnswered = !!(await this.db.getAnswerForQuestionToday(userId, (currentQuestion as any)._id.toString()));
+        const answer = await this.db.getAnswerForQuestionToday(userId, (currentQuestion as any)._id.toString());
 
-        return { question: currentQuestion, hasAnswered };
+        // If professor has already answered, force a new one
+        if (answer && user?.role === 'PROFESSOR') {
+            const questions = await this.db.getAllQuestions();
+            // Filter out the one just answered if possible, or just pick another random
+            let nextQuestion = currentQuestion;
+            while (questions.length > 1 && (nextQuestion as any)._id.toString() === (currentQuestion as any)._id.toString()) {
+                const randomIndex = Math.floor(Math.random() * questions.length);
+                nextQuestion = questions[randomIndex];
+            }
+            currentQuestion = nextQuestion;
+            await this.db.assignQuestionToUser(userId, (currentQuestion as any)._id.toString());
+
+            return {
+                question: currentQuestion,
+                hasAnswered: false,
+                answerId: undefined,
+                rating: undefined
+            };
+        }
+
+        const hasAnswered = !!answer;
+
+        return {
+            question: currentQuestion,
+            hasAnswered,
+            answerId: answer ? (answer as any)._id.toString() : undefined,
+            rating: answer?.rating
+        };
     }
 }

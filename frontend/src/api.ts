@@ -30,6 +30,22 @@ interface Answer {
     timestamp: string;
 }
 
+interface Appeal {
+    _id: string;
+    userId: string;
+    userName: string;
+    answerId: string;
+    questionId: string;
+    questionText: string;
+    userAnswer: string;
+    originalRating: 'correct' | 'partial' | 'incorrect';
+    originalFeedback: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    professorFeedback?: string;
+    createdAt: string;
+    resolvedAt?: string;
+}
+
 async function apiRequest(
     endpoint: string,
     options: RequestInit = {}
@@ -78,7 +94,12 @@ export const api = {
     },
 
     // Questions endpoints
-    async getRandomQuestion(): Promise<{ question: Question; hasAnswered: boolean }> {
+    async getRandomQuestion(): Promise<{
+        question: Question;
+        hasAnswered: boolean;
+        answerId?: string;
+        rating?: string;
+    }> {
         const data = await apiRequest('/questions/random');
         return data;
     },
@@ -91,6 +112,7 @@ export const api = {
         rating: 'correct' | 'partial' | 'incorrect';
         feedback: string;
         newStreak: number;
+        answerId: string;
     }> {
         const data = await apiRequest('/answers/submit', {
             method: 'POST',
@@ -100,6 +122,7 @@ export const api = {
             rating: data.rating!,
             feedback: data.feedback!,
             newStreak: data.newStreak!,
+            answerId: data.answer?._id || data.answerId,
         };
     },
 
@@ -149,6 +172,29 @@ export const api = {
             body: JSON.stringify({ currentPassword, newPassword }),
         });
     },
+
+    // Appeals endpoints
+    async createAppeal(answerId: string): Promise<Appeal> {
+        return apiRequest('/appeals', {
+            method: 'POST',
+            body: JSON.stringify({ answerId }),
+        });
+    },
+
+    async getMyAppeals(): Promise<Appeal[]> {
+        return apiRequest('/appeals/my');
+    },
+
+    async getAllAppeals(): Promise<Appeal[]> {
+        return apiRequest('/appeals');
+    },
+
+    async resolveAppeal(id: string, status: 'accepted' | 'rejected', feedback: string): Promise<Appeal> {
+        return apiRequest(`/appeals/${id}/resolve`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status, feedback }),
+        });
+    },
 };
 
-export type { User, Question, Answer };
+export type { User, Question, Answer, Appeal };

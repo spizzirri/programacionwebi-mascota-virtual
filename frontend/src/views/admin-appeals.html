@@ -1,0 +1,52 @@
+<main id="admin-appeals-page" class="page">
+    <app-navbar view="admin-appeals"></app-navbar>
+
+    <section class="profile-container">
+        <div class="header-with-action">
+            <h1 class="auth-header">APELACIONES</h1>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Alumno</th>
+                        <th>Pregunta</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-appeals-table-body">
+                    <!-- Appeals will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Appeal Detail Modal -->
+    <div id="appeal-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">Detalle de Apelación</h2>
+            <div id="appeal-details" style="margin-bottom: var(--spacing-md);">
+                <p><strong>Alumno:</strong> <span id="detail-student"></span></p>
+                <p><strong>Pregunta:</strong> <span id="detail-question"></span></p>
+                <p><strong>Respuesta:</strong> <span id="detail-answer"></span></p>
+                <p><strong>Rating Original:</strong> <span id="detail-rating"></span></p>
+                <p><strong>Feedback Original:</strong> <span id="detail-original-feedback"></span></p>
+            </div>
+
+            <div class="form-group">
+                <label for="professor-feedback">Feedback del Profesor</label>
+                <textarea id="professor-feedback" class="answer-input" placeholder="Escribe tu feedback aquí..."
+                    rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button id="reject-appeal-btn" class="btn-secondary"
+                    style="border-color: var(--accent-error); color: var(--accent-error);">RECHAZAR</button>
+                <button id="accept-appeal-btn" class="btn-primary">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+</main>

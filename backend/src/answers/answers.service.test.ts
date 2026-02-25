@@ -42,12 +42,26 @@ describe('AnswersService', () => {
     });
 
     describe('submitAnswer', () => {
-        it('deberia lanzar una excepcion si el usuario ya respondio hoy', async () => {
+        it('deberia lanzar una excepcion si el usuario ya respondio hoy y es STUDENT', async () => {
             jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue({ text: 'Question?' } as any);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ role: 'STUDENT' } as any);
             jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1' } as any);
 
             await expect(service.submitAnswer('user123', 'q1', 'Answer'))
                 .rejects.toThrow('Ya has respondido la pregunta del día, vuelve mañana');
+        });
+
+        it('deberia permitir responder si el usuario ya respondio hoy pero es PROFESSOR', async () => {
+            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue({ text: 'Question?' } as any);
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ role: 'PROFESSOR', streak: 0 } as any);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1' } as any);
+            jest.spyOn(service, 'validateAnswer').mockResolvedValue({ rating: 'correct', feedback: 'ok' });
+            jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+            jest.spyOn(databaseService, 'createAnswer').mockResolvedValue({ _id: 'a2' } as any);
+
+            const result = await service.submitAnswer('user123', 'q1', 'Answer');
+            expect(result).toBeDefined();
+            expect(databaseService.createAnswer).toHaveBeenCalled();
         });
 
         it('deberia lanzar una excepcion si el usuario no es encontrado', async () => {

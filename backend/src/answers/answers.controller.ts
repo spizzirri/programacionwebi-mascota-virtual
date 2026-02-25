@@ -30,6 +30,7 @@ export class AnswersController {
                 rating: result.answer.rating,
                 feedback: result.answer.feedback,
                 newStreak: result.newStreak,
+                answerId: (result.answer as any)._id,
             };
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);

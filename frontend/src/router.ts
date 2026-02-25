@@ -3,13 +3,17 @@ import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
 import adminUsersView from './views/admin-users.html?raw';
 import noAuthView from './views/401.html?raw';
+import myAppealsView from './views/my-appeals.html?raw';
+import adminAppealsView from './views/admin-appeals.html?raw';
 import { AuthView } from './views/auth';
 import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
 import { AdminUsersView } from './views/admin-users';
+import { MyAppealsView } from './views/my-appeals';
+import { AdminAppealsView } from './views/admin-appeals';
 import { session } from './session';
 
-let currentView: (AuthView | GameView | ProfileView | AdminUsersView)[] = [];
+let currentView: (AuthView | GameView | ProfileView | AdminUsersView | MyAppealsView | AdminAppealsView)[] = [];
 
 const routes = {
     '/': {
@@ -30,6 +34,16 @@ const routes = {
     '/admin-users': {
         html: adminUsersView,
         init: [() => new AdminUsersView()],
+        guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
+    },
+    '/my-appeals': {
+        html: myAppealsView,
+        init: [() => new MyAppealsView()],
+        guard: () => session.isAuthenticated() && session.getUser()?.role === 'STUDENT'
+    },
+    '/admin-appeals': {
+        html: adminAppealsView,
+        init: [() => new AdminAppealsView()],
         guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
     }
 };

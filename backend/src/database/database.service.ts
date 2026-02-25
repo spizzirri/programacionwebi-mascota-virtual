@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Question, QuestionDocument } from './schemas/question.schema';
 import { Answer, AnswerDocument } from './schemas/answer.schema';
+import { Appeal, AppealDocument } from './schemas/appeal.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -11,6 +12,7 @@ export class DatabaseService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
         @InjectModel(Answer.name) private answerModel: Model<AnswerDocument>,
+        @InjectModel(Appeal.name) private appealModel: Model<AppealDocument>,
     ) { }
 
     async createUser(user: Partial<User>): Promise<UserDocument> {
@@ -101,5 +103,26 @@ export class DatabaseService {
 
     async deleteQuestion(id: string): Promise<void> {
         await this.questionModel.findByIdAndDelete(id).exec();
+    }
+
+    async createAppeal(appeal: Partial<Appeal>): Promise<AppealDocument> {
+        const createdAppeal = new this.appealModel(appeal);
+        return createdAppeal.save();
+    }
+
+    async getAppealsByUserId(userId: string): Promise<AppealDocument[]> {
+        return this.appealModel.find({ userId }).sort({ createdAt: -1 }).exec();
+    }
+
+    async getAllAppeals(): Promise<AppealDocument[]> {
+        return this.appealModel.find().sort({ createdAt: -1 }).exec();
+    }
+
+    async getAppealById(id: string): Promise<AppealDocument | null> {
+        return this.appealModel.findById(id).exec();
+    }
+
+    async updateAppeal(id: string, data: Partial<Appeal>): Promise<AppealDocument | null> {
+        return this.appealModel.findByIdAndUpdate(id, data, { new: true }).exec();
     }
 }

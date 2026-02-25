@@ -4,6 +4,7 @@ import { DatabaseService } from './database.service';
 import { User, UserSchema } from './schemas/user.schema';
 import { Question, QuestionSchema } from './schemas/question.schema';
 import { Answer, AnswerSchema } from './schemas/answer.schema';
+import { Appeal, AppealSchema } from './schemas/appeal.schema';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { DatabaseController } from './database.controller';
 import { QuestionsService } from '../questions/questions.service';
@@ -36,6 +37,7 @@ import { QuestionsService } from '../questions/questions.service';
             { name: User.name, schema: UserSchema },
             { name: Question.name, schema: QuestionSchema },
             { name: Answer.name, schema: AnswerSchema },
+            { name: Appeal.name, schema: AppealSchema },
         ]),
     ],
     controllers: [DatabaseController],

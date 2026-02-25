@@ -9,6 +9,9 @@ import { AppNavbar } from '../src/web-components';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+import { session } from '../src/session';
+
 jest.mock('../src/tamagotchi', () => {
     return {
         Tamagotchi: jest.fn().mockImplementation(() => {
@@ -30,17 +33,17 @@ function cargarHTML(view: string) {
 }
 
 describe('GameManager', () => {
-    let alertSpy: jest.SpiedFunction<typeof window.alert>;
-
     beforeAll(() => {
         inicializarWebComponents();
     });
 
     beforeEach(() => {
         cargarHTML('game');
-
         jest.clearAllMocks();
-        alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => { });
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     it('deberia cargar la pregunta inicial y la racha del usuario al iniciar', async () => {
@@ -62,6 +65,8 @@ describe('GameManager', () => {
 
         const questionSpy = jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
         const profileSpy = jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);
+
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
 
         new GameView();
 
@@ -89,12 +94,15 @@ describe('GameManager', () => {
             createdAt: ''
         } as any);
 
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
         new GameView();
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const questionText = document.getElementById('question-text');
-        expect(questionText?.textContent).toContain('Error al cargar la pregunta');
+        const alertContainer = document.querySelector('.alert-modal-container');
+        expect(alertContainer).toBeTruthy();
+        expect(alertContainer?.textContent).toContain('Error al cargar la pregunta');
     });
 
     it('deberia mostrar alerta si se intenta enviar respuesta vacia', async () => {
@@ -110,6 +118,8 @@ describe('GameManager', () => {
             createdAt: ''
         } as any);
 
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
         new GameView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -119,7 +129,9 @@ describe('GameManager', () => {
 
         submitBtn.click();
 
-        expect(alertSpy).toHaveBeenCalledWith('Por favor, escribe una respuesta');
+        const alertContainer = document.querySelector('.alert-modal-container');
+        expect(alertContainer).toBeTruthy();
+        expect(alertContainer?.textContent).toContain('Por favor, escribe una respuesta');
     });
 
     it('deberia enviar la respuesta y actualizar la UI cuando es correcta', async () => {
@@ -135,14 +147,18 @@ describe('GameManager', () => {
             createdAt: ''
         } as any);
 
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
         const mockResponse: {
             rating: 'correct' | 'partial' | 'incorrect';
             feedback: string;
             newStreak: number;
+            answerId: string;
         } = {
             rating: 'correct',
             feedback: 'Muy bien!',
             newStreak: 1,
+            answerId: 'a1'
         };
         const submitSpy = jest.spyOn(apiModule.api, 'submitAnswer').mockResolvedValue(mockResponse);
 
@@ -178,6 +194,8 @@ describe('GameManager', () => {
             createdAt: ''
         } as any);
 
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
         jest.spyOn(apiModule.api, 'submitAnswer').mockRejectedValue(new Error('Submit error'));
 
         new GameView();
@@ -191,7 +209,41 @@ describe('GameManager', () => {
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(alertSpy).toHaveBeenCalledWith('Error al enviar la respuesta. Por favor, intenta de nuevo.');
+        const alertContainer = document.querySelector('.alert-modal-container');
+        expect(alertContainer).toBeTruthy();
+        expect(alertContainer?.textContent).toContain('Error al enviar la respuesta. Por favor, intenta de nuevo.');
         expect(submitBtn.disabled).toBe(false);
+    });
+
+    it('deberia ocultar el boton siguiente pregunta para estudiantes', async () => {
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({
+            question: { _id: '1', text: 'Q', topic: 'T' },
+            hasAnswered: false
+        });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ streak: 0 } as any);
+
+        new GameView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const nextBtn = document.getElementById('next-question-btn');
+        expect(nextBtn?.classList.contains('hidden')).toBe(true);
+    });
+
+    it('deberia mostrar el boton siguiente pregunta para profesores', async () => {
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'PROFESSOR' } as any);
+
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({
+            question: { _id: '1', text: 'Q', topic: 'T' },
+            hasAnswered: false
+        });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ streak: 0 } as any);
+
+        new GameView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const nextBtn = document.getElementById('next-question-btn');
+        expect(nextBtn?.classList.contains('hidden')).toBe(false);
     });
 });

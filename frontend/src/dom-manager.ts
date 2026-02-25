@@ -166,4 +166,32 @@ export class DOMManager {
 
         return element;
     }
+    /**
+     * Shows a custom alert modal
+     */
+    protected showAlert(message: string): Promise<void> {
+        return new Promise((resolve) => {
+            const container = this.createElement('div', { class: 'alert-modal-container' });
+            const content = this.createElement('div', { class: 'alert-modal-content' });
+            const p = this.createElement('p', {}, message);
+            const btn = this.createElement('button', { class: 'btn-primary' }, 'Aceptar');
+
+            this.appendToContainer(content, p);
+            this.appendToContainer(content, btn);
+            this.appendToContainer(container, content);
+            this.appendToContainer(document.body, container);
+
+            this.attachEvent(btn, 'click', () => {
+                document.body.removeChild(container);
+                resolve();
+            });
+
+            this.attachEvent(container, 'click', (e) => {
+                if (e.target === container) {
+                    document.body.removeChild(container);
+                    resolve();
+                }
+            });
+        });
+    }
 }

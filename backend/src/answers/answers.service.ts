@@ -100,16 +100,17 @@ export class AnswersService {
 
         const questionText = question.text;
 
-        const existingAnswer = await this.db.getAnswerForQuestionToday(userId, questionId);
-        if (existingAnswer) {
-            throw new Error('Ya has respondido la pregunta del día, vuelve mañana');
-        }
-
-        const validation = await this.validateAnswer(questionText, userAnswer);
         const user = await this.db.findUserById(userId);
         if (!user) {
             throw new Error('User not found');
         }
+
+        const existingAnswer = await this.db.getAnswerForQuestionToday(userId, questionId);
+        if (existingAnswer && user.role !== 'PROFESSOR') {
+            throw new Error('Ya has respondido la pregunta del día, vuelve mañana');
+        }
+
+        const validation = await this.validateAnswer(questionText, userAnswer);
 
         let newStreak = user.streak;
 

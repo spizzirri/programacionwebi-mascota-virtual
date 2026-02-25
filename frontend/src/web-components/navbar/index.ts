@@ -9,13 +9,12 @@ export class AppNavbar extends HTMLElement {
     connectedCallback() {
         const currentView = this.getAttribute("view") || "game";
         const title = currentView === "profile" ? "📊 Mi Perfil" :
-            currentView === "admin" ? "👥 Admin de Usuarios" : "🎮 Tamagotchi HTML";
-        const btnText = currentView !== "game" ? "Volver al Juego" : "Mi Perfil";
-        const navigateTo = currentView !== "game" ? "/game" : "/profile";
+            currentView === "admin-users" ? "👥 Admin de Usuarios" :
+                currentView === "admin-appeals" ? "⚖️ Apelaciones" :
+                    currentView === "my-appeals" ? "📜 Mis Apelaciones" : "🎮 Mascota Virtual";
 
         const user = session.getUser();
-        const showAdminBtn = user?.role === 'PROFESSOR';
-        const isAdminView = currentView === 'admin';
+        const isProfessor = user?.role === 'PROFESSOR';
 
         this.innerHTML = `
             <nav class="navbar">
@@ -35,18 +34,29 @@ export class AppNavbar extends HTMLElement {
                     ` : ''}
 
                     <div class="nav-actions">
-                        ${showAdminBtn ? `
-                            <button id="admin-nav-btn" class="btn-secondary" ${isAdminView ? 'disabled' : ''}>
-                                ${isAdminView ? 'Admin Activo' : 'Admin de Usuarios'}
+                        ${isProfessor ? `
+                            <button id="admin-appeals-nav-btn" class="btn-secondary" ${currentView === 'admin-appeals' ? 'disabled' : ''}>
+                                ${currentView === 'admin-appeals' ? 'Apelaciones Activo' : 'Apelaciones'}
+                            </button>
+                            <button id="admin-nav-btn" class="btn-secondary" ${currentView === 'admin-users' ? 'disabled' : ''}>
+                                ${currentView === 'admin-users' ? 'Admin Activo' : 'Admin de Usuarios'}
                             </button>
                             <button id="profile-nav-btn" class="btn-secondary" ${currentView === 'profile' ? 'disabled' : ''}>
-                                ${currentView === 'profile' ? 'Perfil Activo' : 'Mi Perfil'}
+                                Mi Perfil
                             </button>
                             <button id="game-nav-btn" class="btn-secondary" ${currentView === 'game' ? 'disabled' : ''}>
-                                ${currentView === 'game' ? 'Juego Activo' : 'Volver al Juego'}
+                                Volver al Juego
                             </button>
                         ` : `
-                            <button id="nav-action-btn" class="btn-secondary">${btnText}</button>
+                            <button id="my-appeals-nav-btn" class="btn-secondary" ${currentView === 'my-appeals' ? 'disabled' : ''}>
+                                Mis Apelaciones
+                            </button>
+                            <button id="profile-nav-btn" class="btn-secondary" ${currentView === 'profile' ? 'disabled' : ''}>
+                                Mi Perfil
+                            </button>
+                            <button id="game-nav-btn" class="btn-secondary" ${currentView === 'game' ? 'disabled' : ''}>
+                                Volver al Juego
+                            </button>
                         `}
                         <button id="logout-btn" class="btn-secondary">Salir</button>
                     </div>
@@ -54,32 +64,27 @@ export class AppNavbar extends HTMLElement {
             </nav>
         `;
 
+        this.querySelector("#admin-appeals-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-appeals" } }));
+        });
+
         this.querySelector("#admin-nav-btn")?.addEventListener("click", () => {
-            window.dispatchEvent(new CustomEvent("navigate-to", {
-                detail: { view: "/admin-users" }
-            }));
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-users" } }));
+        });
+
+        this.querySelector("#my-appeals-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/my-appeals" } }));
         });
 
         this.querySelector("#profile-nav-btn")?.addEventListener("click", () => {
-            window.dispatchEvent(new CustomEvent("navigate-to", {
-                detail: { view: "/profile" }
-            }));
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/profile" } }));
         });
 
         this.querySelector("#game-nav-btn")?.addEventListener("click", () => {
-            window.dispatchEvent(new CustomEvent("navigate-to", {
-                detail: { view: "/game" }
-            }));
-        });
-
-        this.querySelector("#nav-action-btn")?.addEventListener("click", () => {
-            window.dispatchEvent(new CustomEvent("navigate-to", {
-                detail: { view: navigateTo }
-            }));
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/game" } }));
         });
 
         this.querySelector("#logout-btn")?.addEventListener("click", async () => {
-
             await api.logout();
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/" } }));
         });

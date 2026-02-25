@@ -129,21 +129,49 @@ describe('QuestionsService', () => {
             expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, (result.question as any)._id);
         });
 
-        it('deberia retornar hasAnswered true si el usuario ya respondio hoy', async () => {
+        it('deberia retornar hasAnswered true si el usuario ya respondio hoy y es STUDENT', async () => {
             const today = new Date();
             const mockUser = {
                 _id: userId,
                 currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today
+                lastQuestionAssignedAt: today,
+                role: 'STUDENT'
             };
+            const mockAnswer = { _id: 'a1', rating: 'incorrect' };
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
             jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1' } as any);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(mockAnswer as any);
 
             const result = await service.getRandomQuestion(userId);
 
             expect(result.question).toEqual(mockQuestions[0]);
             expect(result.hasAnswered).toBe(true);
+            expect(result.answerId).toBe('a1');
+            expect(result.rating).toBe('incorrect');
+        });
+
+        it('deberia retornar nueva pregunta si el usuario ya respondio hoy pero es PROFESSOR', async () => {
+            const today = new Date();
+            const mockUser = {
+                _id: userId,
+                currentQuestionId: 'q1',
+                lastQuestionAssignedAt: today,
+                role: 'PROFESSOR'
+            };
+            const mockAnswer = { _id: 'a1', rating: 'incorrect' };
+
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(mockAnswer as any);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
+
+            const result = await service.getRandomQuestion(userId);
+
+            // Should be a different question (q2 since questions length > 1)
+            expect((result.question as any)._id).toBe('q2');
+            expect(result.hasAnswered).toBe(false);
+            expect(result.answerId).toBeUndefined();
+            expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, 'q2');
         });
     });
 });

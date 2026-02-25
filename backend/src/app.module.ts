@@ -5,8 +5,9 @@ import { QuestionsModule } from './questions/questions.module';
 import { AnswersModule } from './answers/answers.module';
 import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
+import { AppealsModule } from './appeals/appeals.module';
 
 @Module({
-    imports: [DatabaseModule, AuthModule, QuestionsModule, AnswersModule, UsersModule, HealthModule],
+    imports: [DatabaseModule, AuthModule, QuestionsModule, AnswersModule, UsersModule, HealthModule, AppealsModule],
 })
 export class AppModule { }
