@@ -50,10 +50,8 @@ export class QuestionsService implements OnModuleInit {
 
         const answer = await this.db.getAnswerForQuestionToday(userId, (currentQuestion as any)._id.toString());
 
-        // If professor has already answered, force a new one
         if (answer && user?.role === 'PROFESSOR') {
             const questions = await this.db.getAllQuestions();
-            // Filter out the one just answered if possible, or just pick another random
             let nextQuestion = currentQuestion;
             while (questions.length > 1 && (nextQuestion as any)._id.toString() === (currentQuestion as any)._id.toString()) {
                 const randomIndex = Math.floor(Math.random() * questions.length);

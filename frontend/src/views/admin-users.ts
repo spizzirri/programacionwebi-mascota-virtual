@@ -40,7 +40,6 @@ export class AdminUsersView extends DOMManager {
 
         this.userForm.addEventListener('submit', (e) => this.handleUserSubmit(e));
 
-        // Close modals on background click
         [this.userModal, this.deleteModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {

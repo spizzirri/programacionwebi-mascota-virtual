@@ -68,7 +68,6 @@ export class UsersController {
     async createUser(@Body() body: any, @Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
         await this.validateAccess(session, apiKey);
 
-        // Filter allowed fields for creation
         const { email, password, role } = body;
         const userData = { email, password, role };
 
@@ -80,7 +79,6 @@ export class UsersController {
     async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any, @Headers('x-api-key') apiKey?: string) {
         await this.validateAccess(session, apiKey);
 
-        // Filter allowed fields for update
         const allowedFields = ['email', 'password', 'role', 'streak', 'currentQuestionId', 'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly'];
         const updateData: any = {};
         for (const field of allowedFields) {
@@ -121,20 +119,16 @@ export class UsersController {
     }
 
     private async validateAccess(session: SessionData, apiKey?: string) {
-        // 1. Check API KEY first (Programmatic access)
         if (apiKey && process.env.API_KEY && apiKey === process.env.API_KEY) {
-            return; // Authorized
+            return;
         }
-
-        // 2. Check Session (Web access)
         if (session.userId) {
             try {
                 const currentUser = await this.usersService.getProfile(session.userId);
                 if (currentUser.role === 'PROFESSOR') {
-                    return; // Authorized
+                    return;
                 }
             } catch (e) {
-                // User not found or other error
             }
         }
 

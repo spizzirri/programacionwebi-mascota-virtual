@@ -6,23 +6,19 @@ import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
 import helmet from 'helmet';
 
-// Load environment variables
 dotenv.config();
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    // Security headers
     app.use(helmet());
 
     app.set('trust proxy', 1);
-
-    // Enable CORS for frontend
     app.enableCors({
         origin: [
-            'http://localhost:5173', // Vite default port
-            'http://localhost:5174', // Alternative Vite port
-            'http://localhost:3001', // Alternative port
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://localhost:3001',
             'http://127.0.0.1:5173',
             'http://127.0.0.1:5174',
             'https://mascota-virtual-frontend-production.up.railway.app',
@@ -32,7 +28,6 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization'],
     });
 
-    // Configure session store
     let sessionStore;
     if (process.env.USE_IN_MEMORY_DB !== 'true') {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tamagotchi';
@@ -40,11 +35,10 @@ async function bootstrap() {
         sessionStore = MongoStore.create({
             mongoUrl: mongoUri,
             collectionName: 'sessions',
-            ttl: 24 * 60 * 60, // 24 hours
+            ttl: 24 * 60 * 60,
         });
     }
 
-    // Configure session
     const sessionSecret = process.env.SESSION_SECRET;
     if (!sessionSecret && process.env.NODE_ENV === 'production') {
         throw new Error('SESSION_SECRET must be set in production');
@@ -56,12 +50,12 @@ async function bootstrap() {
             secret: sessionSecret || 'tamagotchi-secret-key-development-only',
             resave: false,
             saveUninitialized: false,
-            name: 'tamagotchi.sid', // Custom session cookie name
+            name: 'tamagotchi.sid',
             cookie: {
-                maxAge: 24 * 60 * 60 * 1000, // 24 hours
+                maxAge: 24 * 60 * 60 * 1000,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', // true in production with HTTPS
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-site in production
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             },
         }),
     );

@@ -1,4 +1,3 @@
-// API Client for backend communication
 
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000';
 
@@ -52,7 +51,7 @@ async function apiRequest(
 ): Promise<any> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
-        credentials: 'include', // Important for session cookies
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -93,7 +92,6 @@ export const api = {
         return data.user!;
     },
 
-    // Questions endpoints
     async getRandomQuestion(): Promise<{
         question: Question;
         hasAnswered: boolean;
@@ -104,7 +102,6 @@ export const api = {
         return data;
     },
 
-    // Answers endpoints
     async submitAnswer(
         questionId: string,
         userAnswer: string
@@ -126,7 +123,6 @@ export const api = {
         };
     },
 
-    // Users endpoints
     async getProfile(userId?: string): Promise<User> {
         const endpoint = userId ? `/users/${userId}/profile` : '/users/profile';
         const data = await apiRequest(endpoint);
@@ -173,7 +169,6 @@ export const api = {
         });
     },
 
-    // Appeals endpoints
     async createAppeal(answerId: string): Promise<Appeal> {
         return apiRequest('/appeals', {
             method: 'POST',

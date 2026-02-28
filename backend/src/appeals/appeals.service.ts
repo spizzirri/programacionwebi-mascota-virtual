@@ -55,12 +55,8 @@ export class AppealsService {
                 let newStreak = user.streak;
 
                 if (appeal.originalRating === 'incorrect') {
-                    // Si era incorrecta (streak se reseteó a 0), sumamos:
-                    // Lo que tenía antes (streakAtMoment) + 1 (por esta respuesta corregida) + lo que avanzó después (user.streak)
                     newStreak = appeal.streakAtMoment + 1 + user.streak;
                 } else if (appeal.originalRating === 'partial') {
-                    // Si era parcial (sumó 0.5) y ahora es aceptada (sumaría 1),
-                    // simplemente le sumamos el 0.5 que le faltaba sobre su racha actual
                     newStreak = user.streak + 0.5;
                 }
 

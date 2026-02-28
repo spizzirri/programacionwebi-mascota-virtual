@@ -88,7 +88,7 @@ describe('UsersController', () => {
 
         it('deberia lanzar HttpException BAD_REQUEST si no se provee la contrasena actual o la nueva', async () => {
             const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const body = { newPassword: '123' }; // Falta current
+            const body = { newPassword: '123' };
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
                 new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST)

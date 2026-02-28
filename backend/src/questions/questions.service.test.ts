@@ -167,7 +167,6 @@ describe('QuestionsService', () => {
 
             const result = await service.getRandomQuestion(userId);
 
-            // Should be a different question (q2 since questions length > 1)
             expect((result.question as any)._id).toBe('q2');
             expect(result.hasAnswered).toBe(false);
             expect(result.answerId).toBeUndefined();

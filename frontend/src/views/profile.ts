@@ -69,7 +69,6 @@ export class ProfileView extends DOMManager {
             this.setTextContent(this.profileEmail, profile.email);
             this.setTextContent(this.profileStreak, profile.streak.toString());
 
-            // Solo mostrar el formulario de cambio de contraseña si es el perfil propio
             if (this.targetUserId) {
                 this.passwordSection.classList.add('hidden');
             } else {

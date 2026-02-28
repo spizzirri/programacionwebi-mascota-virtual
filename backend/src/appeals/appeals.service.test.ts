@@ -38,13 +38,15 @@ describe('AppealsService', () => {
                 .rejects.toThrow(NotFoundException);
         });
 
-        it('deberia recuperar la racha correctamente para una respuesta incorrecta aceptada (escenario del usuario)', async () => {
-            // Escenario:
-            // 1. Tenía 10 de racha (streakAtMoment: 10)
-            // 2. Respondió mal (originalRating: incorrect)
-            // 3. Pasaron 3 días y el usuario volvió a jugar, tiene 3 de racha actual (user.streak: 3)
-            // 4. Se acepta la apelación.
-            // Resultado esperado: 10 + 1 + 3 = 14.
+        it(`deberia recuperar la racha correctamente para una respuesta incorrecta aceptada (escenario del usuario)
+            Escenario:
+                1. Tenía 10 de racha (streakAtMoment: 10)
+                2. Respondió mal (originalRating: incorrect)
+                3. Pasaron 3 días y el usuario volvió a jugar, tiene 3 de racha actual (user.streak: 3)
+                4. Se acepta la apelación.
+                Resultado esperado: 10 + 1 + 3 = 14.
+            
+            `, async () => {
 
             const mockAppeal = {
                 _id: 'a1',
@@ -69,35 +71,36 @@ describe('AppealsService', () => {
             expect(updateStreakSpy).toHaveBeenCalledWith('u1', 14, true);
         });
 
-        it('deberia actualizar la racha correctamente para una respuesta parcial aceptada', async () => {
-            // Escenario:
-            // 1. Tenía racha de 5.
-            // 2. Respondió parcial (+0.5). El sistema ya le dio 0.5. Current streak is 5.5.
-            // 3. Se acepta la apelación (debería ser +1 en total, o sea +0.5 sobre lo actual).
-            // Resultado esperado: 5.5 + 0.5 = 6.
+        it(`deberia actualizar la racha correctamente para una respuesta parcial aceptada
+            Escenario:
+                1. Tenía racha de 5.
+                2. Respondió parcial (+0.5). El sistema ya le dio 0.5. Current streak is 5.5.
+                3. Se acepta la apelación (debería ser +1 en total, o sea +0.5 sobre lo actual).
+                Resultado esperado: 5.5 + 0.5 = 6.`
+            , async () => {
 
-            const mockAppeal = {
-                _id: 'a1',
-                userId: 'u1',
-                originalRating: 'partial',
-                streakAtMoment: 5,
-                status: 'pending'
-            };
+                const mockAppeal = {
+                    _id: 'a1',
+                    userId: 'u1',
+                    originalRating: 'partial',
+                    streakAtMoment: 5,
+                    status: 'pending'
+                };
 
-            const mockUser = {
-                _id: 'u1',
-                streak: 5.5
-            };
+                const mockUser = {
+                    _id: 'u1',
+                    streak: 5.5
+                };
 
-            jest.spyOn(databaseService, 'getAppealById').mockResolvedValue(mockAppeal as any);
-            jest.spyOn(databaseService, 'updateAppeal').mockResolvedValue({ ...mockAppeal, status: 'accepted' } as any);
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+                jest.spyOn(databaseService, 'getAppealById').mockResolvedValue(mockAppeal as any);
+                jest.spyOn(databaseService, 'updateAppeal').mockResolvedValue({ ...mockAppeal, status: 'accepted' } as any);
+                jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
+                const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
 
-            await service.resolveAppeal('a1', 'accepted', 'Ok');
+                await service.resolveAppeal('a1', 'accepted', 'Ok');
 
-            expect(updateStreakSpy).toHaveBeenCalledWith('u1', 6, true);
-        });
+                expect(updateStreakSpy).toHaveBeenCalledWith('u1', 6, true);
+            });
 
         it('no deberia actualizar la racha si la apelacion es rechazada', async () => {
             const mockAppeal = {

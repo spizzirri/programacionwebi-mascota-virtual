@@ -123,12 +123,9 @@ describe('ProfileManager', () => {
 
         const view = new ProfileView();
 
-        // Perfil propio (targetUserId es null)
         await new Promise(resolve => setTimeout(resolve, 0));
         const passwordSection = document.getElementById('password-change-section');
         expect(passwordSection?.classList.contains('hidden')).toBe(false);
-
-        // Perfil ajeno
         view.setParams({ id: 'other-id' });
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(passwordSection?.classList.contains('hidden')).toBe(true);

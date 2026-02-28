@@ -118,7 +118,6 @@ describe('AuthService', () => {
             const startOfToday = new Date(now);
             startOfToday.setHours(0, 0, 0, 0);
 
-            // lastQuestionAnsweredCorrectly es hace 2 dias (antes de yesterday)
             const missedDay = new Date(startOfToday);
             missedDay.setDate(missedDay.getDate() - 2);
 
@@ -149,7 +148,6 @@ describe('AuthService', () => {
             const startOfToday = new Date(now);
             startOfToday.setHours(0, 0, 0, 0);
 
-            // yesterday at 23:00 (still valid to not reset)
             const yesterdayValid = new Date(startOfToday);
             yesterdayValid.setDate(yesterdayValid.getDate() - 1);
             yesterdayValid.setHours(23, 0, 0, 0);

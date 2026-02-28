@@ -44,7 +44,7 @@ describe('AppNavbar', () => {
         expect(gameBtn).not.toBeNull();
 
         expect(adminBtn.disabled).toBe(false);
-        expect(profileBtn.disabled).toBe(true); // Está en la vista profile
+        expect(profileBtn.disabled).toBe(true);
         expect(gameBtn.disabled).toBe(false);
     });
 
@@ -69,7 +69,7 @@ describe('AppNavbar', () => {
         expect(profileBtn).not.toBeNull();
         expect(gameBtn).not.toBeNull();
 
-        expect(gameBtn.disabled).toBe(true); // Está en la vista game
+        expect(gameBtn.disabled).toBe(true);
     });
 
     it('deberia despachar evento navigate-to al hacer click en los botones del PROFESSOR', () => {

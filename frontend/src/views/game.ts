@@ -100,9 +100,6 @@ export class GameView extends DOMManager {
                     this.removeClass(this.appealButton, 'hidden');
                     this.appealButton.disabled = false;
                     this.setTextContent(this.appealButton, 'SOLICITAR REVISION');
-
-                    // If it was already appealed, we should check that too, 
-                    // but for now let's just allow clicking it (API will handle duplicate)
                 }
                 return;
             }
