@@ -464,7 +464,9 @@ body::before {
 }
 
 .nav-content {
-  max-width: 1200px;
+  width: 100%;
+  height: auto;
+  max-height: 5em;
   margin: 0 auto;
   padding: 0 var(--spacing-md);
   display: flex;
@@ -480,9 +482,10 @@ body::before {
 .nav-actions {
   display: flex;
   gap: var(--spacing-sm);
+  margin: 0 1em;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 800px) {
   .nav-content {
     flex-wrap: wrap;
     gap: var(--spacing-sm);
