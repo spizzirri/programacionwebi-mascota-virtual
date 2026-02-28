@@ -40,6 +40,9 @@ export class Appeal {
 
     @Prop()
     resolvedAt?: Date;
+
+    @Prop({ default: 0 })
+    streakAtMoment: number;
 }
 
 export const AppealSchema = SchemaFactory.createForClass(Appeal);

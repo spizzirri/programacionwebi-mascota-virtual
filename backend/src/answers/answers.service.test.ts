@@ -109,7 +109,8 @@ describe('AnswersService', () => {
                 userAnswer: 'Answer',
                 rating: 'correct',
                 feedback: 'Excellent',
-                timestamp: expect.any(Date)
+                timestamp: expect.any(Date),
+                streakAtMoment: 5
             });
         });
 

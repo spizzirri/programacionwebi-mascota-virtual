@@ -133,6 +133,7 @@ export class AnswersService {
             rating: validation.rating,
             feedback: validation.feedback,
             timestamp: new Date(),
+            streakAtMoment: user.streak,
         });
 
         return { answer, newStreak };

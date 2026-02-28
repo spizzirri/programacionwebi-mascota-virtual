@@ -25,6 +25,9 @@ export class Answer {
 
     @Prop({ default: Date.now })
     timestamp: Date;
+
+    @Prop({ default: 0 })
+    streakAtMoment: number;
 }
 
 export const AnswerSchema = SchemaFactory.createForClass(Answer);

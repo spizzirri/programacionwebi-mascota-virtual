@@ -44,7 +44,8 @@ describe('AnswersController', () => {
                 rating: 'correct' as const,
                 feedback: 'feedback',
                 timestamp: new Date(),
-                userId: "1"
+                userId: "1",
+                streakAtMoment: 0
             },
             newStreak: 1
         };

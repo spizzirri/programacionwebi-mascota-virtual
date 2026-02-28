@@ -25,6 +25,7 @@ export class AppealsService {
             originalFeedback: answer.feedback,
             status: 'pending',
             createdAt: new Date(),
+            streakAtMoment: (answer as any).streakAtMoment || 0,
         });
     }
 
@@ -52,16 +53,15 @@ export class AppealsService {
             const user = await this.db.findUserById(appeal.userId);
             if (user) {
                 let newStreak = user.streak;
-                // Si era incorrecta (0), sumamos 1 (o 0.5 si queremos ser consistentes con la logic de AnswersService)
-                // En AnswersService: correct -> +1, partial -> +0.5, incorrect -> reset to 0.
-                // Si la apelación es aceptada, asumimos que debería haber sido 'correct'.
-                // Si era 'incorrect' (0), ahora es 'correct' (+1).
-                // Si era 'partial' (X), ahora es 'correct' (X+0.5).
 
                 if (appeal.originalRating === 'incorrect') {
-                    newStreak += 1;
+                    // Si era incorrecta (streak se reseteó a 0), sumamos:
+                    // Lo que tenía antes (streakAtMoment) + 1 (por esta respuesta corregida) + lo que avanzó después (user.streak)
+                    newStreak = appeal.streakAtMoment + 1 + user.streak;
                 } else if (appeal.originalRating === 'partial') {
-                    newStreak += 0.5;
+                    // Si era parcial (sumó 0.5) y ahora es aceptada (sumaría 1),
+                    // simplemente le sumamos el 0.5 que le faltaba sobre su racha actual
+                    newStreak = user.streak + 0.5;
                 }
 
                 await this.db.updateUserStreak(appeal.userId, newStreak, true);
