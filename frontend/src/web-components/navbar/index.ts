@@ -19,7 +19,14 @@ export class AppNavbar extends HTMLElement {
         this.innerHTML = `
             <nav class="navbar">
                 <div class="nav-content">
-                    <h2>${title}</h2>
+                    <div class="nav-header">
+                        <h2>${title}</h2>
+                        <button id="mobile-menu-btn" class="mobile-menu-btn">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                    </div>
                     
                     ${currentView === 'game' ? `
                         <div id="streak-display" class="streak-display">
@@ -87,6 +94,13 @@ export class AppNavbar extends HTMLElement {
         this.querySelector("#logout-btn")?.addEventListener("click", async () => {
             await api.logout();
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/" } }));
+        });
+
+        const nav = this.querySelector(".navbar");
+        const mobileMenuBtn = this.querySelector("#mobile-menu-btn");
+
+        mobileMenuBtn?.addEventListener("click", () => {
+            nav?.classList.toggle("menu-open");
         });
     }
 }

@@ -124,4 +124,62 @@ describe('AppNavbar', () => {
 
         expect(logoutSpy).toHaveBeenCalledTimes(1);
     });
+
+    it('deberia tener un boton de menu hamburguesa', () => {
+        jest.spyOn(session, 'getUser').mockReturnValue({
+            _id: '2',
+            email: 'student@test.com',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            createdAt: ''
+        });
+
+        renderNavbar('game');
+
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        expect(mobileMenuBtn).not.toBeNull();
+    });
+
+    it('deberia alternar la clase menu-open al hacer click en el boton de hamburguesa', () => {
+        jest.spyOn(session, 'getUser').mockReturnValue({
+            _id: '2',
+            email: 'student@test.com',
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            createdAt: ''
+        });
+
+        const navbar = renderNavbar('game');
+        const nav = navbar.querySelector('.navbar');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn') as HTMLButtonElement;
+
+        expect(nav?.classList.contains('menu-open')).toBe(false);
+
+        mobileMenuBtn.click();
+        expect(nav?.classList.contains('menu-open')).toBe(true);
+
+        mobileMenuBtn.click();
+        expect(nav?.classList.contains('menu-open')).toBe(false);
+    });
+
+    it('deberia mostrar siempre la racha en la vista de juego', () => {
+        jest.spyOn(session, 'getUser').mockReturnValue({
+            _id: '2',
+            email: 'student@test.com',
+            role: 'STUDENT',
+            streak: 5,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            createdAt: ''
+        });
+
+        renderNavbar('game');
+
+        const streakDisplay = document.getElementById('streak-display');
+        expect(streakDisplay).not.toBeNull();
+    });
 });
