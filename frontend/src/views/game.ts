@@ -2,6 +2,7 @@ import { api, Question } from '../api';
 import { DOMManager } from '../dom-manager';
 import { session } from '../session';
 import { Tamagotchi } from '../tamagotchi';
+import { syncStreakWithWidget } from '../pwa';
 
 export class GameView extends DOMManager {
     private tamagotchi: Tamagotchi;
@@ -143,6 +144,7 @@ export class GameView extends DOMManager {
             if (result.rating === 'correct') {
                 this.tamagotchi.setEmotion('happy');
                 this.addClass(this.feedbackSection, 'correct');
+                syncStreakWithWidget();
             } else if (result.rating === 'partial') {
                 this.tamagotchi.setEmotion('neutral');
                 this.addClass(this.feedbackSection, 'partial');

@@ -53,6 +53,11 @@
 body {
   font-family: 'Open Sans', Arial, sans-serif;
   background: linear-gradient(135deg, #e8f5f2 0%, #ffffff 100%);
+  background-image: url('/logo.svg'), linear-gradient(135deg, #e8f5f2 0%, #ffffff 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: center bottom -50px, center;
+  background-size: 400px, cover;
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;

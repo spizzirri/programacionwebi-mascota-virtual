@@ -1,0 +1,39 @@
+{
+    "name": "Mascota Virtual - Aprende Jugando",
+    "short_name": "Mascota Virtual",
+    "description": "Aprende de forma interactiva con tu mascota virtual",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0f9977",
+    "icons": [
+        {
+            "src": "/logo.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "widgets": [
+        {
+            "name": "Racha Diaria",
+            "description": "Tu racha actual de respuestas correctas",
+            "tag": "streak-widget",
+            "template": "streak-template",
+            "ms_allow_engine": true,
+            "data": [
+                {
+                    "name": "streak",
+                    "type": "number"
+                }
+            ],
+            "screenshots": [
+                {
+                    "src": "/logo.svg",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        }
+    ]
+}

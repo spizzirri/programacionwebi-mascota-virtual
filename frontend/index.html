@@ -7,12 +7,20 @@
   <title>Mascota Virtual - Aprende Jugando</title>
   <meta name="description" content="Aprende de forma interactiva con tu mascota virtual">
   <link rel="stylesheet" href="/src/styles.css">
+  <link rel="manifest" href="/manifest.json">
 </head>
 
 <body>
   <div id="app"></div>
   <script type="module" src="./src/web-components/index.ts"></script>
   <script type="module" src="./src/router.ts"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
 </body>
 
 </html>

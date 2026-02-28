@@ -1,4 +1,5 @@
 import { api, User } from './api';
+import { syncStreakWithWidget } from './pwa';
 
 class Session {
     private static instance: Session;
@@ -37,6 +38,7 @@ class Session {
 
     public setUser(user: User): void {
         this.currentUser = user;
+        syncStreakWithWidget();
     }
 
     public clearSession(): void {
