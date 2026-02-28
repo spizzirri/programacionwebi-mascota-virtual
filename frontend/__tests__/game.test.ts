@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 
 import { session } from '../src/session';
 
-jest.mock('../src/tamagotchi', () => {
+jest.mock('../src/virtual-pet', () => {
     return {
-        Tamagotchi: jest.fn().mockImplementation(() => {
+        VirtualPet: jest.fn().mockImplementation(() => {
             return {
                 setEmotion: jest.fn()
             };

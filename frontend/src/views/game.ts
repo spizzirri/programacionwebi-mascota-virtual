@@ -1,11 +1,11 @@
 import { api, Question } from '../api';
 import { DOMManager } from '../dom-manager';
 import { session } from '../session';
-import { Tamagotchi } from '../tamagotchi';
+import { VirtualPet } from '../virtual-pet';
 import { syncStreakWithWidget } from '../pwa';
 
 export class GameView extends DOMManager {
-    private tamagotchi: Tamagotchi;
+    private virtualPet: VirtualPet;
     private currentQuestion: Question | null = null;
     private currentStreak: number = 0;
     private isLoadingQuestion: boolean = false;
@@ -23,7 +23,7 @@ export class GameView extends DOMManager {
 
     constructor() {
         super();
-        this.tamagotchi = new Tamagotchi('tamagotchi-container');
+        this.virtualPet = new VirtualPet('tamagotchi-container');
 
         this.questionText = this.getElementSafe<HTMLElement>('#question-text');
         this.answerInput = this.getElementSafe<HTMLTextAreaElement>('#answer-input');
@@ -86,7 +86,7 @@ export class GameView extends DOMManager {
 
             this.answerInput.value = '';
             this.answerInput.disabled = false;
-            this.tamagotchi.setEmotion('neutral');
+            this.virtualPet.setEmotion('neutral');
 
             const response = await api.getRandomQuestion();
 
@@ -142,14 +142,14 @@ export class GameView extends DOMManager {
             this.updateStreakDisplay(result.newStreak);
 
             if (result.rating === 'correct') {
-                this.tamagotchi.setEmotion('happy');
+                this.virtualPet.setEmotion('happy');
                 this.addClass(this.feedbackSection, 'correct');
                 syncStreakWithWidget();
             } else if (result.rating === 'partial') {
-                this.tamagotchi.setEmotion('neutral');
+                this.virtualPet.setEmotion('neutral');
                 this.addClass(this.feedbackSection, 'partial');
             } else {
-                this.tamagotchi.setEmotion('sad');
+                this.virtualPet.setEmotion('sad');
                 this.addClass(this.feedbackSection, 'incorrect');
             }
 
