@@ -3,5 +3,7 @@ module.exports = {
     css: ['src/styles/**/*.css'],
     rejected: true,
     rejectedCss: true,
-    output: './src/styles/'
+    variables: true,
+    fontFace: true,
+    keyframes: true
 }
