@@ -26,7 +26,7 @@ export class VirtualPet {
 
     private render(): void {
         const svgPath = this.emotionToSvg[this.currentEmotion];
-        this.container.innerHTML = `<img src="/${svgPath}" alt="Virtual Pet ${this.currentEmotion}" class="tamagotchi-svg" style="width: 300px; height: 300px;">`;
+        this.container.innerHTML = `<img src="/${svgPath}" alt="Virtual Pet ${this.currentEmotion}" class="tamagotchi-svg">`;
         this.container.style.display = 'flex';
         this.container.style.justifyContent = 'center';
         this.container.style.alignItems = 'center';
