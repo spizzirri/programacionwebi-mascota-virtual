@@ -1,0 +1,88 @@
+/* Responsive Design - Unified Breakpoint (800px) */
+
+@media (max-width: 800px) {
+
+    /* Navbar & Navigation */
+    .nav-content {
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        flex-direction: column;
+    }
+
+    .nav-header {
+        width: auto;
+        flex: 1;
+    }
+
+    .nav-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .nav-actions {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        flex-direction: column;
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        z-index: 99;
+        justify-content: center;
+    }
+
+    .navbar.menu-open .nav-actions {
+        display: flex;
+        animation: slideDown var(--transition-base);
+    }
+
+    .navbar.menu-open .mobile-menu-btn span:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
+    }
+
+    .navbar.menu-open .mobile-menu-btn span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .navbar.menu-open .mobile-menu-btn span:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
+    }
+
+    /* Components & Layout */
+    .streak-display {
+        order: -1;
+        margin-right: auto;
+    }
+
+    .auth-header h1 {
+        font-size: 2rem;
+    }
+
+    .tamagotchi-svg {
+        width: 200px;
+        height: 200px;
+    }
+
+    .question-text {
+        font-size: 1.25rem;
+    }
+}
+
+/* Animations referenced in responsive transitions */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

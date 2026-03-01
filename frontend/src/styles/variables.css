@@ -1,0 +1,44 @@
+/* Import UNLaM Font */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+
+/* CSS Variables - UNLaM Inspired Design System */
+:root {
+    /* Colors - Light Theme */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f0f7f5;
+    --bg-card: #ffffff;
+    --bg-glass: rgba(15, 153, 119, 0.05);
+
+    --accent-primary: #0f9977;
+    /* UNLaM Green */
+    --accent-secondary: #0d8063;
+    --accent-success: #10b981;
+    --accent-warning: #f59e0b;
+    --accent-error: #ef4444;
+
+    --text-primary: #111111;
+    --text-secondary: #696969;
+    --text-muted: #888888;
+
+    --border-color: rgba(15, 153, 119, 0.2);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+
+    /* Border Radius - Sharp corners like UNLaM */
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 400ms ease;
+}
