@@ -170,8 +170,8 @@ body::before {
   box-shadow: var(--shadow-md);
   position: absolute;
   z-index: 1;
-  right: 0;
-  top: 0;
+  right: -30px;
+  top: -30px;
   padding: 0;
 }
 
