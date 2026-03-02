@@ -101,8 +101,11 @@ export class AdminQuestionsView extends DOMManager {
         questions.forEach((question) => {
             const row = this.createElement('tr');
 
-            const textCell = this.createElement('td', {}, question.text);
-            const topicCell = this.createElement('td', {}, question.topic);
+            const textCell = this.createElement('td');
+            this.setTextContent(textCell, question.text);
+
+            const topicCell = this.createElement('td');
+            this.setTextContent(topicCell, question.topic);
 
             const actionsCell = this.createElement('td');
             const actionsContainer = this.createElement('div', { class: 'action-buttons' });
