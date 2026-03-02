@@ -16,6 +16,8 @@ describe('QuestionsController', () => {
         updateQuestion: jest.fn<() => Promise<any>>(),
         deleteQuestion: jest.fn<() => Promise<any>>(),
         findUserById: jest.fn<() => Promise<any>>(),
+        createQuestions: jest.fn<() => Promise<any>>(),
+        deleteAllQuestions: jest.fn<() => Promise<any>>(),
     };
 
     beforeEach(async () => {
@@ -96,6 +98,22 @@ describe('QuestionsController', () => {
             mockDbService.deleteQuestion.mockResolvedValue(undefined);
 
             const result = await controller.deleteQuestion(session as any, '1');
+            expect(result).toEqual({ success: true });
+        });
+
+        it('createQuestionsBulk deberia crear todas si es PROFESSOR', async () => {
+            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
+            mockDbService.createQuestions.mockResolvedValue(mockQuestions as any);
+
+            const result = await controller.createQuestionsBulk(session as any, { questions: mockQuestions as any });
+            expect(result).toEqual({ questions: mockQuestions });
+        });
+
+        it('deleteAllQuestions deberia borrar todas si es PROFESSOR', async () => {
+            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
+            mockDbService.deleteAllQuestions.mockResolvedValue(undefined);
+
+            const result = await controller.deleteAllQuestions(session as any);
             expect(result).toEqual({ success: true });
         });
 

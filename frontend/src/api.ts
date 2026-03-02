@@ -102,6 +102,43 @@ export const api = {
         return data;
     },
 
+    async getAllQuestions(): Promise<Question[]> {
+        const data = await apiRequest('/questions');
+        return data.questions!;
+    },
+
+    async createQuestion(question: Partial<Question>): Promise<Question> {
+        const data = await apiRequest('/questions', {
+            method: 'POST',
+            body: JSON.stringify(question),
+        });
+        return data.question!;
+    },
+
+    async updateQuestion(id: string, question: Partial<Question>): Promise<Question> {
+        const data = await apiRequest(`/questions/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(question),
+        });
+        return data.question!;
+    },
+
+    async deleteQuestion(id: string): Promise<void> {
+        await apiRequest(`/questions/${id}`, { method: 'DELETE' });
+    },
+
+    async deleteAllQuestions(): Promise<void> {
+        await apiRequest('/questions', { method: 'DELETE' });
+    },
+
+    async createQuestionsBulk(questions: { text: string, topic: string }[]): Promise<Question[]> {
+        const data = await apiRequest('/questions/bulk', {
+            method: 'POST',
+            body: JSON.stringify({ questions }),
+        });
+        return data.questions!;
+    },
+
     async submitAnswer(
         questionId: string,
         userAnswer: string

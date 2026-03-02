@@ -2,6 +2,7 @@ import gameView from './views/game.html?raw';
 import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
 import adminUsersView from './views/admin-users.html?raw';
+import adminQuestionsView from './views/admin-questions.html?raw';
 import noAuthView from './views/401.html?raw';
 import myAppealsView from './views/my-appeals.html?raw';
 import adminAppealsView from './views/admin-appeals.html?raw';
@@ -9,11 +10,12 @@ import { AuthView } from './views/auth';
 import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
 import { AdminUsersView } from './views/admin-users';
+import { AdminQuestionsView } from './views/admin-questions';
 import { MyAppealsView } from './views/my-appeals';
 import { AdminAppealsView } from './views/admin-appeals';
 import { session } from './session';
 
-let currentView: (AuthView | GameView | ProfileView | AdminUsersView | MyAppealsView | AdminAppealsView)[] = [];
+let currentView: (AuthView | GameView | ProfileView | AdminUsersView | AdminQuestionsView | MyAppealsView | AdminAppealsView)[] = [];
 
 const routes = {
     '/': {
@@ -34,6 +36,11 @@ const routes = {
     '/admin-users': {
         html: adminUsersView,
         init: [() => new AdminUsersView()],
+        guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
+    },
+    '/admin-questions': {
+        html: adminQuestionsView,
+        init: [() => new AdminQuestionsView()],
         guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
     },
     '/my-appeals': {

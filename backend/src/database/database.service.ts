@@ -105,6 +105,14 @@ export class DatabaseService {
         await this.questionModel.findByIdAndDelete(id).exec();
     }
 
+    async createQuestions(questions: Partial<Question>[]): Promise<QuestionDocument[]> {
+        return this.questionModel.insertMany(questions) as unknown as QuestionDocument[];
+    }
+
+    async deleteAllQuestions(): Promise<void> {
+        await this.questionModel.deleteMany({}).exec();
+    }
+
     async createAppeal(appeal: Partial<Appeal>): Promise<AppealDocument> {
         const createdAppeal = new this.appealModel(appeal);
         return createdAppeal.save();

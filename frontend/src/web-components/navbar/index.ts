@@ -10,8 +10,9 @@ export class AppNavbar extends HTMLElement {
         const currentView = this.getAttribute("view") || "game";
         const title = currentView === "profile" ? "📊 Mi Perfil" :
             currentView === "admin-users" ? "👥 Admin de Usuarios" :
-                currentView === "admin-appeals" ? "⚖️ Apelaciones" :
-                    currentView === "my-appeals" ? "📜 Mis Apelaciones" : "🎮 Mascota Virtual";
+                currentView === "admin-questions" ? "📚 Admin de Preguntas" :
+                    currentView === "admin-appeals" ? "⚖️ Apelaciones" :
+                        currentView === "my-appeals" ? "📜 Mis Apelaciones" : "🎮 Mascota Virtual";
 
         const user = session.getUser();
         const isProfessor = user?.role === 'PROFESSOR';
@@ -45,6 +46,9 @@ export class AppNavbar extends HTMLElement {
                             <button id="admin-appeals-nav-btn" class="btn-secondary" ${currentView === 'admin-appeals' ? 'disabled' : ''}>
                                 ${currentView === 'admin-appeals' ? 'Apelaciones Activo' : 'Apelaciones'}
                             </button>
+                            <button id="admin-questions-nav-btn" class="btn-secondary" ${currentView === 'admin-questions' ? 'disabled' : ''}>
+                                ${currentView === 'admin-questions' ? 'Preguntas Activo' : 'Admin de Preguntas'}
+                            </button>
                             <button id="admin-nav-btn" class="btn-secondary" ${currentView === 'admin-users' ? 'disabled' : ''}>
                                 ${currentView === 'admin-users' ? 'Admin Activo' : 'Admin de Usuarios'}
                             </button>
@@ -73,6 +77,10 @@ export class AppNavbar extends HTMLElement {
 
         this.querySelector("#admin-appeals-nav-btn")?.addEventListener("click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-appeals" } }));
+        });
+
+        this.querySelector("#admin-questions-nav-btn")?.addEventListener("click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-questions" } }));
         });
 
         this.querySelector("#admin-nav-btn")?.addEventListener("click", () => {

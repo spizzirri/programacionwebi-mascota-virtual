@@ -1,0 +1,108 @@
+<main class="page">
+    <app-navbar view="admin-questions"></app-navbar>
+
+    <section class="profile-container">
+        <section class="profile-card">
+            <div class="profile-header">
+                <div class="header-with-action">
+                    <div>
+                        <h1>📚 Administración de Preguntas</h1>
+                        <p class="profile-subtitle">Gestiona las preguntas de la plataforma</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <button id="add-question-btn" class="btn-primary">➕ Agregar Pregunta</button>
+                        <button id="import-questions-btn" class="btn-secondary"
+                            title="Cargar desde archivo CSV (tópico;pregunta)">📂 Cargar CSV</button>
+                        <button id="delete-all-btn" class="btn-secondary"
+                            style="background: var(--accent-error); color: white; border-color: var(--accent-error);"
+                            title="Borrar Todas">🗑️ Borrado Total</button>
+                        <input type="file" id="file-input" accept=".csv,.txt" style="display: none;" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-container" style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 0 1rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="filter-topic">Filtrar por Tópico</label>
+                    <select id="filter-topic" class="form-control">
+                        <option value="">Todos los tópicos</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                    <label for="filter-text">Buscar por texto</label>
+                    <input type="text" id="filter-text" placeholder="Buscar pregunta..." class="form-control">
+                </div>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Texto</th>
+                            <th>Tópico</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="questions-table-body">
+                        <tr>
+                            <td colspan="3" class="loading">Cargando preguntas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+
+    <!-- Modals -->
+    <div id="question-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">Agregar Pregunta</h2>
+            <form id="question-form">
+                <input type="hidden" id="question-id">
+                <div class="form-group">
+                    <label for="question-text">Texto de la pregunta</label>
+                    <input type="text" id="question-text" required
+                        placeholder="Ej: ¿Qué etiqueta define un párrafo en HTML?">
+                </div>
+                <div class="form-group">
+                    <label for="question-topic">Tópico</label>
+                    <input type="text" id="question-topic" required placeholder="Ej: HTML">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="close-modal" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Confirmar Eliminación</h2>
+            <p>¿Estás seguro de que deseas eliminar la pregunta <span id="delete-question-text"
+                    style="font-weight: bold;"></span>?</p>
+            <p style="color: var(--accent-error); font-size: 0.9rem; margin-top: 0.5rem;">Esta acción no se puede
+                deshacer.</p>
+            <div class="modal-actions">
+                <button id="close-delete-modal" class="btn-secondary">Cancelar</button>
+                <button id="confirm-delete" class="btn-primary"
+                    style="background: var(--accent-error);">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-all-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Confirmar Borrado Total</h2>
+            <p>¿Estás seguro de que deseas eliminar <span style="font-weight: bold;">TODAS</span> las preguntas de la
+                base de datos?</p>
+            <p style="color: var(--accent-error); font-size: 0.9rem; margin-top: 0.5rem;">Esta acción no se puede
+                deshacer.</p>
+            <div class="modal-actions">
+                <button id="close-delete-all-modal" class="btn-secondary">Cancelar</button>
+                <button id="confirm-delete-all" class="btn-primary" style="background: var(--accent-error);">Eliminar
+                    Todas</button>
+            </div>
+        </div>
+    </div>
+</main>

@@ -54,6 +54,23 @@ export class QuestionsController {
         return { success: true };
     }
 
+    @Post('bulk')
+    async createQuestionsBulk(@Session() session: SessionData, @Body() body: { questions: { text: string, topic: string }[] }) {
+        await this.checkProfessor(session);
+        if (!body.questions || !Array.isArray(body.questions)) {
+            throw new HttpException('Invalid questions data', HttpStatus.BAD_REQUEST);
+        }
+        const questions = await this.db.createQuestions(body.questions);
+        return { questions };
+    }
+
+    @Delete()
+    async deleteAllQuestions(@Session() session: SessionData) {
+        await this.checkProfessor(session);
+        await this.db.deleteAllQuestions();
+        return { success: true };
+    }
+
     private async checkProfessor(session: SessionData) {
         if (!session.userId) {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
