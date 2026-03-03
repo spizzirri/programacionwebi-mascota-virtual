@@ -2,6 +2,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Question } from '../database/schemas/question.schema';
 import { questionsData } from './questions.data';
+import { QuestionPool } from './question-pool';
+import { ActiveTopicFilter } from './active-topic-filter';
+import { Questioner, QuestionResult } from './questioner';
 
 @Injectable()
 export class QuestionsService implements OnModuleInit {
@@ -33,88 +36,50 @@ export class QuestionsService implements OnModuleInit {
         }
     }
 
-    async getRandomQuestion(userId: string): Promise<{ question: Question; hasAnswered: boolean; answerId?: string; rating?: string }> {
+    async getRandomQuestion(userId: string): Promise<QuestionResult> {
         const user = await this.db.findUserById(userId);
+
+        const currentQuestion =
+            await this.findTodaysAssignedQuestion(user)
+            ?? await this.assignNewQuestion(userId);
+
+        const questioner = Questioner.create(user?.role, this.db, userId, currentQuestion);
+        return questioner.getRandomQuestion();
+    }
+
+    private async findTodaysAssignedQuestion(user: any): Promise<Question | null> {
+        if (!user?.currentQuestionId || !user?.lastQuestionAssignedAt) {
+            return null;
+        }
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        let currentQuestion: Question | null = null;
+        const assignmentDate = new Date(user.lastQuestionAssignedAt);
+        assignmentDate.setHours(0, 0, 0, 0);
 
-        if (user?.currentQuestionId && user?.lastQuestionAssignedAt) {
-            const assignmentDate = new Date(user.lastQuestionAssignedAt);
-            assignmentDate.setHours(0, 0, 0, 0);
-
-            if (assignmentDate.getTime() === today.getTime()) {
-                currentQuestion = await this.db.getQuestionById(user.currentQuestionId);
-            }
+        if (assignmentDate.getTime() !== today.getTime()) {
+            return null;
         }
 
-        if (!currentQuestion) {
-            const allQuestions = await this.db.getAllQuestions();
-            const allTopics = await this.db.getAllTopics();
-            const now = new Date();
+        return this.db.getQuestionById(user.currentQuestionId);
+    }
 
-            const activeTopicNames = allTopics
-                .filter(topic => {
-                    if (!topic.enabled) return false;
-                    if (topic.startDate && new Date(topic.startDate) > now) return false;
-                    if (topic.endDate && new Date(topic.endDate) < now) return false;
-                    return true;
-                })
-                .map(topic => topic.name);
+    private async assignNewQuestion(userId: string): Promise<Question> {
+        const allQuestions = await this.db.getAllQuestions();
+        const allTopics = await this.db.getAllTopics();
 
-            // If a topic exists in questions but not in topics collection (shouldn't happen with new logic but for safety)
-            // or if we just want to allow topics that aren't explicitly configured yet as active by default?
-            // The plan says we list topics for enabling/disabling, so if it's not in the list, we might want to treat it as "enabled"
-            // but the upsert logic ensures they are in the collection.
+        const all = new QuestionPool(allQuestions);
+        const activeTopicNames = new ActiveTopicFilter(allTopics).getActiveNames();
+        const active = all.filterByTopics(activeTopicNames);
+        const pool = active.isEmpty() ? all : active;
 
-            const availableQuestions = allQuestions.filter(q => activeTopicNames.includes(q.topic));
-
-            if (availableQuestions.length === 0) {
-                // Fallback to all questions if no active topics are found to avoid breaking the app,
-                // or throw an error? Usually better to show something unless the professor explicitly disabled everything.
-                if (allQuestions.length === 0) {
-                    throw new Error('No questions available in the database');
-                }
-                // If there are questions but none are from active topics, maybe we should return a specific "no questions today" state?
-                // For now, let's pick from any to avoid a crash, but ideally we should follow the restriction.
-                const randomIndex = Math.floor(Math.random() * allQuestions.length);
-                currentQuestion = allQuestions[randomIndex];
-            } else {
-                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-                currentQuestion = availableQuestions[randomIndex];
-            }
-
-            await this.db.assignQuestionToUser(userId, (currentQuestion as any)._id.toString());
+        if (pool.isEmpty()) {
+            throw new Error('No questions available in the database');
         }
 
-        const answer = await this.db.getAnswerForQuestionToday(userId, (currentQuestion as any)._id.toString());
-
-        if (answer && user?.role === 'PROFESSOR') {
-            const questions = await this.db.getAllQuestions();
-            let nextQuestion = currentQuestion;
-            while (questions.length > 1 && (nextQuestion as any)._id.toString() === (currentQuestion as any)._id.toString()) {
-                const randomIndex = Math.floor(Math.random() * questions.length);
-                nextQuestion = questions[randomIndex];
-            }
-            currentQuestion = nextQuestion;
-            await this.db.assignQuestionToUser(userId, (currentQuestion as any)._id.toString());
-
-            return {
-                question: currentQuestion,
-                hasAnswered: false,
-                answerId: undefined,
-                rating: undefined
-            };
-        }
-
-        const hasAnswered = !!answer;
-
-        return {
-            question: currentQuestion,
-            hasAnswered,
-            answerId: answer ? (answer as any)._id.toString() : undefined,
-            rating: answer?.rating
-        };
+        const question = pool.pickRandom();
+        await this.db.assignQuestionToUser(userId, (question as any)._id.toString());
+        return question;
     }
 }

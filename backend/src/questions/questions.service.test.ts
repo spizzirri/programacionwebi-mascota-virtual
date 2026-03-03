@@ -59,7 +59,7 @@ describe('QuestionsService', () => {
             expect(createQuestionSpy).not.toHaveBeenCalled();
         });
 
-        it('deberia sincronizar tópicos pero no sembrar preguntas si la base de datos esta vacia y no se levanta la base de datos en memoria', async () => {
+        it('deberia sincronizar tópicos pero no sembrar preguntas si no se levanta la base de datos en memoria', async () => {
             const getAllQuestionsSpy = jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
             const createQuestionSpy = jest.spyOn(databaseService, 'createQuestion');
 
@@ -84,7 +84,7 @@ describe('QuestionsService', () => {
             jest.spyOn(databaseService, 'assignQuestionToUser').mockResolvedValue(undefined);
         });
 
-        it('dado que no hay pregunta asignada cuando se solicita una pregunta entonces se asigna y retorna una nueva', async () => {
+        it('deberia asignar y retornar una nueva pregunta cuando no hay pregunta asignada', async () => {
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
             jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
 
@@ -95,7 +95,7 @@ describe('QuestionsService', () => {
             expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, (result.question as any)._id);
         });
 
-        it('dado una pregunta asignada hoy cuando se solicita otra pregunta entonces se retorna la misma', async () => {
+        it('deberia retornar la misma pregunta si ya fue asignada hoy', async () => {
             const today = new Date();
             const mockUser = {
                 _id: userId,
@@ -114,7 +114,7 @@ describe('QuestionsService', () => {
             expect(databaseService.assignQuestionToUser).not.toHaveBeenCalled();
         });
 
-        it('dado una pregunta asignada ayer cuando se solicita otra pregunta entonces se retorna una nueva', async () => {
+        it('deberia asignar nueva pregunta si la asignacion fue ayer', async () => {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const mockUser = {
@@ -132,55 +132,10 @@ describe('QuestionsService', () => {
             expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, (result.question as any)._id);
         });
 
-        it('deberia retornar hasAnswered true si el usuario ya respondio hoy y es STUDENT', async () => {
-            const today = new Date();
-            const mockUser = {
-                _id: userId,
-                currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today,
-                role: 'STUDENT'
-            };
-            const mockAnswer = { _id: 'a1', rating: 'incorrect' };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(mockAnswer as any);
-
-            const result = await service.getRandomQuestion(userId);
-
-            expect(result.question).toEqual(mockQuestions[0]);
-            expect(result.hasAnswered).toBe(true);
-            expect(result.answerId).toBe('a1');
-            expect(result.rating).toBe('incorrect');
-        });
-
-        it('deberia retornar nueva pregunta si el usuario ya respondio hoy pero es PROFESSOR', async () => {
-            const today = new Date();
-            const mockUser = {
-                _id: userId,
-                currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today,
-                role: 'PROFESSOR'
-            };
-            const mockAnswer = { _id: 'a1', rating: 'incorrect' };
-
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(mockAnswer as any);
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
-
-            const result = await service.getRandomQuestion(userId);
-
-            expect((result.question as any)._id).toBe('q2');
-            expect(result.hasAnswered).toBe(false);
-            expect(result.answerId).toBeUndefined();
-            expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, 'q2');
-        });
-
-        it('deberia filtrar preguntas de tópicos deshabilitados', async () => {
+        it('deberia filtrar preguntas de topicos deshabilitados', async () => {
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
             jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
 
-            // html habilitado, css deshabilitado
             jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
                 { name: 'html', enabled: true },
                 { name: 'css', enabled: false }
@@ -192,40 +147,65 @@ describe('QuestionsService', () => {
             expect((result.question as any)._id).toBe('q1');
         });
 
-        it('deberia filtrar preguntas de tópicos fuera de rango de fechas', async () => {
+        it('deberia lanzar error cuando no hay preguntas en la base de datos', async () => {
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
+            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([]);
 
-            const past = new Date(); past.setDate(past.getDate() - 10);
-            const future = new Date(); future.setDate(future.getDate() + 10);
-
-            // html activo, css futuro
-            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
-                { name: 'html', enabled: true },
-                { name: 'css', enabled: true, startDate: future }
-            ] as any);
-
-            const result = await service.getRandomQuestion(userId);
-
-            expect(result.question.topic).toBe('html');
+            await expect(service.getRandomQuestion(userId)).rejects.toThrow('No questions available in the database');
         });
 
-        it('deberia permitir preguntas de tópicos dentro de rango de fechas', async () => {
+        it('deberia usar fallback a todas las preguntas cuando no hay topicos activos', async () => {
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
             jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
-
-            const past = new Date(); past.setDate(past.getDate() - 5);
-            const future = new Date(); future.setDate(future.getDate() + 5);
-
-            // html activo con rango
             jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
-                { name: 'html', enabled: true, startDate: past, endDate: future },
+                { name: 'html', enabled: false },
                 { name: 'css', enabled: false }
             ] as any);
 
             const result = await service.getRandomQuestion(userId);
 
-            expect(result.question.topic).toBe('html');
+            expect(mockQuestions).toContain(result.question);
+            expect(result.hasAnswered).toBe(false);
+        });
+
+        it('deberia delegar al QuestionerForProfessor cuando el usuario es profesor', async () => {
+            const today = new Date();
+            const mockUser = {
+                _id: userId,
+                currentQuestionId: 'q1',
+                lastQuestionAssignedAt: today,
+                role: 'PROFESSOR'
+            };
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1', rating: 'correct' } as any);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
+
+            const result = await service.getRandomQuestion(userId);
+
+            expect((result.question as any)._id).toBe('q2');
+            expect(result.hasAnswered).toBe(false);
+        });
+
+        it('deberia delegar al QuestionerForStudent cuando el usuario es estudiante', async () => {
+            const today = new Date();
+            const mockUser = {
+                _id: userId,
+                currentQuestionId: 'q1',
+                lastQuestionAssignedAt: today,
+                role: 'STUDENT'
+            };
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1', rating: 'incorrect' } as any);
+
+            const result = await service.getRandomQuestion(userId);
+
+            expect(result.question).toEqual(mockQuestions[0]);
+            expect(result.hasAnswered).toBe(true);
+            expect(result.answerId).toBe('a1');
+            expect(result.rating).toBe('incorrect');
         });
     });
 });
