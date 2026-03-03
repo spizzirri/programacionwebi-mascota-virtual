@@ -1,55 +1,69 @@
 <main class="page">
     <app-navbar view="admin-questions"></app-navbar>
 
-    <section class="profile-container">
-        <section class="profile-card">
-            <div class="profile-header">
-                <div class="header-with-action">
-                    <div>
-                        <h1>📚 Administración de Preguntas</h1>
-                        <p class="profile-subtitle">Gestiona las preguntas de la plataforma</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <button id="add-question-btn" class="btn-primary">➕ Agregar Pregunta</button>
-                        <button id="import-questions-btn" class="btn-secondary"
-                            title="Cargar desde archivo CSV (tópico;pregunta)">📂 Cargar CSV</button>
-                        <button id="delete-all-btn" class="btn-secondary"
-                            style="background: var(--accent-error); color: white; border-color: var(--accent-error);"
-                            title="Borrar Todas">🗑️ Borrado Total</button>
-                        <input type="file" id="file-input" accept=".csv,.txt" style="display: none;" />
-                    </div>
+    <section class="admin-questions-layout">
+        <aside class="admin-sidebar">
+            <section class="profile-card sidebar-card">
+                <h3>⚙️ Acciones</h3>
+                <div class="sidebar-actions">
+                    <button id="add-question-btn" class="btn-primary">➕ Agregar Pregunta</button>
+                    <button id="import-questions-btn" class="btn-secondary"
+                        title="Cargar desde archivo CSV (tópico;pregunta)">📂 Cargar CSV</button>
+                    <button id="delete-all-btn" class="btn-secondary btn-danger" title="Borrar Todas">🗑️ Borrado
+                        Total</button>
+                    <input type="file" id="file-input" accept=".csv,.txt" style="display: none;" />
                 </div>
-            </div>
+            </section>
 
-            <div class="filters-container" style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 0 1rem;">
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label for="filter-topic">Filtrar por Tópico</label>
-                    <select id="filter-topic" class="form-control">
-                        <option value="">Todos los tópicos</option>
-                    </select>
+            <section class="profile-card sidebar-card" style="margin-top: 1rem;">
+                <h3>🏷️ Tópicos</h3>
+                <div id="topics-list" class="topics-sidebar-list">
+                    <p class="loading">Cargando tópicos...</p>
                 </div>
-                <div class="form-group" style="flex: 2; margin-bottom: 0;">
-                    <label for="filter-text">Buscar por texto</label>
-                    <input type="text" id="filter-text" placeholder="Buscar pregunta..." class="form-control">
-                </div>
-            </div>
+            </section>
+        </aside>
 
-            <div class="admin-table-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Texto</th>
-                            <th>Tópico</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="questions-table-body">
-                        <tr>
-                            <td colspan="3" class="loading">Cargando preguntas...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <section class="admin-main-content">
+            <section class="profile-card">
+                <div class="profile-header">
+                    <div class="header-with-action">
+                        <div>
+                            <h1>📚 Administración de Preguntas</h1>
+                            <p class="profile-subtitle">Gestiona las preguntas de la plataforma</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filters-container" style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 0 1rem;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label for="filter-topic">Filtrar por Tópico</label>
+                        <select id="filter-topic" class="form-control">
+                            <option value="">Todos los tópicos</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                        <label for="filter-text">Buscar por texto</label>
+                        <input type="text" id="filter-text" placeholder="Buscar pregunta..." class="form-control">
+                    </div>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Texto</th>
+                                <th>Tópico</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questions-table-body">
+                            <tr>
+                                <td colspan="3" class="loading">Cargando preguntas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </section>
     </section>
 
@@ -103,6 +117,32 @@
                 <button id="confirm-delete-all" class="btn-primary" style="background: var(--accent-error);">Eliminar
                     Todas</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Topic Modal -->
+    <div id="topic-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="topic-modal-title">Configurar Tópico</h2>
+            <form id="topic-form">
+                <input type="hidden" id="topic-name-hidden">
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <input type="checkbox" id="topic-enabled" style="width: auto; margin-bottom: 0;">
+                    <label for="topic-enabled" style="margin-bottom: 0;">Tópico Habilitado</label>
+                </div>
+                <div class="form-group">
+                    <label for="topic-start-date">Fecha Desde (opcional)</label>
+                    <input type="date" id="topic-start-date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="topic-end-date">Fecha Hasta (opcional)</label>
+                    <input type="date" id="topic-end-date" class="form-control">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="close-topic-modal" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 </main>

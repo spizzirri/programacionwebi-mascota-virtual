@@ -14,12 +14,14 @@ describe('QuestionsService', () => {
                 {
                     provide: DatabaseService,
                     useValue: {
-                        getAllQuestions: jest.fn(),
-                        createQuestion: jest.fn(),
+                        getAllQuestions: jest.fn<any>().mockResolvedValue([]),
+                        createQuestion: jest.fn<any>().mockResolvedValue({} as any),
                         findUserById: jest.fn(),
                         getQuestionById: jest.fn(),
                         assignQuestionToUser: jest.fn(),
                         getAnswerForQuestionToday: jest.fn(),
+                        getAllTopics: jest.fn<any>().mockResolvedValue([]),
+                        upsertTopic: jest.fn<any>().mockResolvedValue({} as any),
                     },
                 },
             ],
@@ -57,14 +59,14 @@ describe('QuestionsService', () => {
             expect(createQuestionSpy).not.toHaveBeenCalled();
         });
 
-        it('no deberia sembrar preguntas si la base de datos esta vacia y no se levanta la base de datos en memoria', async () => {
-            const getAllQuestionsSpy = jest.spyOn(databaseService, 'getAllQuestions');
+        it('deberia sincronizar tópicos pero no sembrar preguntas si la base de datos esta vacia y no se levanta la base de datos en memoria', async () => {
+            const getAllQuestionsSpy = jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
             const createQuestionSpy = jest.spyOn(databaseService, 'createQuestion');
 
             jest.replaceProperty(process, 'env', { USE_IN_MEMORY_DB: 'false' });
             await service.onModuleInit();
 
-            expect(getAllQuestionsSpy).not.toHaveBeenCalled();
+            expect(getAllQuestionsSpy).toHaveBeenCalled();
             expect(createQuestionSpy).not.toHaveBeenCalled();
         });
     });
@@ -78,6 +80,7 @@ describe('QuestionsService', () => {
 
         beforeEach(() => {
             jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
+            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue(mockQuestions.map(q => ({ name: q.topic, enabled: true })) as any);
             jest.spyOn(databaseService, 'assignQuestionToUser').mockResolvedValue(undefined);
         });
 
@@ -171,6 +174,58 @@ describe('QuestionsService', () => {
             expect(result.hasAnswered).toBe(false);
             expect(result.answerId).toBeUndefined();
             expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, 'q2');
+        });
+
+        it('deberia filtrar preguntas de tópicos deshabilitados', async () => {
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+
+            // html habilitado, css deshabilitado
+            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
+                { name: 'html', enabled: true },
+                { name: 'css', enabled: false }
+            ] as any);
+
+            const result = await service.getRandomQuestion(userId);
+
+            expect(result.question.topic).toBe('html');
+            expect((result.question as any)._id).toBe('q1');
+        });
+
+        it('deberia filtrar preguntas de tópicos fuera de rango de fechas', async () => {
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+
+            const past = new Date(); past.setDate(past.getDate() - 10);
+            const future = new Date(); future.setDate(future.getDate() + 10);
+
+            // html activo, css futuro
+            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
+                { name: 'html', enabled: true },
+                { name: 'css', enabled: true, startDate: future }
+            ] as any);
+
+            const result = await service.getRandomQuestion(userId);
+
+            expect(result.question.topic).toBe('html');
+        });
+
+        it('deberia permitir preguntas de tópicos dentro de rango de fechas', async () => {
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+
+            const past = new Date(); past.setDate(past.getDate() - 5);
+            const future = new Date(); future.setDate(future.getDate() + 5);
+
+            // html activo con rango
+            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
+                { name: 'html', enabled: true, startDate: past, endDate: future },
+                { name: 'css', enabled: false }
+            ] as any);
+
+            const result = await service.getRandomQuestion(userId);
+
+            expect(result.question.topic).toBe('html');
         });
     });
 });

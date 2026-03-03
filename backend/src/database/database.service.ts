@@ -5,6 +5,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { Question, QuestionDocument } from './schemas/question.schema';
 import { Answer, AnswerDocument } from './schemas/answer.schema';
 import { Appeal, AppealDocument } from './schemas/appeal.schema';
+import { Topic, TopicDocument } from './schemas/topic.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -13,6 +14,7 @@ export class DatabaseService {
         @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
         @InjectModel(Answer.name) private answerModel: Model<AnswerDocument>,
         @InjectModel(Appeal.name) private appealModel: Model<AppealDocument>,
+        @InjectModel(Topic.name) private topicModel: Model<TopicDocument>,
     ) { }
 
     async createUser(user: Partial<User>): Promise<UserDocument> {
@@ -44,6 +46,9 @@ export class DatabaseService {
     }
 
     async createQuestion(question: Partial<Question>): Promise<QuestionDocument> {
+        if (question.topic) {
+            await this.upsertTopic(question.topic);
+        }
         const createdQuestion = new this.questionModel(question);
         return createdQuestion.save();
     }
@@ -106,6 +111,10 @@ export class DatabaseService {
     }
 
     async createQuestions(questions: Partial<Question>[]): Promise<QuestionDocument[]> {
+        const topics = [...new Set(questions.map(q => q.topic).filter(Boolean))];
+        for (const topic of topics) {
+            await this.upsertTopic(topic!);
+        }
         return this.questionModel.insertMany(questions) as unknown as QuestionDocument[];
     }
 
@@ -132,5 +141,25 @@ export class DatabaseService {
 
     async updateAppeal(id: string, data: Partial<Appeal>): Promise<AppealDocument | null> {
         return this.appealModel.findByIdAndUpdate(id, data, { new: true }).exec();
+    }
+
+    async upsertTopic(name: string): Promise<TopicDocument> {
+        return this.topicModel.findOneAndUpdate(
+            { name },
+            { $setOnInsert: { name, enabled: true } },
+            { upsert: true, new: true }
+        ).exec() as Promise<TopicDocument>;
+    }
+
+    async getAllTopics(): Promise<TopicDocument[]> {
+        return this.topicModel.find().sort({ name: 1 }).exec();
+    }
+
+    async getTopicByName(name: string): Promise<TopicDocument | null> {
+        return this.topicModel.findOne({ name }).exec();
+    }
+
+    async updateTopic(name: string, data: Partial<Topic>): Promise<TopicDocument | null> {
+        return this.topicModel.findOneAndUpdate({ name }, data, { new: true }).exec();
     }
 }

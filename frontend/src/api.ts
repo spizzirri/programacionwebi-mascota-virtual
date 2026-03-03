@@ -18,6 +18,13 @@ interface Question {
     topic: string;
 }
 
+interface Topic {
+    name: string;
+    enabled: boolean;
+    startDate?: string;
+    endDate?: string;
+}
+
 interface Answer {
     _id: string;
     userId: string;
@@ -139,6 +146,19 @@ export const api = {
         return data.questions!;
     },
 
+    async getAllTopics(): Promise<Topic[]> {
+        const data = await apiRequest('/questions/topics');
+        return data.topics!;
+    },
+
+    async updateTopic(name: string, topic: Partial<Topic>): Promise<Topic> {
+        const data = await apiRequest(`/questions/topics/${name}`, {
+            method: 'PATCH',
+            body: JSON.stringify(topic),
+        });
+        return data.topic!;
+    },
+
     async submitAnswer(
         questionId: string,
         userAnswer: string
@@ -229,4 +249,4 @@ export const api = {
     },
 };
 
-export type { User, Question, Answer, Appeal };
+export type { User, Question, Answer, Appeal, Topic };

@@ -64,6 +64,23 @@ export class QuestionsController {
         return { questions };
     }
 
+    @Get('topics')
+    async getAllTopics(@Session() session: SessionData) {
+        await this.checkProfessor(session);
+        const topics = await this.db.getAllTopics();
+        return { topics };
+    }
+
+    @Patch('topics/:name')
+    async updateTopic(@Session() session: SessionData, @Param('name') name: string, @Body() body: any) {
+        await this.checkProfessor(session);
+        const topic = await this.db.updateTopic(name, body);
+        if (!topic) {
+            throw new HttpException('Topic not found', HttpStatus.NOT_FOUND);
+        }
+        return { topic };
+    }
+
     @Delete()
     async deleteAllQuestions(@Session() session: SessionData) {
         await this.checkProfessor(session);

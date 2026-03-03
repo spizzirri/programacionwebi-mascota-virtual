@@ -1,4 +1,4 @@
-import { api, Question } from '../api';
+import { api, Question, Topic } from '../api';
 import { DOMManager } from '../dom-manager';
 
 export class AdminQuestionsView extends DOMManager {
@@ -15,9 +15,17 @@ export class AdminQuestionsView extends DOMManager {
     private fileInput: HTMLInputElement;
     private filterTopicSelect: HTMLSelectElement;
     private filterTextInput: HTMLInputElement;
+    private topicsList: HTMLElement;
+    private topicModal: HTMLElement;
+    private topicForm: HTMLFormElement;
+    private topicNameHidden: HTMLInputElement;
+    private topicEnabledCheckbox: HTMLInputElement;
+    private topicStartDateInput: HTMLInputElement;
+    private topicEndDateInput: HTMLInputElement;
     private currentDeleteId: string | null = null;
     private questions: Question[] = [];
     private filteredQuestions: Question[] = [];
+    private topics: Topic[] = [];
 
     constructor() {
         super();
@@ -34,9 +42,16 @@ export class AdminQuestionsView extends DOMManager {
         this.fileInput = this.getElementSafe<HTMLInputElement>('#file-input');
         this.filterTopicSelect = this.getElementSafe<HTMLSelectElement>('#filter-topic');
         this.filterTextInput = this.getElementSafe<HTMLInputElement>('#filter-text');
+        this.topicsList = this.getElementSafe<HTMLElement>('#topics-list');
+        this.topicModal = this.getElementSafe<HTMLElement>('#topic-modal');
+        this.topicForm = this.getElementSafe<HTMLFormElement>('#topic-form');
+        this.topicNameHidden = this.getElementSafe<HTMLInputElement>('#topic-name-hidden');
+        this.topicEnabledCheckbox = this.getElementSafe<HTMLInputElement>('#topic-enabled');
+        this.topicStartDateInput = this.getElementSafe<HTMLInputElement>('#topic-start-date');
+        this.topicEndDateInput = this.getElementSafe<HTMLInputElement>('#topic-end-date');
 
         this.setupEventListeners();
-        this.loadQuestions();
+        this.loadData();
     }
 
     private setupEventListeners(): void {
@@ -56,13 +71,16 @@ export class AdminQuestionsView extends DOMManager {
         this.filterTextInput.addEventListener('input', () => this.applyFilters());
 
         this.questionForm.addEventListener('submit', (e) => this.handleQuestionSubmit(e));
+        this.topicForm.addEventListener('submit', (e) => this.handleTopicSubmit(e));
+        this.getElementSafe('#close-topic-modal').addEventListener('click', () => this.closeTopicModal());
 
-        [this.questionModal, this.deleteModal, this.deleteAllModal].forEach(modal => {
+        [this.questionModal, this.deleteModal, this.deleteAllModal, this.topicModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     this.closeQuestionModal();
                     this.closeDeleteModal();
                     this.closeDeleteAllModal();
+                    this.closeTopicModal();
                 }
             });
         });
@@ -70,6 +88,13 @@ export class AdminQuestionsView extends DOMManager {
 
     destroy(): void {
         super.destroy();
+    }
+
+    private async loadData(): Promise<void> {
+        await Promise.all([
+            this.loadQuestions(),
+            this.loadTopics()
+        ]);
     }
 
     private async loadQuestions(): Promise<void> {
@@ -85,6 +110,58 @@ export class AdminQuestionsView extends DOMManager {
             this.appendToContainer(row, cell);
             this.appendToContainer(this.tableBody, row);
         }
+    }
+
+    private async loadTopics(): Promise<void> {
+        try {
+            this.topics = await api.getAllTopics();
+            this.renderTopics();
+        } catch (error) {
+            console.error('Error loading topics:', error);
+            this.clearContainer(this.topicsList);
+            const errorMsg = this.createElement('p', { class: 'loading' }, 'Error al cargar tópicos');
+            this.appendToContainer(this.topicsList, errorMsg);
+        }
+    }
+
+    private renderTopics(): void {
+        this.clearContainer(this.topicsList);
+
+        if (this.topics.length === 0) {
+            const emptyMsg = this.createElement('p', { class: 'loading' }, 'No hay tópicos registrados');
+            this.appendToContainer(this.topicsList, emptyMsg);
+            return;
+        }
+
+        this.topics.forEach(topic => {
+            const item = this.createElement('div', {
+                class: `topic-item ${!topic.enabled ? 'disabled' : ''}`
+            });
+
+            const info = this.createElement('div');
+            const name = this.createElement('strong', {}, topic.name);
+            this.appendToContainer(info, name);
+
+            if (topic.startDate || topic.endDate) {
+                const dates = this.createElement('div', { style: 'font-size: 0.7rem; color: var(--text-secondary);' });
+                let dateText = '';
+                if (topic.startDate) dateText += `Desde: ${new Date(topic.startDate).toLocaleDateString()}`;
+                if (topic.endDate) dateText += ` Hasta: ${new Date(topic.endDate).toLocaleDateString()}`;
+                this.setTextContent(dates, dateText);
+                this.appendToContainer(info, dates);
+            }
+
+            const status = this.createElement('span', {
+                class: `topic-status-tag ${topic.enabled ? 'status-active' : 'status-inactive'}`
+            }, topic.enabled ? 'Activo' : 'Inactivo');
+
+            this.appendToContainer(item, info);
+            this.appendToContainer(item, status);
+
+            item.addEventListener('click', () => this.openTopicModal(topic));
+
+            this.appendToContainer(this.topicsList, item);
+        });
     }
 
     private renderQuestions(questions: Question[]): void {
@@ -161,7 +238,7 @@ export class AdminQuestionsView extends DOMManager {
                 await api.createQuestion(questionData);
             }
             this.closeQuestionModal();
-            this.loadQuestions();
+            this.loadData();
         } catch (error) {
             alert('Error al guardar la pregunta: ' + (error as Error).message);
         }
@@ -192,7 +269,7 @@ export class AdminQuestionsView extends DOMManager {
         try {
             await api.deleteQuestion(this.currentDeleteId);
             this.closeDeleteModal();
-            this.loadQuestions();
+            this.loadData();
         } catch (error) {
             alert('Error al eliminar la pregunta: ' + (error as Error).message);
         }
@@ -202,7 +279,7 @@ export class AdminQuestionsView extends DOMManager {
         try {
             await api.deleteAllQuestions();
             this.closeDeleteAllModal();
-            this.loadQuestions();
+            this.loadData();
         } catch (error) {
             alert('Error al eliminar las preguntas: ' + (error as Error).message);
         }
@@ -258,7 +335,7 @@ export class AdminQuestionsView extends DOMManager {
         try {
             await api.createQuestionsBulk(questionsData);
             alert(`Se han importado ${questionsData.length} preguntas correctamente.`);
-            this.loadQuestions();
+            this.loadData();
         } catch (error) {
             alert('Error al importar preguntas: ' + (error as Error).message);
         }
@@ -296,7 +373,38 @@ export class AdminQuestionsView extends DOMManager {
         this.renderQuestions(this.filteredQuestions);
     }
 
+    private openTopicModal(topic: Topic): void {
+        this.topicForm.reset();
+        this.topicNameHidden.value = topic.name;
+        this.topicEnabledCheckbox.checked = topic.enabled;
+        this.topicStartDateInput.value = topic.startDate ? topic.startDate.split('T')[0] : '';
+        this.topicEndDateInput.value = topic.endDate ? topic.endDate.split('T')[0] : '';
+        this.topicModal.classList.remove('hidden');
+    }
+
+    private closeTopicModal(): void {
+        this.topicModal.classList.add('hidden');
+    }
+
+    private async handleTopicSubmit(e: Event): Promise<void> {
+        e.preventDefault();
+        const name = this.topicNameHidden.value;
+        const topicData: Partial<Topic> = {
+            enabled: this.topicEnabledCheckbox.checked,
+            startDate: this.topicStartDateInput.value || undefined,
+            endDate: this.topicEndDateInput.value || undefined,
+        };
+
+        try {
+            await api.updateTopic(name, topicData);
+            this.closeTopicModal();
+            this.loadTopics();
+        } catch (error) {
+            alert('Error al guardar el tópico: ' + (error as Error).message);
+        }
+    }
+
     refresh(): void {
-        this.loadQuestions();
+        this.loadData();
     }
 }
