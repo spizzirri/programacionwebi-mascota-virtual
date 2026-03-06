@@ -1,0 +1,25 @@
+{
+    "request": {
+        "method": "POST",
+        "urlPathPattern": "/v1beta/models/.*:generateContent.*"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "{\n  \"rating\": \"correct\",\n  \"feedback\": \"Respuesta evaluada correctamente por wiremock.\"\n}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

@@ -18,6 +18,30 @@ Para el backend, navega a la carpeta `/backend` o usa los comandos de npm worksp
 - **Iniciar servidor (Desarrollo):** `npm run dev` (o `npm run dev:backend` desde la raíz)
 - **Iniciar servidor (Producción):** `node dist/main.js` (requiere `npm run build`)
 
+## Pruebas de Sistema
+
+Para ejecutar las pruebas End-to-End con Playwright:
+
+1. **Levantar el entorno E2E (contenedores)**:
+   ```bash
+   npm run start:e2e:env
+   ```
+
+2. **Levantar backend y frontend con configuración E2E**:
+   ```bash
+   npm run dev:e2e
+   ```
+
+3. **Ejecutar las pruebas E2E**:
+   ```bash
+   npm run test:e2e
+   ```
+
+4. **Detener y limpiar los contenedores E2E**:
+   ```bash
+   npm run stop:e2e:env -- --rmi local
+   ```
+
 #### Frontend
 Para el frontend, navega a la carpeta `/frontend` o usa los comandos de npm workspaces desde la raíz:
 - **Iniciar aplicación:** `npm run dev` (o `npm run dev:frontend` desde la raíz)
