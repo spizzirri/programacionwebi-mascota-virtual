@@ -1,3 +1,4 @@
+NODE_ENV=e2e-local
 GEMINI_API_KEY=dummy-key-for-e2e
 GEMINI_BASE_URL=http://localhost:8080
 PORT=3000

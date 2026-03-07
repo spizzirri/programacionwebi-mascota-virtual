@@ -24,11 +24,11 @@ export class AnswersService {
         if (!apiKey) {
             console.error('GEMINI_API_KEY not set. Answer validation will fail.');
         } else {
-            const config: any = { apiKey };
+            const options: any = { apiKey };
             if (baseUrl) {
-                config.baseUrl = baseUrl;
+                options.httpOptions = { baseUrl };
             }
-            this.client = new GoogleGenAI(config);
+            this.client = new GoogleGenAI(options);
         }
     }
 

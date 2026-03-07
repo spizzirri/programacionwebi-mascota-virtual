@@ -42,7 +42,7 @@ export class QuestionsService implements OnModuleInit {
         const currentQuestion =
             await this.findTodaysAssignedQuestion(user)
             ?? await this.assignNewQuestion(userId);
-
+        console.log(currentQuestion);
         const questioner = Questioner.create(user?.role, this.db, userId, currentQuestion);
         return questioner.getRandomQuestion();
     }
