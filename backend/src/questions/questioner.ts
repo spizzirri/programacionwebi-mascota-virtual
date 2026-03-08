@@ -59,7 +59,7 @@ export class QuestionerForProfessor extends Questioner {
 export class QuestionerForStudent extends Questioner {
     async getRandomQuestion(): Promise<QuestionResult> {
         const answer = await this.db.getAnswerForQuestionToday(this.userId, (this.currentQuestion as any)._id.toString());
-        const hasAnswered = false;
+        const hasAnswered = !!answer;
         console.log(answer);
         console.log(hasAnswered);
 

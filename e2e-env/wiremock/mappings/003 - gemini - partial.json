@@ -1,0 +1,30 @@
+{
+    "request": {
+        "method": "POST",
+        "urlPathPattern": "/v1beta/models/.*:generateContent.*",
+        "bodyPatterns": [
+            {
+                "contains": "Mi respuesta parcial"
+            }
+        ]
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "{\n  \"rating\": \"partial\",\n  \"feedback\": \"Respuesta evaluada parcialmente por wiremock.\"\n}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

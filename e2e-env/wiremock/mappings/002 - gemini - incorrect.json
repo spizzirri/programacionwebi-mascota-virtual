@@ -1,7 +1,12 @@
 {
     "request": {
         "method": "POST",
-        "urlPathPattern": "/v1beta/models/.*:generateContent.*"
+        "urlPathPattern": "/v1beta/models/.*:generateContent.*",
+        "bodyPatterns": [
+            {
+                "contains": "Mi respuesta mala"
+            }
+        ]
     },
     "response": {
         "status": 200,
@@ -11,7 +16,7 @@
                     "content": {
                         "parts": [
                             {
-                                "text": "{\n  \"rating\": \"correct\",\n  \"feedback\": \"Respuesta evaluada correctamente por wiremock.\"\n}"
+                                "text": "{\n  \"rating\": \"incorrect\",\n  \"feedback\": \"Respuesta evaluada incorrectamente por wiremock.\"\n}"
                             }
                         ]
                     }
