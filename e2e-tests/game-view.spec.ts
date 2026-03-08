@@ -57,6 +57,22 @@ async function cleanDatabase() {
         }
     );
 
+    await db.collection('questions').deleteMany({})
+    await db.collection('topic').deleteMany({})
+    await db.collection('questions').insertMany([
+        {
+            text: "¿Qué es el DOM?",
+            topic: "html_semantico",
+        },
+        {
+            text: "¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?",
+            topic: "javascript"
+        },
+        {
+            text: "¿Por qué es importante entender el modelo de caja (box model) en CSS?",
+            topic: "css_modelo_caja"
+        }
+    ]);
     await db.collection('answers').deleteMany({});
     await db.collection('appeals').deleteMany({});
 }
@@ -283,4 +299,92 @@ test.describe('game-view', () => {
         })
     })
 
+    test.describe('profesor administra preguntas', () => {
+
+        test('El profesor navega a la pantalla de administración de preguntas y ve la lista de preguntas actuales. Agrega la pregunta "¿Que es CSS?" con el topico CSS y la guarda. El usuario ahora visualiza "¿Que es CSS?" en la lista de preguntas.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-questions-nav-btn');
+            await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
+
+            await page.click('#add-question-btn');
+            await expect(page.locator('#question-modal')).not.toHaveClass(/hidden/);
+
+            await page.fill('#question-modal #question-text', '¿Que es CSS?');
+            await page.fill('#question-modal #question-topic', 'css_modelo_caja');
+            await page.click('#question-modal #question-form button[type="submit"]');
+
+            await expect(page.locator('#question-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#questions-table-body')).toContainText('¿Que es CSS?');
+
+            await logout(page);
+        });
+
+        test('El profesor elimina la pregunta "¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?" y ahora el usuario no visualiza la pregunta en la lista de preguntas.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-questions-nav-btn');
+            await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
+
+            const textToFind = '¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?';
+            await expect(page.locator('#questions-table-body')).toContainText(textToFind);
+
+            const row = page.locator('#questions-table-body tr', { hasText: textToFind }).first();
+            await row.locator('button', { hasText: '🗑️' }).click();
+
+            await expect(page.locator('#delete-modal')).not.toHaveClass(/hidden/);
+            await page.click('#confirm-delete');
+
+            await expect(page.locator('#delete-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#questions-table-body')).not.toContainText(textToFind);
+
+            await logout(page);
+        });
+
+        test('El profesor edita la pregunta "¿Qué es el DOM?" y cambia su texto a "¿Qué es el DOMO?" y ahora el usuario visualiza "¿Qué es el DOMO?" en la lista de preguntas y no visualiza "¿Qué es el DOM?".', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-questions-nav-btn');
+            await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
+
+            const row = page.locator('#questions-table-body tr').filter({ hasText: '¿Qué es el DOM?' });
+            // Clickeamos el botón de editar
+            await row.locator('button', { hasText: '✏️' }).click();
+
+            await expect(page.locator('#question-modal')).not.toHaveClass(/hidden/);
+            await page.fill('#question-modal #question-text', '¿Qué es el DOMO?');
+            await page.click('#question-modal #question-form button[type="submit"]');
+
+            await expect(page.locator('#question-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#questions-table-body')).toContainText('¿Qué es el DOMO?');
+
+            // To check it doesn't contain the exact old text, but checking without exact might fail since DOMO contains DOM. Thus we check exact text:
+            const allTexts = await page.locator('#questions-table-body td:first-child').allInnerTexts();
+            expect(allTexts).not.toContain('¿Qué es el DOM?');
+
+            await logout(page);
+        });
+
+        test('El profesor visualiza los topicos "css_modelo_caja", "html_semantico" y "javascript" en la vista y todos estan activos.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-questions-nav-btn');
+            await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
+
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'css_modelo_caja' })).toBeVisible();
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'css_modelo_caja' })).toContainText('Activo');
+
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'html_semantico' })).toBeVisible();
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'html_semantico' })).toContainText('Activo');
+
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'javascript' })).toBeVisible();
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'javascript' })).toContainText('Activo');
+
+            await logout(page);
+        });
+    })
+
+    test.describe('profesor administra usuarios', () => {
+
+    })
 })
