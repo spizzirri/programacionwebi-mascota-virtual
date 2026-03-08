@@ -19,10 +19,16 @@ export class AnswersService {
 
     constructor(private readonly db: DatabaseService) {
         const apiKey = process.env.GEMINI_API_KEY;
+        const baseUrl = process.env.GEMINI_BASE_URL;
+
         if (!apiKey) {
             console.error('GEMINI_API_KEY not set. Answer validation will fail.');
         } else {
-            this.client = new GoogleGenAI({ apiKey });
+            const options: any = { apiKey };
+            if (baseUrl) {
+                options.httpOptions = { baseUrl };
+            }
+            this.client = new GoogleGenAI(options);
         }
     }
 

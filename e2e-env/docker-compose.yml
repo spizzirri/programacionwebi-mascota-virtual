@@ -1,0 +1,26 @@
+services:
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=tamagotchi_e2e
+    volumes:
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  wiremock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+    command:
+      - --global-response-templating
+      - --disable-gzip
+      - --verbose
