@@ -31,31 +31,34 @@ async function cleanDatabase() {
     await client.connect();
     const db = client.db('tamagotchi_e2e');
 
-    await db.collection('users').updateOne(
-        { email: 'estudiante@gmail.com' },
+    await db.collection('users').deleteMany({});
+    const passwordHash = "$2b$10$eyTT939IAmBiXRyRlpHEQeE91NRJ4WxfwSiDUtvXnFLgal99qAJ2q";
+    await db.collection('users').insertMany([
         {
-            $set: {
-                streak: 0,
-                currentQuestionId: null,
-                lastQuestionAssignedAt: null,
-                lastQuestionAnsweredCorrectly: null,
-                currentQuestionText: null
-            }
-        }
-    );
-
-    await db.collection('users').updateOne(
-        { email: 'admin@gmail.com' },
+            email: 'admin@gmail.com',
+            password: passwordHash,
+            role: 'PROFESSOR',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            lastQuestionAnsweredCorrectly: null,
+            currentQuestionText: null,
+            createdAt: new Date(),
+            __v: 0
+        },
         {
-            $set: {
-                streak: 0,
-                currentQuestionId: null,
-                lastQuestionAssignedAt: null,
-                lastQuestionAnsweredCorrectly: null,
-                currentQuestionText: null
-            }
+            email: 'estudiante@gmail.com',
+            password: passwordHash,
+            role: 'STUDENT',
+            streak: 0,
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            lastQuestionAnsweredCorrectly: null,
+            currentQuestionText: null,
+            createdAt: new Date(),
+            __v: 0
         }
-    );
+    ]);
 
     await db.collection('questions').deleteMany({})
     await db.collection('topic').deleteMany({})
@@ -382,9 +385,108 @@ test.describe('game-view', () => {
 
             await logout(page);
         });
-    })
+    });
 
     test.describe('profesor administra usuarios', () => {
 
-    })
-})
+        test('El profesor navega a administracion de usuario y visualiza estudiante@gmail.com y admin@gmail.com. Ve las columans "Email, Rol, Racha, Pregunta Actual, Fecha Asignación y Acciones". Acciones tiene tres botones, uno para ver el perfil, otro para editar y otro para eliminar.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            await expect(page.locator('.admin-table thead th').nth(0)).toHaveText('Email');
+            await expect(page.locator('.admin-table thead th').nth(1)).toHaveText('Rol');
+            await expect(page.locator('.admin-table thead th').nth(2)).toHaveText('Racha');
+            await expect(page.locator('.admin-table thead th').nth(3)).toHaveText('Pregunta Actual');
+            await expect(page.locator('.admin-table thead th').nth(4)).toHaveText('Fecha Asignación');
+            await expect(page.locator('.admin-table thead th').nth(5)).toHaveText('Acciones');
+
+            const rowStudent = page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' });
+            await expect(rowStudent).toBeVisible();
+            await expect(rowStudent.locator('button', { hasText: '👤' })).toBeVisible();
+            await expect(rowStudent.locator('button', { hasText: '✏️' })).toBeVisible();
+            await expect(rowStudent.locator('button', { hasText: '🗑️' })).toBeVisible();
+
+            const rowAdmin = page.locator('#users-table-body tr').filter({ hasText: 'admin@gmail.com' });
+            await expect(rowAdmin).toBeVisible();
+
+            await logout(page);
+        });
+
+        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            await page.click('#add-user-btn');
+            await expect(page.locator('#user-modal')).not.toHaveClass(/hidden/);
+
+            await page.fill('#user-email', 'estudiante2@gmail.com');
+            await page.fill('#user-password', '123456');
+            await page.selectOption('#user-role', 'STUDENT');
+            await page.click('#user-form button[type="submit"]');
+
+            await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#users-table-body')).toContainText('estudiante2@gmail.com');
+
+            await logout(page);
+
+            await login(page, 'estudiante2@gmail.com', '123456');
+            await expect(page.locator('#game-page')).toBeVisible();
+
+            await logout(page);
+        });
+
+        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante) y luego modifica el email de estudiante2 a otroestudiante. Verifica que el cambio se vea reflejado en la tabla. Elimina el usuario otroestudiante y verifica que no este en la lista.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            // Ensure the user exists from previous or just create it directly
+            await page.click('#add-user-btn');
+            await page.fill('#user-email', 'estudiante3@gmail.com');
+            await page.fill('#user-password', '123456');
+            await page.selectOption('#user-role', 'STUDENT');
+            await page.click('#user-form button[type="submit"]');
+            await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
+            
+            const rowStudent2 = page.locator('#users-table-body tr').filter({ hasText: 'estudiante3@gmail.com' });
+            await rowStudent2.locator('button', { hasText: '✏️' }).click();
+
+            await expect(page.locator('#user-modal')).not.toHaveClass(/hidden/);
+            await page.fill('#user-email', 'otroestudiante@gmail.com');
+            await page.click('#user-form button[type="submit"]');
+
+            await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#users-table-body')).toContainText('otroestudiante@gmail.com');
+            await expect(page.locator('#users-table-body')).not.toContainText('estudiante3@gmail.com');
+
+            const rowEdited = page.locator('#users-table-body tr').filter({ hasText: 'otroestudiante@gmail.com' });
+            await rowEdited.locator('button', { hasText: '🗑️' }).click();
+
+            await expect(page.locator('#delete-modal')).not.toHaveClass(/hidden/);
+            await page.click('#confirm-delete');
+
+            await expect(page.locator('#delete-modal')).toHaveClass(/hidden/);
+            await expect(page.locator('#users-table-body')).not.toContainText('otroestudiante@gmail.com');
+
+            await logout(page);
+        });
+
+        test('El profesor navega a administracion de usuario, y navega al perfil del usuario estudiante@gmail.com.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            const rowStudent = page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' });
+            await rowStudent.locator('button', { hasText: '👤' }).click();
+
+            await expect(page.locator('#profile-page')).toBeVisible({ timeout: 5000 });
+            await logout(page);
+        });
+    });
+});
