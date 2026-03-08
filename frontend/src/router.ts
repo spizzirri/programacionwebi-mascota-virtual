@@ -102,6 +102,11 @@ window.addEventListener('navigate-to', ((e: CustomEvent<{ view: string }>) => {
     navigateTo(`${e?.detail?.view}`);
 }) as EventListener);
 
+window.addEventListener('session-expired', () => {
+    session.clearSession();
+    window.history.pushState(null, '', '/');
+    navigateTo('/');
+});
 
 session.initialize().then(() => {
     const pathname = window.location.pathname;

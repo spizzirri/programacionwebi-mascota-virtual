@@ -66,6 +66,11 @@ async function apiRequest(
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            window.dispatchEvent(new CustomEvent('session-expired'));
+            throw new Error('Sesión vencida');
+        }
+
         const errorText = await response.text();
         let errorMessage = errorText || 'Request failed';
         try {
@@ -74,7 +79,6 @@ async function apiRequest(
                 errorMessage = errorJson.message;
             }
         } catch (e) {
-            // Not JSON
         }
         throw new Error(errorMessage);
     }
