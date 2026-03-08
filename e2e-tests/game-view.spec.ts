@@ -102,6 +102,33 @@ test.describe('game-view', () => {
         });
     })
 
+    test.describe('estudiante navega al perfil', () => {
+        test('[wiremock 001] estudiante navega al perfil y ve el historial de sus preguntas mostrando la respuesta dada y la fecha en la que la respondió y su email en el header', async ({ page }) => {
+            await login(page, 'estudiante@gmail.com', '123456');
+
+            expect(await getStreak(page)).toBe('0');
+
+            await answerQuestion(page, 'Mi respuesta buena');
+
+            expect(await getStreak(page)).toBe('1');
+
+            await page.click('#profile-nav-btn');
+            await expect(page.locator('#profile-page')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('#profile-email')).toHaveText('estudiante@gmail.com');
+            await expect(page.locator('.history-item')).toHaveCount(1, { timeout: 5000 });
+            await expect(page.locator('.history-item .history-answer')).toHaveText('Tu respuesta: Mi respuesta buena');
+            await expect(page.locator('.history-item .history-rating')).toHaveText('Correcta');
+
+            await expect(page.locator('.history-item .history-timestamp')).toHaveText('Hace un momento');
+
+            await page.click('#game-nav-btn');
+            await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
+            expect(await getStreak(page)).toBe('1');
+
+            await logout(page);
+        })
+    })
+
     test.describe('estudiante apela', () => {
 
         test('[wiremock 001] debería permitir apelar una respuesta incorrecta y que el profesor la acepte actualizando la racha del estudiante', async ({ page }) => {
@@ -228,4 +255,32 @@ test.describe('game-view', () => {
 
         });
     })
+
+    test.describe('profesor navega al perfil', () => {
+        test('[wiremock 001] profesor navega al perfil y ve el historial de sus preguntas mostrando la respuesta dada y la fecha en la que la respondió y su email en el header', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            expect(await getStreak(page)).toBe('0');
+
+            await answerQuestion(page, 'Mi respuesta mala');
+
+            expect(await getStreak(page)).toBe('0');
+
+            await page.click('#profile-nav-btn');
+            await expect(page.locator('#profile-page')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('#profile-email')).toHaveText('admin@gmail.com');
+            await expect(page.locator('.history-item')).toHaveCount(1, { timeout: 5000 });
+            await expect(page.locator('.history-item .history-answer')).toHaveText('Tu respuesta: Mi respuesta mala');
+            await expect(page.locator('.history-item .history-rating')).toHaveText('Incorrecta');
+
+            await expect(page.locator('.history-item .history-timestamp')).toHaveText('Hace un momento');
+
+            await page.click('#game-nav-btn');
+            await expect(page.locator('#question-text')).toBeVisible();
+            expect(await getStreak(page)).toBe('0');
+
+            await logout(page);
+        })
+    })
+
 })
