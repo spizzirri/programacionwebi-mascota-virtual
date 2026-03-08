@@ -26,6 +26,21 @@ export class DatabaseService {
         return this.userModel.findOne({ email }).exec();
     }
 
+    async incrementFailedLoginAttempts(email: string): Promise<UserDocument | null> {
+        return this.userModel.findOneAndUpdate(
+            { email },
+            { $inc: { failedLoginAttempts: 1 } },
+            { new: true }
+        ).exec();
+    }
+
+    async resetFailedLoginAttempts(email: string): Promise<void> {
+        await this.userModel.updateOne(
+            { email },
+            { $set: { failedLoginAttempts: 0 } }
+        ).exec();
+    }
+
     async findUserById(id: string): Promise<UserDocument | null> {
         return this.userModel.findById(id).exec();
     }

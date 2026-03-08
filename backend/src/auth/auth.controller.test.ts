@@ -34,7 +34,7 @@ describe('AuthController', () => {
         it('deberia loguear un usuario correctamente y establecer la sesión', async () => {
             const body = { email: 'test@test.com', password: 'password123' };
             const session: any = {};
-            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
+            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
 
@@ -49,10 +49,10 @@ describe('AuthController', () => {
             const body = { email: 'test@test.com', password: 'wrongpassword' };
             const session: any = {};
 
-            jest.spyOn(authService, 'login').mockRejectedValue(new Error('Invalid credentials'));
+            jest.spyOn(authService, 'login').mockRejectedValue(new Error('usuario o contraseña incorrectos'));
 
             await expect(controller.login(body, session)).rejects.toThrow(
-                new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED)
+                new HttpException('usuario o contraseña incorrectos', HttpStatus.UNAUTHORIZED)
             );
             expect(session.userId).toBeUndefined();
         });
@@ -72,7 +72,7 @@ describe('AuthController', () => {
     describe('getCurrentUser', () => {
         it('deberia retornar el usuario si la sesión es valida', async () => {
             const session: any = { userId: 'user123' };
-            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, createdAt: new Date() };
+            const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(mockUser);
 

@@ -86,6 +86,32 @@ test.describe('game-view', () => {
         await cleanDatabase();
     });
 
+
+    test.describe('usuario se loguea', () => {
+
+        test('el usuario estudiante@gmail se bloquea luego de 3 intentos fallidos de inicio de sesión', async ({ page }) => {
+            await page.goto('/');
+
+            for (let i = 0; i < 2; i++) {
+                await page.fill('#login-email', 'estudiante@gmail.com');
+                await page.fill('#login-password', 'wrong-password');
+                await page.click('#login-button');
+                await expect(page.locator('#login-error')).toHaveText('usuario o contraseña incorrectos');
+            }
+
+            await page.fill('#login-email', 'estudiante@gmail.com');
+            await page.fill('#login-password', 'wrong-password');
+            await page.click('#login-button');
+            await expect(page.locator('#login-error')).toHaveText('usuario bloqueado, contacte al administrador');
+            
+            // Should also be blocked with correct password now
+            await page.fill('#login-email', 'estudiante@gmail.com');
+            await page.fill('#login-password', '123456');
+            await page.click('#login-button');
+            await expect(page.locator('#login-error')).toHaveText('usuario bloqueado, contacte al administrador');
+        });
+    });
+
     test.describe('estudiante responde', () => {
 
         test('[wiremock 001] debería mostrar racha de 1 cuando el estudiante responde correctamente y no puede volver a responder', async ({ page }) => {
@@ -452,7 +478,7 @@ test.describe('game-view', () => {
             await page.selectOption('#user-role', 'STUDENT');
             await page.click('#user-form button[type="submit"]');
             await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
-            
+
             const rowStudent2 = page.locator('#users-table-body tr').filter({ hasText: 'estudiante3@gmail.com' });
             await rowStudent2.locator('button', { hasText: '✏️' }).click();
 

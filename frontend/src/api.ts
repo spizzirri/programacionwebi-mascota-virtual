@@ -66,8 +66,17 @@ async function apiRequest(
     });
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Request failed');
+        const errorText = await response.text();
+        let errorMessage = errorText || 'Request failed';
+        try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.message) {
+                errorMessage = errorJson.message;
+            }
+        } catch (e) {
+            // Not JSON
+        }
+        throw new Error(errorMessage);
     }
 
     return response.json();

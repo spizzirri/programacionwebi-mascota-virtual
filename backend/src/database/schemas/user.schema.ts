@@ -21,6 +21,9 @@ export class User {
     @Prop({ default: 0 })
     streak: number;
 
+    @Prop({ default: 0 })
+    failedLoginAttempts: number;
+
     @Prop()
     currentQuestionId?: string;
 

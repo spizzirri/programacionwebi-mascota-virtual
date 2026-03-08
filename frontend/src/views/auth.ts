@@ -61,6 +61,7 @@ export class AuthView extends DOMManager {
     displayLoginError(errorElement: HTMLElement, error: unknown): void {
         const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
         this.setTextContent(errorElement, message);
+        errorElement.style.display = 'block';
     }
 
     destroy(): void {

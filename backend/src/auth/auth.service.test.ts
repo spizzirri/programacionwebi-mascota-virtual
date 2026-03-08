@@ -35,6 +35,8 @@ describe('AuthService', () => {
                         findUserById: jest.fn(),
                         createUser: jest.fn(),
                         updateUserStreak: jest.fn(),
+                        incrementFailedLoginAttempts: jest.fn(),
+                        resetFailedLoginAttempts: jest.fn(),
                     },
                 },
             ],
@@ -56,7 +58,7 @@ describe('AuthService', () => {
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('wrong@test.com', 'pass'))
-                .rejects.toThrow('Invalid credentials');
+                .rejects.toThrow('usuario o contraseña incorrectos');
 
             expect(bcrypt.compare).toHaveBeenCalled();
         });
@@ -68,6 +70,7 @@ describe('AuthService', () => {
                 email: 'test@test.com',
                 password: 'hashed-real-password',
                 streak: 0,
+                failedLoginAttempts: 0,
                 createdAt: new Date()
             };
 
@@ -79,7 +82,7 @@ describe('AuthService', () => {
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('test@test.com', 'wrong-pass'))
-                .rejects.toThrow('Invalid credentials');
+                .rejects.toThrow('usuario o contraseña incorrectos');
 
             expect(bcrypt.compare).toHaveBeenCalledWith('wrong-pass', 'hashed-real-password');
         });
@@ -92,6 +95,7 @@ describe('AuthService', () => {
                 email: 'test@test.com',
                 password: 'hashed-real-password',
                 streak: 5,
+                failedLoginAttempts: 0,
                 createdAt: now
             };
 
@@ -108,6 +112,7 @@ describe('AuthService', () => {
                 _id: 'user1',
                 email: 'test@test.com',
                 streak: 5,
+                failedLoginAttempts: 0,
                 createdAt: now
             });
             expect((result as any).password).toBeUndefined();
@@ -126,6 +131,7 @@ describe('AuthService', () => {
                 email: 'test@test.com',
                 password: 'hashed-real-password',
                 streak: 5,
+                failedLoginAttempts: 0,
                 lastQuestionAnsweredCorrectly: missedDay,
                 createdAt: now
             };
@@ -157,6 +163,7 @@ describe('AuthService', () => {
                 email: 'test2@test.com',
                 password: 'hashed-real-password',
                 streak: 3,
+                failedLoginAttempts: 0,
                 lastQuestionAnsweredCorrectly: yesterdayValid,
                 createdAt: now
             };
@@ -191,6 +198,7 @@ describe('AuthService', () => {
                 email: 'test@test.com',
                 password: 'secret',
                 streak: 10,
+                failedLoginAttempts: 0,
                 createdAt: now
             };
 
@@ -205,6 +213,7 @@ describe('AuthService', () => {
                 _id: 'user1',
                 email: 'test@test.com',
                 streak: 10,
+                failedLoginAttempts: 0,
                 createdAt: now
             });
             expect((result as any).password).toBeUndefined();
