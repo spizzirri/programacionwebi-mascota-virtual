@@ -67,151 +67,165 @@ test.describe('game-view', () => {
         await cleanDatabase();
     });
 
-    test('[wiremock 001] debería mostrar racha de 1 cuando el estudiante responde correctamente y no puede volver a responder', async ({ page }) => {
-        await login(page, 'estudiante@gmail.com', '123456');
+    test.describe('estudiante responde', () => {
 
-        expect(await getStreak(page)).toBe('0');
+        test('[wiremock 001] debería mostrar racha de 1 cuando el estudiante responde correctamente y no puede volver a responder', async ({ page }) => {
+            await login(page, 'estudiante@gmail.com', '123456');
 
-        await answerQuestion(page, 'Mi respuesta buena');
+            expect(await getStreak(page)).toBe('0');
 
-        expect(await getStreak(page)).toBe('1');
+            await answerQuestion(page, 'Mi respuesta buena');
 
-        await page.reload();
+            expect(await getStreak(page)).toBe('1');
 
-        await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
+            await page.reload();
 
-        await logout(page);
-    });
+            await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
 
-    test('[wiremock 003] debería mostrar racha de 0.5 cuando el estudiante responde parcialmente y no puede volver a responder', async ({ page }) => {
-        await login(page, 'estudiante@gmail.com', '123456');
+            await logout(page);
+        });
 
-        expect(await getStreak(page)).toBe('0');
+        test('[wiremock 003] debería mostrar racha de 0.5 cuando el estudiante responde parcialmente y no puede volver a responder', async ({ page }) => {
+            await login(page, 'estudiante@gmail.com', '123456');
 
-        await answerQuestion(page, 'Mi respuesta parcial');
+            expect(await getStreak(page)).toBe('0');
 
-        expect(await getStreak(page)).toBe('0.5');
+            await answerQuestion(page, 'Mi respuesta parcial');
 
-        await page.reload();
+            expect(await getStreak(page)).toBe('0.5');
 
-        await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
+            await page.reload();
 
-        await logout(page);
-    });
+            await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
 
-    test('[wiremock 001] debería permitir apelar una respuesta incorrecta y que el profesor la acepte actualizando la racha del estudiante', async ({ page }) => {
-        await login(page, 'estudiante@gmail.com', '123456');
+            await logout(page);
+        });
+    })
 
-        expect(await getStreak(page)).toBe('0');
+    test.describe('estudiante apela', () => {
 
-        await answerQuestion(page, 'Mi respuesta mala');
+        test('[wiremock 001] debería permitir apelar una respuesta incorrecta y que el profesor la acepte actualizando la racha del estudiante', async ({ page }) => {
+            await login(page, 'estudiante@gmail.com', '123456');
 
-        expect(await getStreak(page)).toBe('0');
+            expect(await getStreak(page)).toBe('0');
 
-        await page.click('#appeal-btn');
-        await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
+            await answerQuestion(page, 'Mi respuesta mala');
 
-        await page.goto('/my-appeals');
-        await expect(page.locator('#my-appeals-page')).toBeVisible({ timeout: 5000 });
-        await expect(page.locator('#appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
-        await expect(page.locator('#appeals-table-body .pending')).toBeVisible();
+            expect(await getStreak(page)).toBe('0');
 
-        await logout(page);
+            await page.click('#appeal-btn');
+            await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
 
-        await login(page, 'admin@gmail.com', '123456');
+            await page.goto('/my-appeals');
+            await expect(page.locator('#my-appeals-page')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('#appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
+            await expect(page.locator('#appeals-table-body .pending')).toBeVisible();
 
-        await page.goto('/admin-appeals');
-        await expect(page.locator('#admin-appeals-page')).toBeVisible({ timeout: 5000 });
-        await expect(page.locator('#admin-appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
+            await logout(page);
 
-        await page.click('.view-appeal-btn');
-        await expect(page.locator('#appeal-modal')).not.toHaveClass(/hidden/, { timeout: 5000 });
+            await login(page, 'admin@gmail.com', '123456');
 
-        await page.fill('#professor-feedback', 'La respuesta es correcta, acepto la apelación.');
-        await page.click('#accept-appeal-btn');
+            await page.goto('/admin-appeals');
+            await expect(page.locator('#admin-appeals-page')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('#admin-appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
 
-        await expect(page.locator('.alert-modal-container .alert-modal-content p')).toHaveText('Apelación aceptada correctamente.', { timeout: 5000 });
-        await page.click('.alert-modal-container .alert-modal-content .btn-primary');
+            await page.click('.view-appeal-btn');
+            await expect(page.locator('#appeal-modal')).not.toHaveClass(/hidden/, { timeout: 5000 });
 
-        await expect(page.locator('#appeal-modal')).toHaveClass(/hidden/, { timeout: 5000 });
-        await expect(page.locator('#admin-appeals-table-body .accepted')).toBeVisible({ timeout: 5000 });
+            await page.fill('#professor-feedback', 'La respuesta es correcta, acepto la apelación.');
+            await page.click('#accept-appeal-btn');
 
-        await logout(page);
+            await expect(page.locator('.alert-modal-container .alert-modal-content p')).toHaveText('Apelación aceptada correctamente.', { timeout: 5000 });
+            await page.click('.alert-modal-container .alert-modal-content .btn-primary');
 
-        await login(page, 'estudiante@gmail.com', '123456');
-        expect(await getStreak(page)).toBe('1');
+            await expect(page.locator('#appeal-modal')).toHaveClass(/hidden/, { timeout: 5000 });
+            await expect(page.locator('#admin-appeals-table-body .accepted')).toBeVisible({ timeout: 5000 });
 
-        await page.goto('/my-appeals');
-        await expect(page.locator('#appeals-table-body .accepted')).toBeVisible({ timeout: 5000 });
+            await logout(page);
 
-        await logout(page);
-    });
+            await login(page, 'estudiante@gmail.com', '123456');
+            expect(await getStreak(page)).toBe('1');
 
-    test('[wiremock 002] debería permitir apelar una respuesta incorrecta y que el profesor la rechace manteniendo la racha en 0', async ({ page }) => {
-        await login(page, 'estudiante@gmail.com', '123456');
+            await page.goto('/my-appeals');
+            await expect(page.locator('#appeals-table-body .accepted')).toBeVisible({ timeout: 5000 });
 
-        expect(await getStreak(page)).toBe('0');
+            await logout(page);
+        });
 
-        await answerQuestion(page, 'Mi respuesta mala');
+        test('[wiremock 002] debería permitir apelar una respuesta incorrecta y que el profesor la rechace manteniendo la racha en 0', async ({ page }) => {
+            await login(page, 'estudiante@gmail.com', '123456');
 
-        expect(await getStreak(page)).toBe('0');
+            expect(await getStreak(page)).toBe('0');
 
-        await page.click('#appeal-btn');
-        await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
+            await answerQuestion(page, 'Mi respuesta mala');
 
-        await page.goto('/my-appeals');
-        await expect(page.locator('#appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
+            expect(await getStreak(page)).toBe('0');
 
-        await logout(page);
+            await page.click('#appeal-btn');
+            await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
 
-        await login(page, 'admin@gmail.com', '123456');
+            await page.goto('/my-appeals');
+            await expect(page.locator('#appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
 
-        await page.goto('/admin-appeals');
-        await expect(page.locator('#admin-appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
+            await logout(page);
 
-        await page.click('.view-appeal-btn');
-        await expect(page.locator('#appeal-modal')).not.toHaveClass(/hidden/, { timeout: 5000 });
+            await login(page, 'admin@gmail.com', '123456');
 
-        await page.fill('#professor-feedback', 'La respuesta es incorrecta, rechazo la apelación.');
-        await page.click('#reject-appeal-btn');
+            await page.goto('/admin-appeals');
+            await expect(page.locator('#admin-appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
 
-        await expect(page.locator('.alert-modal-container .alert-modal-content p')).toHaveText('Apelación rechazada correctamente.', { timeout: 5000 });
-        await page.click('.alert-modal-container .alert-modal-content .btn-primary');
+            await page.click('.view-appeal-btn');
+            await expect(page.locator('#appeal-modal')).not.toHaveClass(/hidden/, { timeout: 5000 });
 
-        await expect(page.locator('#appeal-modal')).toHaveClass(/hidden/, { timeout: 5000 });
-        await expect(page.locator('#admin-appeals-table-body .rejected')).toBeVisible({ timeout: 5000 });
+            await page.fill('#professor-feedback', 'La respuesta es incorrecta, rechazo la apelación.');
+            await page.click('#reject-appeal-btn');
 
-        await logout(page);
+            await expect(page.locator('.alert-modal-container .alert-modal-content p')).toHaveText('Apelación rechazada correctamente.', { timeout: 5000 });
+            await page.click('.alert-modal-container .alert-modal-content .btn-primary');
 
-        await login(page, 'estudiante@gmail.com', '123456');
-        expect(await getStreak(page)).toBe('0');
+            await expect(page.locator('#appeal-modal')).toHaveClass(/hidden/, { timeout: 5000 });
+            await expect(page.locator('#admin-appeals-table-body .rejected')).toBeVisible({ timeout: 5000 });
 
-        await page.goto('/my-appeals');
-        await expect(page.locator('#appeals-table-body .rejected')).toBeVisible({ timeout: 5000 });
+            await logout(page);
 
-        await logout(page);
-    });
+            await login(page, 'estudiante@gmail.com', '123456');
+            expect(await getStreak(page)).toBe('0');
 
-    test('[wiremock 001] debería permitir que un profesor responda varias preguntas acumulando racha', async ({ page }) => {
-        await login(page, 'admin@gmail.com', '123456');
+            await page.goto('/my-appeals');
+            await expect(page.locator('#appeals-table-body .rejected')).toBeVisible({ timeout: 5000 });
 
-        expect(await getStreak(page)).toBe('0');
+            await logout(page);
+        });
+    })
 
-        await answerQuestion(page, 'Mi respuesta buena');
+    test.describe('profesor responde', () => {
+        test('[wiremock 001] [wiremock 002] [wiremock 003] debería permitir que un profesor responda varias preguntas alternando entre bien, mal y regular y acumulando racha. Al responder mal la racha vuelve a cero', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
 
-        expect(await getStreak(page)).toBe('1');
+            expect(await getStreak(page)).toBe('0');
 
-        await page.click('#next-question-btn');
+            await answerQuestion(page, 'Mi respuesta buena');
 
-        await answerQuestion(page, 'Mi respuesta buena');
+            expect(await getStreak(page)).toBe('1');
 
-        expect(await getStreak(page)).toBe('2');
+            await page.click('#next-question-btn');
 
-        await page.click('#next-question-btn');
+            await answerQuestion(page, 'Mi respuesta parcial');
 
-        await answerQuestion(page, 'Mi respuesta buena');
+            expect(await getStreak(page)).toBe('1.5');
 
-        expect(await getStreak(page)).toBe('3');
+            await page.click('#next-question-btn');
 
-    });
+            await answerQuestion(page, 'Mi respuesta buena');
+
+            expect(await getStreak(page)).toBe('2.5');
+
+            await page.click('#next-question-btn');
+
+            await answerQuestion(page, 'Mi respuesta mala');
+
+            expect(await getStreak(page)).toBe('0');
+
+        });
+    })
 })
