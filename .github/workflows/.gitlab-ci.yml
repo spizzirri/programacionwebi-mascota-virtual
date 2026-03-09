@@ -31,13 +31,12 @@ jobs:
       - name: Instalar navegadores Playwright
         run: npx playwright install --with-deps chromium
       - name: Inicia ambiente de pruebas
-        run: npm run start:e2e:env
-      - name: Esperar contenedores
-        run: npx wait-on tcp:27018 tcp:8080 --timeout 30000
-      - name: Inicia servidor de pruebas en background
-        run: npm run dev:e2e &
-      - name: Esperar a que la app este lista
-        run: npx wait-on http://localhost:5173 http://localhost:3000 --timeout 60000
-      - name: Correr pruebas
-        run: npm run test:e2e
+        run: |
+          npm run start:e2e:env
+          npx -y wait-on tcp:27018 tcp:8080 --timeout 30000
+      - name: Inicia servidor y correr pruebas
+        run: |
+          npm run dev:e2e &
+          npx -y wait-on http-get://localhost:5173 http-get://localhost:3000 --timeout 60000
+          npm run test:e2e
 
