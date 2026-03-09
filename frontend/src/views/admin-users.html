@@ -13,13 +13,27 @@
                 </div>
             </div>
 
+            <div class="filters-container" style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 0 1rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="user-filter-text">Buscar por texto</label>
+                    <input type="text" id="user-filter-text" placeholder="Buscar usuario..." class="form-control">
+                </div>
+            </div>
+
+            <div class="tabs-container" style="display: flex; gap: 0.5rem; padding: 0 1rem; margin-bottom: 1rem;">
+                <button id="tab-all" class="tab-btn tab-active">Todos</button>
+                <button id="tab-manana" class="tab-btn">🌅 Mañana</button>
+                <button id="tab-noche" class="tab-btn">🌙 Noche</button>
+            </div>
+
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>Email</th>
+                            <th id="sort-email" class="sortable" style="cursor: pointer;">Email <span id="sort-email-icon">↕</span></th>
                             <th>Rol</th>
-                            <th>Racha</th>
+                            <th id="sort-streak" class="sortable" style="cursor: pointer;">Racha <span id="sort-streak-icon">↕</span></th>
+                            <th>Comisión</th>
                             <th>Pregunta Actual</th>
                             <th>Fecha Asignación</th>
                             <th>Acciones</th>
@@ -27,7 +41,7 @@
                     </thead>
                     <tbody id="users-table-body">
                         <tr>
-                            <td colspan="6" class="loading">Cargando usuarios...</td>
+                            <td colspan="7" class="loading">Cargando usuarios...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -54,6 +68,14 @@
                     <select id="user-role" required>
                         <option value="STUDENT">Estudiante</option>
                         <option value="PROFESSOR">Profesor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="user-commission">Comisión</label>
+                    <select id="user-commission">
+                        <option value="">Sin asignar</option>
+                        <option value="MAÑANA">Mañana</option>
+                        <option value="NOCHE">Noche</option>
                     </select>
                 </div>
                 <div class="modal-actions">

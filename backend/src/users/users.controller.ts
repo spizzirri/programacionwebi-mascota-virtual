@@ -79,7 +79,7 @@ export class UsersController {
     async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any, @Headers('x-api-key') apiKey?: string) {
         await this.validateAccess(session, apiKey);
 
-        const allowedFields = ['email', 'password', 'role', 'streak', 'currentQuestionId', 'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly'];
+        const allowedFields = ['email', 'password', 'role', 'streak', 'currentQuestionId', 'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly', 'commission'];
         const updateData: any = {};
         for (const field of allowedFields) {
             if (body[field] !== undefined) {

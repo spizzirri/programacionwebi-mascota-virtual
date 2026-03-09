@@ -10,6 +10,7 @@ interface User {
     lastQuestionAssignedAt: string | null;
     password?: string;
     createdAt: string;
+    commission?: 'MAÑANA' | 'NOCHE';
 }
 
 interface Question {
@@ -66,7 +67,7 @@ async function apiRequest(
     });
 
     if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 && endpoint !== '/auth/login') {
             window.dispatchEvent(new CustomEvent('session-expired'));
             throw new Error('Sesión vencida');
         }

@@ -362,11 +362,12 @@ export class AdminQuestionsView extends DOMManager {
 
     private applyFilters(): void {
         const selectedTopic = this.filterTopicSelect.value;
-        const searchText = this.filterTextInput.value.toLowerCase();
+        const searchText = this.filterTextInput.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
         this.filteredQuestions = this.questions.filter(q => {
             const matchesTopic = selectedTopic === '' || q.topic === selectedTopic;
-            const matchesText = q.text.toLowerCase().includes(searchText);
+            const normalizedText = q.text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            const matchesText = normalizedText.includes(searchText);
             return matchesTopic && matchesText;
         });
 

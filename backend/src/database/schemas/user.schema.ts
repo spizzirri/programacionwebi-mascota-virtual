@@ -33,6 +33,9 @@ export class User {
     @Prop()
     lastQuestionAnsweredCorrectly?: Date;
 
+    @Prop({ enum: ['MAÑANA', 'NOCHE'], required: false })
+    commission?: string;
+
     @Prop({ default: Date.now })
     createdAt: Date;
 }

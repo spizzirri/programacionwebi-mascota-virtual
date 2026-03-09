@@ -39,6 +39,7 @@ async function cleanDatabase() {
             password: passwordHash,
             role: 'PROFESSOR',
             streak: 0,
+            commission: 'MAÑANA',
             currentQuestionId: null,
             lastQuestionAssignedAt: null,
             lastQuestionAnsweredCorrectly: null,
@@ -51,6 +52,20 @@ async function cleanDatabase() {
             password: passwordHash,
             role: 'STUDENT',
             streak: 0,
+            commission: 'MAÑANA',
+            currentQuestionId: null,
+            lastQuestionAssignedAt: null,
+            lastQuestionAnsweredCorrectly: null,
+            currentQuestionText: null,
+            createdAt: new Date(),
+            __v: 0
+        },
+        {
+            email: 'estudiantenoche@gmail.com',
+            password: passwordHash,
+            role: 'STUDENT',
+            streak: 0,
+            commission: 'NOCHE',
             currentQuestionId: null,
             lastQuestionAssignedAt: null,
             lastQuestionAnsweredCorrectly: null,
@@ -78,6 +93,7 @@ async function cleanDatabase() {
     ]);
     await db.collection('answers').deleteMany({});
     await db.collection('appeals').deleteMany({});
+    await client.close();
 }
 
 test.describe('game-view', () => {
@@ -104,7 +120,6 @@ test.describe('game-view', () => {
             await page.click('#login-button');
             await expect(page.locator('#login-error')).toHaveText('usuario bloqueado, contacte al administrador');
             
-            // Should also be blocked with correct password now
             await page.fill('#login-email', 'estudiante@gmail.com');
             await page.fill('#login-password', '123456');
             await page.click('#login-button');
@@ -377,7 +392,6 @@ test.describe('game-view', () => {
             await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
 
             const row = page.locator('#questions-table-body tr').filter({ hasText: '¿Qué es el DOM?' });
-            // Clickeamos el botón de editar
             await row.locator('button', { hasText: '✏️' }).click();
 
             await expect(page.locator('#question-modal')).not.toHaveClass(/hidden/);
@@ -387,7 +401,6 @@ test.describe('game-view', () => {
             await expect(page.locator('#question-modal')).toHaveClass(/hidden/);
             await expect(page.locator('#questions-table-body')).toContainText('¿Qué es el DOMO?');
 
-            // To check it doesn't contain the exact old text, but checking without exact might fail since DOMO contains DOM. Thus we check exact text:
             const allTexts = await page.locator('#questions-table-body td:first-child').allInnerTexts();
             expect(allTexts).not.toContain('¿Qué es el DOM?');
 
@@ -415,18 +428,19 @@ test.describe('game-view', () => {
 
     test.describe('profesor administra usuarios', () => {
 
-        test('El profesor navega a administracion de usuario y visualiza estudiante@gmail.com y admin@gmail.com. Ve las columans "Email, Rol, Racha, Pregunta Actual, Fecha Asignación y Acciones". Acciones tiene tres botones, uno para ver el perfil, otro para editar y otro para eliminar.', async ({ page }) => {
+        test('El profesor navega a administracion de usuario y visualiza estudiante@gmail.com, estudiantenoche@gmail.com y admin@gmail.com. Ve las columnas "Email, Rol, Racha, Comisión, Pregunta Actual, Fecha Asignación y Acciones". Acciones tiene tres botones, uno para ver el perfil, otro para editar y otro para eliminar.', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
 
-            await expect(page.locator('.admin-table thead th').nth(0)).toHaveText('Email');
+            await expect(page.locator('.admin-table thead th').nth(0)).toHaveText(/Email/);
             await expect(page.locator('.admin-table thead th').nth(1)).toHaveText('Rol');
-            await expect(page.locator('.admin-table thead th').nth(2)).toHaveText('Racha');
-            await expect(page.locator('.admin-table thead th').nth(3)).toHaveText('Pregunta Actual');
-            await expect(page.locator('.admin-table thead th').nth(4)).toHaveText('Fecha Asignación');
-            await expect(page.locator('.admin-table thead th').nth(5)).toHaveText('Acciones');
+            await expect(page.locator('.admin-table thead th').nth(2)).toHaveText(/Racha/);
+            await expect(page.locator('.admin-table thead th').nth(3)).toHaveText('Comisión');
+            await expect(page.locator('.admin-table thead th').nth(4)).toHaveText('Pregunta Actual');
+            await expect(page.locator('.admin-table thead th').nth(5)).toHaveText('Fecha Asignación');
+            await expect(page.locator('.admin-table thead th').nth(6)).toHaveText('Acciones');
 
             const rowStudent = page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' });
             await expect(rowStudent).toBeVisible();
@@ -440,7 +454,7 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
-        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
+        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante y comision NOCHE) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456');
 
             await page.click('#admin-nav-btn');
@@ -452,6 +466,7 @@ test.describe('game-view', () => {
             await page.fill('#user-email', 'estudiante2@gmail.com');
             await page.fill('#user-password', '123456');
             await page.selectOption('#user-role', 'STUDENT');
+            await page.selectOption('#user-commission', 'NOCHE');
             await page.click('#user-form button[type="submit"]');
 
             await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
@@ -471,7 +486,6 @@ test.describe('game-view', () => {
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
 
-            // Ensure the user exists from previous or just create it directly
             await page.click('#add-user-btn');
             await page.fill('#user-email', 'estudiante3@gmail.com');
             await page.fill('#user-password', '123456');
@@ -512,6 +526,51 @@ test.describe('game-view', () => {
             await rowStudent.locator('button', { hasText: '👤' }).click();
 
             await expect(page.locator('#profile-page')).toBeVisible({ timeout: 5000 });
+            await logout(page);
+        });
+
+        test('debería mostrar solo usuarios de la comision manana al seleccionar la pestaña Mañana', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            await page.click('#tab-manana');
+
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' })).toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'admin@gmail.com' })).toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiantenoche@gmail.com' })).not.toBeVisible();
+
+            await logout(page);
+        });
+
+        test('debería mostrar solo usuarios de la comision noche al seleccionar la pestaña Noche', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            await page.click('#tab-noche');
+
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiantenoche@gmail.com' })).toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' })).not.toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'admin@gmail.com' })).not.toBeVisible();
+
+            await logout(page);
+        });
+
+        test('debería filtrar usuarios sin distincion de mayusculas ni tildes al escribir en el campo de busqueda', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            await page.fill('#user-filter-text', 'ESTUDIANTE');
+
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiante@gmail.com' })).toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'estudiantenoche@gmail.com' })).toBeVisible();
+            await expect(page.locator('#users-table-body tr').filter({ hasText: 'admin@gmail.com' })).not.toBeVisible();
+
             await logout(page);
         });
     });

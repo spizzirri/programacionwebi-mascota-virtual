@@ -83,4 +83,23 @@ describe('AdminQuestionsView', () => {
             enabled: false
         }));
     });
+
+    it('deberia filtrar preguntas ignorando mayusculas y tildes cuando se usa el filtro de texto', async () => {
+        const mockQuestions = [
+            { _id: 'q1', text: '¿Qué es el DOM?', topic: 'HTML' },
+            { _id: 'q2', text: 'Tipos de datos en JavaScript', topic: 'JS' },
+        ];
+        jest.spyOn(apiModule.api, 'getAllQuestions').mockResolvedValue(mockQuestions as any);
+
+        new AdminQuestionsView();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const filterInput = document.getElementById('filter-text') as HTMLInputElement;
+        filterInput.value = 'QUE ES EL DOM';
+        filterInput.dispatchEvent(new Event('input'));
+
+        const tableBody = document.getElementById('questions-table-body');
+        expect(tableBody?.textContent).toContain('¿Qué es el DOM?');
+        expect(tableBody?.textContent).not.toContain('Tipos de datos en JavaScript');
+    });
 });

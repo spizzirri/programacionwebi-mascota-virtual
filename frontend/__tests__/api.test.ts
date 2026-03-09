@@ -26,6 +26,34 @@ describe('apiRequest - manejo de sesion', () => {
         expect(dispatchedEvents).toContain('session-expired');
     });
 
+    it('deberia no despachar session-expired y lanzar el mensaje del servidor cuando el login responde 401', async () => {
+        const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
+            ok: false,
+            status: 401,
+            text: async () => JSON.stringify({ message: 'usuario o contraseña incorrectos' }),
+        });
+        global.fetch = mockFetch as unknown as typeof fetch;
+
+        await expect(api.login('test@test.com', 'wrong')).rejects.toThrow('usuario o contraseña incorrectos');
+
+        const dispatchedEvents = dispatchEventSpy.mock.calls.map(([e]) => (e as Event).type);
+        expect(dispatchedEvents).not.toContain('session-expired');
+    });
+
+    it('deberia despachar session-expired cuando un endpoint protegido responde 401', async () => {
+        const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
+            ok: false,
+            status: 401,
+            text: async () => 'Unauthorized',
+        });
+        global.fetch = mockFetch as unknown as typeof fetch;
+
+        await expect(api.getRandomQuestion()).rejects.toThrow('Sesión vencida');
+
+        const dispatchedEvents = dispatchEventSpy.mock.calls.map(([e]) => (e as Event).type);
+        expect(dispatchedEvents).toContain('session-expired');
+    });
+
     it('deberia lanzar el mensaje de error del servidor cuando el estado no es 401', async () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: false,

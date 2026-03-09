@@ -225,6 +225,18 @@ describe('UsersController', () => {
             const result = await controller.updateUser(session, 'u1', mockUser);
             expect(result).toEqual({ user: mockUser });
         });
+
+        it('deberia permitir actualizar la commission de un usuario cuando es PROFESSOR', async () => {
+            const session: any = { userId: 'admin1' };
+            const body = { commission: 'NOCHE' };
+            const mockUser = { email: 'test@test.com', commission: 'NOCHE' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(service, 'updateUser').mockResolvedValue(mockUser as any);
+
+            const result = await controller.updateUser(session, 'u1', body);
+            expect(result).toEqual({ user: mockUser });
+            expect(service.updateUser).toHaveBeenCalledWith('u1', { commission: 'NOCHE' });
+        });
     });
 
     describe('deleteUser', () => {
