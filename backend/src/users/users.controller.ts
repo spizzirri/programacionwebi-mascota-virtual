@@ -86,7 +86,7 @@ export class UsersController {
                 updateData[field] = body[field];
             }
         }
-        console.log(updateData);
+
         const user = await this.usersService.updateUser(id, updateData);
         return { user };
     }
