@@ -37,7 +37,7 @@ jobs:
       - name: Inicia servidor de pruebas en background
         run: npm run dev:e2e &
       - name: Esperar a que la app este lista
-        run: npx wait-on http://localhost:5173 http://localhost:3000 --timeout 20000
+        run: npx wait-on http://localhost:5173 http://localhost:3000 --timeout 60000
       - name: Correr pruebas
         run: npm run test:e2e
 
