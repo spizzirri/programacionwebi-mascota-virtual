@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
 jobs:
-  pruebas_unitarias_backend:
+  pruebas_unitarias:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,26 +13,10 @@ jobs:
         with:
           node-version: '20'
       - name: Instalar dependencias
-        run: npm install
-        working-directory: ./backend
-      - name: Validar typescript
+        run: npm ci
+      - name: Validar codigo estático
         run: npm run type-check
-        working-directory: ./backend
       - name: Correr pruebas
         run: npm run test
-        working-directory: ./backend
 
-  pruebas_unitarias_frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Instalar dependencias
-        run: npm install
-        working-directory: ./frontend
-      - name: Correr pruebas
-        run: npm run test
-        working-directory: ./frontend
 
