@@ -37,6 +37,6 @@ jobs:
       - name: Inicia servidor y correr pruebas
         run: |
           npm run dev:e2e &
-          npx -y wait-on http-get://localhost:5173 http-get://localhost:3000 --timeout 60000
+          npx -y wait-on http-get://localhost:5173 http-get://localhost:3000/health --timeout 60000
           npm run test:e2e
 
