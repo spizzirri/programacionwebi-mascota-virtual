@@ -138,7 +138,7 @@ describe('UsersService', () => {
 
             const result = await service.createUser(data);
             expect(result).toBeDefined();
-            expect(bcrypt.hash).toHaveBeenCalledWith('123', 10);
+            expect(bcrypt.hash).toHaveBeenCalledWith('123', 12);
             expect(databaseService.createUser).toHaveBeenCalledWith({ ...data, password: 'hashed' });
         });
 
@@ -169,7 +169,7 @@ describe('UsersService', () => {
             await service.updateProfilePassword('u1', 'old', 'new');
 
             expect(bcrypt.compare).toHaveBeenCalledWith('old', 'hashed-old');
-            expect(bcrypt.hash).toHaveBeenCalledWith('new', 10);
+            expect(bcrypt.hash).toHaveBeenCalledWith('new', 12);
             expect(databaseService.updateUser).toHaveBeenCalledWith('u1', { password: 'hashed-new' });
         });
 

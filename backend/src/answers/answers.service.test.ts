@@ -268,8 +268,8 @@ describe('AnswersService', () => {
 
             const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
-                rating: 'partial',
-                feedback: 'No se pudo validar la respuesta automáticamente debido a un error técnico.'
+                rating: 'incorrect',
+                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
             });
         });
 
@@ -286,8 +286,8 @@ describe('AnswersService', () => {
 
             const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
-                rating: 'partial',
-                feedback: 'No se pudo validar la respuesta automáticamente debido a un error técnico.'
+                rating: 'incorrect',
+                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
             });
         });
 
@@ -302,8 +302,8 @@ describe('AnswersService', () => {
 
             const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
-                rating: 'partial',
-                feedback: 'No se pudo validar la respuesta automáticamente debido a un error técnico.'
+                rating: 'incorrect',
+                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
             });
         });
 

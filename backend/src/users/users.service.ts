@@ -42,14 +42,14 @@ export class UsersService {
         }
 
         if (data.password) {
-            data.password = await hash(data.password, 10);
+            data.password = await hash(data.password, 12);
         }
         return this.db.createUser(data);
     }
 
     async updateUser(id: string, data: any) {
         if (data.password) {
-            data.password = await hash(data.password, 10);
+            data.password = await hash(data.password, 12);
         }
         return this.db.updateUser(id, data);
     }
@@ -65,7 +65,7 @@ export class UsersService {
             throw new Error('La contraseña actual es incorrecta');
         }
 
-        const hashedPassword = await hash(newPassword, 10);
+        const hashedPassword = await hash(newPassword, 12);
         return this.db.updateUser(userId, { password: hashedPassword });
     }
 

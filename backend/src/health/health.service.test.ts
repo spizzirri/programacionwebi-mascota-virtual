@@ -13,16 +13,31 @@ describe('HealthService', () => {
         service = module.get<HealthService>(HealthService);
     });
 
-    describe('getHealthStatus', () => {
-        it('deberia retornar el estado de salud de la aplicacion con status ok', () => {
-            const result = service.getHealthStatus();
+    describe('getPublicHealthStatus', () => {
+        it('deberia retornar estado de salud publico sin informacion sensible', () => {
+            const result = service.getPublicHealthStatus();
+
+            expect(result).toEqual({
+                status: 'ok',
+                timestamp: expect.any(String),
+            });
+
+            expect(result).not.toHaveProperty('uptime');
+            expect(result).not.toHaveProperty('environment');
+            expect(result).not.toHaveProperty('message');
+        });
+    });
+
+    describe('getDetailedHealthStatus', () => {
+        it('deberia retornar estado de salud detallado con informacion completa', () => {
+            const result = service.getDetailedHealthStatus();
 
             expect(result).toEqual({
                 status: 'ok',
                 timestamp: expect.any(String),
                 uptime: expect.any(Number),
                 environment: expect.any(String),
-                message: 'Backend is running correctly'
+                message: 'Backend is running correctly',
             });
         });
     });
