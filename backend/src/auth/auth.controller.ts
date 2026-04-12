@@ -1,8 +1,12 @@
-import { Controller, Post, Get, Body, Session, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Session, HttpException, HttpStatus, UsePipes, ValidationPipe, Req, Res, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { Request, Response } from 'express';
 
 interface SessionData {
     userId?: string;
+    csrfSecret?: string;
 }
 
 @Controller('auth')
@@ -11,13 +15,31 @@ export class AuthController {
 
 
     @Post('login')
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
+    @UsePipes(new ValidationPipe({ transform: true }))
     async login(
-        @Body() body: { email: string; password: string },
+        @Body() loginDto: LoginDto,
         @Session() session: SessionData,
+        @Req() req: Request,
+        @Res() res: Response,
     ) {
         try {
-            const user = await this.authService.login(body.email, body.password);
-            session.userId = user._id;
+            await new Promise<void>((resolve, reject) => {
+                req.session.regenerate((err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+
+            const user = await this.authService.login(loginDto.email, loginDto.password);
+            (req.session as any).userId = user._id;
+
+            const csrfToken = (req as any).csrfToken?.();
+            if (csrfToken) {
+                res.setHeader('X-CSRF-Token', csrfToken);
+            }
+
             return { success: true, user };
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
@@ -25,8 +47,17 @@ export class AuthController {
     }
 
     @Post('logout')
-    async logout(@Session() session: SessionData) {
-        session.userId = undefined;
+    async logout(@Session() session: SessionData, @Req() req: Request, @Res() res: Response) {
+        await new Promise<void>((resolve, reject) => {
+            req.session.destroy((err) => {
+                if (err) reject(err);
+                else {
+                    res.clearCookie('tamagotchi.sid');
+                    resolve();
+                }
+            });
+        });
+
         return { success: true };
     }
 

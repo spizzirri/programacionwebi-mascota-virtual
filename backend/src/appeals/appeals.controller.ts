@@ -1,6 +1,8 @@
-import { Controller, Post, Get, Patch, Body, Param, Session, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, Session, HttpException, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AppealsService } from './appeals.service';
 import { DatabaseService } from '../database/database.service';
+import { AppealCreateDto } from './dto/appeal-create.dto';
+import { AppealResolveDto } from './dto/appeal-resolve.dto';
 
 interface SessionData {
     userId?: string;
@@ -14,7 +16,8 @@ export class AppealsController {
     ) { }
 
     @Post()
-    async create(@Session() session: SessionData, @Body() body: { answerId: string }) {
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async create(@Session() session: SessionData, @Body() body: AppealCreateDto) {
         if (!session.userId) {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
         }
@@ -42,10 +45,11 @@ export class AppealsController {
     }
 
     @Patch(':id/resolve')
+    @UsePipes(new ValidationPipe({ transform: true }))
     async resolve(
         @Session() session: SessionData,
         @Param('id') id: string,
-        @Body() body: { status: 'accepted' | 'rejected'; feedback: string }
+        @Body() body: AppealResolveDto
     ) {
         await this.validateProfessor(session);
         return this.appealsService.resolveAppeal(id, body.status, body.feedback);

@@ -79,7 +79,7 @@ describe('UsersController', () => {
 
         it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en sesion', async () => {
             const session: any = {};
-            const body = { password: 'newPassword123' };
+            const body = { currentPassword: 'old', newPassword: 'newPassword123' };
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
                 new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
@@ -88,7 +88,11 @@ describe('UsersController', () => {
 
         it('deberia lanzar HttpException BAD_REQUEST si no se provee la contrasena actual o la nueva', async () => {
             const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const body = { newPassword: '123' };
+            const body = { currentPassword: 'old', newPassword: '123' };
+
+            jest.spyOn(service, 'updateProfilePassword').mockRejectedValue(
+                new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST)
+            );
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow(
                 new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST)

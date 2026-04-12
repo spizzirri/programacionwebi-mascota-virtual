@@ -3,22 +3,40 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { HttpException, HttpStatus } from "@nestjs/common";
+import { Request, Response } from 'express';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 describe('AuthController', () => {
 
     let authService: AuthService;
     let controller: AuthController;
 
+    const mockSession = {
+        userId: undefined as string | undefined,
+        regenerate: jest.fn((cb: (err: Error | null) => void) => cb(null)),
+        destroy: jest.fn((cb: (err: Error | null) => void) => cb(null)),
+    };
+
+    const mockRequest = {
+        session: mockSession,
+    } as unknown as Request;
+
+    const mockResponse = {
+        setHeader: jest.fn(),
+        clearCookie: jest.fn(),
+    } as unknown as Response;
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
+            imports: [
+                ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+            ],
             controllers: [AuthController],
             providers: [
                 {
                     provide: AuthService,
                     useValue: {
-                        register: jest.fn(),
                         login: jest.fn(),
-                        logout: jest.fn(),
                         getUserById: jest.fn(),
                     },
                 },
@@ -27,21 +45,23 @@ describe('AuthController', () => {
 
         controller = module.get<AuthController>(AuthController);
         authService = module.get<AuthService>(AuthService);
+
+        jest.clearAllMocks();
     });
 
 
     describe('login', () => {
-        it('deberia loguear un usuario correctamente y establecer la sesión', async () => {
+        it('deberia loguear un usuario correctamente y regenerar la sesion (Fix Session Fixation)', async () => {
             const body = { email: 'test@test.com', password: 'password123' };
             const session: any = {};
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
 
-            const result = await controller.login(body, session);
+            const result = await controller.login(body as any, session, mockRequest, mockResponse);
 
             expect(result).toEqual({ success: true, user: mockUser });
-            expect(session.userId).toBe('user123');
+            expect(mockSession.regenerate).toHaveBeenCalled();
             expect(authService.login).toHaveBeenCalledWith(body.email, body.password);
         });
 
@@ -51,26 +71,26 @@ describe('AuthController', () => {
 
             jest.spyOn(authService, 'login').mockRejectedValue(new Error('usuario o contraseña incorrectos'));
 
-            await expect(controller.login(body, session)).rejects.toThrow(
+            await expect(controller.login(body as any, session, mockRequest, mockResponse)).rejects.toThrow(
                 new HttpException('usuario o contraseña incorrectos', HttpStatus.UNAUTHORIZED)
             );
-            expect(session.userId).toBeUndefined();
         });
     });
 
     describe('logout', () => {
-        it('deberia eliminar el userId de la sesión al cerrar sesión', async () => {
+        it('deberia destruir la sesion completamente al cerrar sesion', async () => {
             const session: any = { userId: 'user123' };
 
-            const result = await controller.logout(session);
+            const result = await controller.logout(session, mockRequest, mockResponse);
 
             expect(result).toEqual({ success: true });
-            expect(session.userId).toBeUndefined();
+            expect(mockSession.destroy).toHaveBeenCalled();
+            expect(mockResponse.clearCookie).toHaveBeenCalledWith('tamagotchi.sid');
         });
     });
 
     describe('getCurrentUser', () => {
-        it('deberia retornar el usuario si la sesión es valida', async () => {
+        it('deberia retornar el usuario si la sesion es valida', async () => {
             const session: any = { userId: 'user123' };
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
@@ -82,7 +102,7 @@ describe('AuthController', () => {
             expect(authService.getUserById).toHaveBeenCalledWith('user123');
         });
 
-        it('deberia lanzar HttpException con UNAUTHORIZED si no hay userId en la sesión', async () => {
+        it('deberia lanzar HttpException con UNAUTHORIZED si no hay userId en la sesion', async () => {
             const session: any = {};
 
             await expect(controller.getCurrentUser(session)).rejects.toThrow(

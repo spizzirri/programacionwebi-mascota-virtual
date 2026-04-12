@@ -5,6 +5,9 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 import MongoStore from 'connect-mongo';
 import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { randomBytes } from 'crypto';
 
 dotenv.config();
 
@@ -12,6 +15,18 @@ async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
     app.use(helmet());
+
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret) {
+        throw new Error('SESSION_SECRET environment variable must be set. Generate one using a random string generator.');
+    }
+
+    const nodeEnv = process.env.NODE_ENV;
+    if (!nodeEnv) {
+        throw new Error('NODE_ENV environment variable must be set (e.g., "development", "production")');
+    }
+
+    const isProduction = nodeEnv === 'production';
 
     app.set('trust proxy', 1);
     app.enableCors({
@@ -25,7 +40,7 @@ async function bootstrap() {
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
     });
 
     let sessionStore;
@@ -39,26 +54,27 @@ async function bootstrap() {
         });
     }
 
-    const sessionSecret = process.env.SESSION_SECRET;
-    if (!sessionSecret && process.env.NODE_ENV === 'production') {
-        throw new Error('SESSION_SECRET must be set in production');
-    }
-
     app.use(
         session({
             store: sessionStore,
-            secret: sessionSecret || 'tamagotchi-secret-key-development-only',
+            secret: sessionSecret,
             resave: false,
             saveUninitialized: false,
             name: 'tamagotchi.sid',
             cookie: {
-                maxAge: 15 * 60 * 1000,
+                maxAge: 15 * 60 * 60 * 1000,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+                secure: isProduction,
+                sameSite: 'lax',
             },
         }),
     );
+
+    app.useGlobalPipes(new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+    }));
 
     const port = process.env.PORT || 3000;
     await app.listen(port);

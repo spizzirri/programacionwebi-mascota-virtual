@@ -1,5 +1,7 @@
-import { Controller, Post, Body, Session, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Session, HttpException, HttpStatus, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AnswersService } from './answers.service';
+import { AnswerSubmitDto } from './dto/answer-submit.dto';
 
 interface SessionData {
     userId?: string;
@@ -10,8 +12,11 @@ export class AnswersController {
     constructor(private readonly answersService: AnswersService) { }
 
     @Post('submit')
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
+    @UsePipes(new ValidationPipe({ transform: true }))
     async submitAnswer(
-        @Body() body: { questionId: string; userAnswer: string },
+        @Body() answerDto: AnswerSubmitDto,
         @Session() session: SessionData,
     ) {
         if (!session.userId) {
@@ -21,8 +26,8 @@ export class AnswersController {
         try {
             const result = await this.answersService.submitAnswer(
                 session.userId,
-                body.questionId,
-                body.userAnswer,
+                answerDto.questionId,
+                answerDto.userAnswer,
             );
 
             return {

@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body, Headers, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { PasswordUpdateDto } from './dto/password-update.dto';
 
 interface SessionData {
     userId?: string;
@@ -24,19 +25,14 @@ export class UsersController {
     }
 
     @Patch('profile/password')
-    async updateProfilePassword(@Session() session: SessionData, @Body() body: any) {
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async updateProfilePassword(@Session() session: SessionData, @Body() body: PasswordUpdateDto) {
         if (!session.userId) {
             throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
         }
 
-        const { currentPassword, newPassword } = body;
-
-        if (!currentPassword || !newPassword) {
-            throw new HttpException('Both current and new password are required', HttpStatus.BAD_REQUEST);
-        }
-
         try {
-            await this.usersService.updateProfilePassword(session.userId, currentPassword, newPassword);
+            await this.usersService.updateProfilePassword(session.userId, body.currentPassword, body.newPassword);
             return { success: true };
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
