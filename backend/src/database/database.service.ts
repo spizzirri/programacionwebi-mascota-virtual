@@ -37,7 +37,24 @@ export class DatabaseService {
     async resetFailedLoginAttempts(email: string): Promise<void> {
         await this.userModel.updateOne(
             { email },
-            { $set: { failedLoginAttempts: 0 } }
+            { $set: { failedLoginAttempts: 0 }, $unset: { lockedUntil: '' } }
+        ).exec();
+    }
+
+    async lockUser(email: string, lockDurationMinutes = 15): Promise<UserDocument | null> {
+        const lockedUntil = new Date(Date.now() + lockDurationMinutes * 60 * 1000);
+        return this.userModel.findOneAndUpdate(
+            { email },
+            { $set: { failedLoginAttempts: 3, lockedUntil } },
+            { new: true }
+        ).exec();
+    }
+
+    async unlockUser(email: string): Promise<UserDocument | null> {
+        return this.userModel.findOneAndUpdate(
+            { email },
+            { $set: { failedLoginAttempts: 0 }, $unset: { lockedUntil: '' } },
+            { new: true }
         ).exec();
     }
 
@@ -70,6 +87,15 @@ export class DatabaseService {
 
     async getAllQuestions(): Promise<QuestionDocument[]> {
         return this.questionModel.find().exec();
+    }
+
+    async getAllQuestionsPaginated(page: number, limit: number): Promise<{ data: QuestionDocument[], total: number }> {
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+            this.questionModel.find().skip(skip).limit(limit).exec(),
+            this.questionModel.countDocuments().exec(),
+        ]);
+        return { data, total };
     }
 
     async getQuestionById(id: string): Promise<QuestionDocument | null> {
@@ -107,6 +133,15 @@ export class DatabaseService {
 
     async findAllUsers(): Promise<UserDocument[]> {
         return this.userModel.find().exec();
+    }
+
+    async findAllUsersPaginated(page: number, limit: number): Promise<{ data: UserDocument[], total: number }> {
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+            this.userModel.find().skip(skip).limit(limit).exec(),
+            this.userModel.countDocuments().exec(),
+        ]);
+        return { data, total };
     }
 
     async deleteUser(id: string): Promise<void> {
@@ -148,6 +183,15 @@ export class DatabaseService {
 
     async getAllAppeals(): Promise<AppealDocument[]> {
         return this.appealModel.find().sort({ createdAt: -1 }).exec();
+    }
+
+    async getAllAppealsPaginated(page: number, limit: number): Promise<{ data: AppealDocument[], total: number }> {
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+            this.appealModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+            this.appealModel.countDocuments().exec(),
+        ]);
+        return { data, total };
     }
 
     async getAppealById(id: string): Promise<AppealDocument | null> {

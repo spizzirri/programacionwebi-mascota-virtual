@@ -36,6 +36,23 @@ export class UsersService {
         });
     }
 
+    async getAllUsersPaginated(page: number, limit: number) {
+        const { data: users, total } = await this.db.findAllUsersPaginated(page, limit);
+        const questions = await this.db.getAllQuestions();
+        const questionMap = new Map(questions.map(q => [q._id.toString(), q.text]));
+
+        const mappedUsers = users.map(user => {
+            const userObj = user.toObject();
+            const { password: _, ...userWithoutPassword } = userObj;
+            return {
+                ...userWithoutPassword,
+                currentQuestionText: userObj.currentQuestionId ? (questionMap.get(userObj.currentQuestionId.toString()) || 'Pregunta no encontrada') : '-'
+            };
+        });
+
+        return { data: mappedUsers, total };
+    }
+
     async createUser(data: any) {
         if (!data.role) {
             throw new Error('Role is required');
@@ -71,5 +88,13 @@ export class UsersService {
 
     async deleteUser(id: string) {
         return this.db.deleteUser(id);
+    }
+
+    async unlockUser(id: string) {
+        const user = await this.db.findUserById(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return this.db.unlockUser(user.email);
     }
 }

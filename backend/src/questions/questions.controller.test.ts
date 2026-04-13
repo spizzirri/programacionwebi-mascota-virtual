@@ -12,6 +12,7 @@ describe('QuestionsController', () => {
 
     const mockDbService = {
         getAllQuestions: jest.fn<() => Promise<any>>(),
+        getAllQuestionsPaginated: jest.fn<() => Promise<any>>(),
         createQuestion: jest.fn<() => Promise<any>>(),
         updateQuestion: jest.fn<() => Promise<any>>(),
         deleteQuestion: jest.fn<() => Promise<any>>(),
@@ -69,12 +70,13 @@ describe('QuestionsController', () => {
         const session = { userId: 'prof-id' };
         const mockQuestions = [{ _id: '1', text: 'Q1' }];
 
-        it('getAllQuestions should return questions if PROFESSOR', async () => {
+        it('getAllQuestions should return paginated questions if PROFESSOR', async () => {
             mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.getAllQuestions.mockResolvedValue(mockQuestions as any);
+            mockDbService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 });
 
-            const result = await controller.getAllQuestions(session as any);
-            expect(result).toEqual({ questions: mockQuestions });
+            const result = await controller.getAllQuestions(session as any, '1', '10');
+            expect(result.questions.data).toEqual(mockQuestions);
+            expect(result.questions.meta.page).toBe(1);
         });
 
         it('createQuestion should create and return question if PROFESSOR', async () => {

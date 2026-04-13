@@ -1,10 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body, Headers, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PasswordUpdateDto } from './dto/password-update.dto';
-
-interface SessionData {
-    userId?: string;
-}
+import { UserUpdateDto } from './dto/user-update.dto';
+import { SessionData } from '../common/types/session.types';
+import { paginate } from '../common/types/pagination.types';
 
 @Controller('users')
 export class UsersController {
@@ -54,10 +53,21 @@ export class UsersController {
     }
 
     @Get()
-    async getAllUsers(@Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
+    async getAllUsers(
+        @Session() session: SessionData,
+        @Headers('x-api-key') apiKey?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
         await this.validateAccess(session, apiKey);
-        const users = await this.usersService.getAllUsers();
-        return { users };
+
+        const pageNum = Math.max(1, parseInt(page || '1', 10));
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
+
+        const { data: users, total } = await this.usersService.getAllUsersPaginated(pageNum, limitNum);
+        return {
+            users: paginate(users, total, pageNum, limitNum),
+        };
     }
 
     @Post()
@@ -72,11 +82,20 @@ export class UsersController {
     }
 
     @Patch(':id')
-    async updateUser(@Session() session: SessionData, @Param('id') id: string, @Body() body: any, @Headers('x-api-key') apiKey?: string) {
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async updateUser(
+        @Session() session: SessionData,
+        @Param('id') id: string,
+        @Body() body: UserUpdateDto,
+        @Headers('x-api-key') apiKey?: string,
+    ) {
         await this.validateAccess(session, apiKey);
 
-        const allowedFields = ['email', 'password', 'role', 'streak', 'currentQuestionId', 'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly', 'commission'];
         const updateData: any = {};
+        const allowedFields: (keyof UserUpdateDto)[] = [
+            'email', 'password', 'role', 'streak', 'currentQuestionId',
+            'lastQuestionAssignedAt', 'lastQuestionAnsweredCorrectly', 'commission',
+        ];
         for (const field of allowedFields) {
             if (body[field] !== undefined) {
                 updateData[field] = body[field];
@@ -112,6 +131,17 @@ export class UsersController {
         const parsedLimit = limit ? parseInt(limit, 10) : 50;
         const history = await this.usersService.getHistory(id, parsedLimit);
         return { history };
+    }
+
+    @Post(':id/unlock')
+    async unlockUser(
+        @Session() session: SessionData,
+        @Param('id') id: string,
+        @Headers('x-api-key') apiKey?: string,
+    ) {
+        await this.validateAccess(session, apiKey);
+        await this.usersService.unlockUser(id);
+        return { success: true, message: 'User unlocked successfully' };
     }
 
     private async validateAccess(session: SessionData, apiKey?: string) {

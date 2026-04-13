@@ -2,10 +2,7 @@ import { Controller, Post, Body, Session, HttpException, HttpStatus, UsePipes, V
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AnswersService } from './answers.service';
 import { AnswerSubmitDto } from './dto/answer-submit.dto';
-
-interface SessionData {
-    userId?: string;
-}
+import { SessionData } from '../common/types/session.types';
 
 @Controller('answers')
 export class AnswersController {

@@ -20,10 +20,12 @@ describe('UsersController', () => {
                         getProfile: jest.fn(),
                         getHistory: jest.fn(),
                         getAllUsers: jest.fn(),
+                        getAllUsersPaginated: jest.fn(),
                         createUser: jest.fn(),
                         updateUser: jest.fn(),
                         updateProfilePassword: jest.fn(),
                         deleteUser: jest.fn(),
+                        unlockUser: jest.fn(),
                     },
                 },
             ],
@@ -145,30 +147,32 @@ describe('UsersController', () => {
     });
 
     describe('getAllUsers', () => {
-        it('deberia retornar todos los usuarios si el usuario es PROFESSOR', async () => {
+        it('deberia retornar usuarios paginados si el usuario es PROFESSOR', async () => {
             const session: any = { userId: 'admin1' };
             const mockAdmin = { role: 'PROFESSOR' };
-            const mockUsers = [{ email: 'user1@test.com' }, { email: 'user2@test.com' }];
+            const mockUsers: any[] = [{ email: 'user1@test.com' }, { email: 'user2@test.com' }];
 
             jest.spyOn(service, 'getProfile').mockResolvedValue(mockAdmin as any);
-            jest.spyOn(service, 'getAllUsers').mockResolvedValue(mockUsers as any);
+            jest.spyOn(service, 'getAllUsersPaginated').mockResolvedValue({ data: mockUsers, total: 2 });
 
-            const result = await controller.getAllUsers(session);
+            const result = await controller.getAllUsers(session, undefined, '1', '10');
 
-            expect(result).toEqual({ users: mockUsers });
-            expect(service.getAllUsers).toHaveBeenCalled();
+            expect(result.users.data).toEqual(mockUsers);
+            expect(result.users.meta.page).toBe(1);
+            expect(result.users.meta.limit).toBe(10);
+            expect(service.getAllUsersPaginated).toHaveBeenCalledWith(1, 10);
         });
 
         it('deberia retornar todos los usuarios si se provee un API KEY valido', async () => {
             const session: any = {};
-            const mockUsers = [{ email: 'user1@test.com' }];
+            const mockUsers: any[] = [{ email: 'user1@test.com' }];
             process.env.API_KEY = 'valid-key';
 
-            jest.spyOn(service, 'getAllUsers').mockResolvedValue(mockUsers as any);
+            jest.spyOn(service, 'getAllUsersPaginated').mockResolvedValue({ data: mockUsers, total: 1 });
 
             const result = await controller.getAllUsers(session, 'valid-key');
 
-            expect(result).toEqual({ users: mockUsers });
+            expect(result.users.data).toEqual(mockUsers);
         });
 
         it('deberia lanzar HttpException FORBIDDEN si el usuario no es PROFESSOR y no hay API KEY', async () => {
@@ -251,6 +255,33 @@ describe('UsersController', () => {
 
             const result = await controller.deleteUser(session, 'u1');
             expect(result).toEqual({ success: true });
+        });
+    });
+
+    describe('unlockUser', () => {
+        it('deberia permitir a un PROFESSOR desbloquear un usuario', async () => {
+            const session: any = { userId: 'admin1' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(service, 'unlockUser').mockResolvedValue({ email: 'user@test.com' } as any);
+
+            const result = await controller.unlockUser(session, 'u1');
+            expect(result).toEqual({ success: true, message: 'User unlocked successfully' });
+            expect(service.unlockUser).toHaveBeenCalledWith('u1');
+        });
+
+        it('deberia permitir desbloquear un usuario con API KEY', async () => {
+            process.env.API_KEY = 'test-key';
+            jest.spyOn(service, 'unlockUser').mockResolvedValue({ email: 'user@test.com' } as any);
+
+            await controller.unlockUser({}, 'u1', 'test-key');
+            expect(service.unlockUser).toHaveBeenCalledWith('u1');
+        });
+
+        it('deberia fallar si no es profesor ni tiene api key', async () => {
+            const session: any = { userId: 'student1' };
+            jest.spyOn(service, 'getProfile').mockResolvedValue({ role: 'STUDENT' } as any);
+
+            await expect(controller.unlockUser(session, 'u1')).rejects.toThrow(HttpException);
         });
     });
 });

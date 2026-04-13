@@ -1,10 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Session, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Session, HttpException, HttpStatus, Query } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { DatabaseService } from '../database/database.service';
-
-interface SessionData {
-    userId?: string;
-}
+import { SessionData } from '../common/types/session.types';
+import { paginate } from '../common/types/pagination.types';
 
 @Controller('questions')
 export class QuestionsController {
@@ -24,10 +22,20 @@ export class QuestionsController {
     }
 
     @Get()
-    async getAllQuestions(@Session() session: SessionData) {
+    async getAllQuestions(
+        @Session() session: SessionData,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
         await this.checkProfessor(session);
-        const questions = await this.db.getAllQuestions();
-        return { questions };
+
+        const pageNum = Math.max(1, parseInt(page || '1', 10));
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
+
+        const { data: questions, total } = await this.db.getAllQuestionsPaginated(pageNum, limitNum);
+        return {
+            questions: paginate(questions, total, pageNum, limitNum),
+        };
     }
 
     @Post()

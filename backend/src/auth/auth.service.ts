@@ -12,7 +12,12 @@ export class AuthService {
         const user = await this.db.findUserByEmail(email);
 
         if (user && user.failedLoginAttempts >= 3) {
-            throw new UnauthorizedException('usuario bloqueado, contacte al administrador');
+            if (user.lockedUntil && new Date() < user.lockedUntil) {
+                const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+                throw new UnauthorizedException(`usuario bloqueado, intente nuevamente en ${minutesLeft} minutos`);
+            }
+            // Lock has expired, auto-unlock
+            await this.db.unlockUser(email);
         }
 
         const dummyHash = '$2b$10$fV2sc6eY0V8fW.K0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X';
@@ -23,7 +28,8 @@ export class AuthService {
             if (user) {
                 const updatedUser = await this.db.incrementFailedLoginAttempts(email);
                 if (updatedUser && updatedUser.failedLoginAttempts >= 3) {
-                    throw new UnauthorizedException('usuario bloqueado, contacte al administrador');
+                    await this.db.lockUser(email, 15);
+                    throw new UnauthorizedException('usuario bloqueado por 15 minutos');
                 }
             }
             throw new UnauthorizedException('usuario o contraseña incorrectos');

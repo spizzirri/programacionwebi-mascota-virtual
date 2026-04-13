@@ -3,11 +3,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
-
-interface SessionData {
-    userId?: string;
-    csrfSecret?: string;
-}
+import { SessionData } from '../common/types/session.types';
 
 @Controller('auth')
 export class AuthController {

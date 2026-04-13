@@ -1,14 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseController } from './database.controller';
 import { DatabaseService } from './database.service';
-import { QuestionsService } from '../questions/questions.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 describe('DatabaseController', () => {
     let controller: DatabaseController;
     let databaseService: DatabaseService;
-    let questionsService: QuestionsService;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -18,12 +16,8 @@ describe('DatabaseController', () => {
                     provide: DatabaseService,
                     useValue: {
                         findUserById: jest.fn(),
-                    },
-                },
-                {
-                    provide: QuestionsService,
-                    useValue: {
-                        seedQuestions: jest.fn(),
+                        getAllQuestions: jest.fn(),
+                        createQuestion: jest.fn(),
                     },
                 },
             ],
@@ -31,18 +25,29 @@ describe('DatabaseController', () => {
 
         controller = module.get<DatabaseController>(DatabaseController);
         databaseService = module.get<DatabaseService>(DatabaseService);
-        questionsService = module.get<QuestionsService>(QuestionsService);
     });
 
     describe('seedQuestions', () => {
         it('should seed questions if user is PROFESSOR', async () => {
             const session = { userId: 'prof-id' };
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
+            jest.spyOn(databaseService, 'createQuestion').mockResolvedValue({} as any);
 
             const result = await controller.seedQuestions(session);
 
-            expect(result).toEqual({ message: 'Questions seeded successfully' });
-            expect(questionsService.seedQuestions).toHaveBeenCalled();
+            expect(result).toEqual({ message: 'Questions seeded successfully', seeded: true });
+        });
+
+        it('should skip seeding if questions already exist', async () => {
+            const session = { userId: 'prof-id' };
+            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([{ id: 1 }] as any);
+
+            const result = await controller.seedQuestions(session);
+
+            expect(result).toEqual({ message: 'Questions already exist, skipping seed', seeded: false });
+            expect(databaseService.createQuestion).not.toHaveBeenCalled();
         });
 
         it('should throw UNAUTHORIZED if no session', async () => {

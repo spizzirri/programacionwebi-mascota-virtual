@@ -25,6 +25,9 @@ export class User {
     failedLoginAttempts: number;
 
     @Prop()
+    lockedUntil?: Date;
+
+    @Prop()
     currentQuestionId?: string;
 
     @Prop()

@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database.service';
 import { User, UserSchema } from './schemas/user.schema';
@@ -8,9 +8,7 @@ import { Appeal, AppealSchema } from './schemas/appeal.schema';
 import { Topic, TopicSchema } from './schemas/topic.schema';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { DatabaseController } from './database.controller';
-import { QuestionsService } from '../questions/questions.service';
 
-@Global()
 @Module({
     imports: [
         MongooseModule.forRootAsync({
@@ -43,8 +41,7 @@ import { QuestionsService } from '../questions/questions.service';
         ]),
     ],
     controllers: [DatabaseController],
-    providers: [DatabaseService, QuestionsService],
-    exports: [DatabaseService],
+    providers: [DatabaseService],
+    exports: [DatabaseService, MongooseModule],
 })
 export class DatabaseModule { }
-

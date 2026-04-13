@@ -37,6 +37,10 @@ export class AppealsService {
         return this.db.getAllAppeals();
     }
 
+    async getAllAppealsPaginated(page: number, limit: number) {
+        return this.db.getAllAppealsPaginated(page, limit);
+    }
+
     async resolveAppeal(appealId: string, status: 'accepted' | 'rejected', professorFeedback: string) {
         const appeal = await this.db.getAppealById(appealId);
         if (!appeal) {

@@ -209,4 +209,119 @@ describe('DatabaseService', () => {
             expect(answers[0].userAnswer).toBe('A4');
         });
     });
+
+    describe('Pagination Operations', () => {
+        it('deberia retornar usuarios paginados correctamente', async () => {
+            // Create multiple users
+            for (let i = 0; i < 5; i++) {
+                await service.createUser({
+                    email: `page-test-${i}@test.com`,
+                    password: 'pwd',
+                    role: 'STUDENT',
+                    streak: 0,
+                    createdAt: new Date()
+                });
+            }
+
+            const page1 = await service.findAllUsersPaginated(1, 2);
+            expect(page1.data.length).toBe(2);
+            expect(page1.total).toBeGreaterThanOrEqual(5);
+
+            const page2 = await service.findAllUsersPaginated(2, 2);
+            expect(page2.data.length).toBe(2);
+        });
+
+        it('deberia retornar preguntas paginadas correctamente', async () => {
+            const initialCount = (await service.getAllQuestions()).length;
+
+            for (let i = 0; i < 4; i++) {
+                await service.createQuestion({ text: `Pag Q${i}`, topic: 'Test' });
+            }
+
+            const page1 = await service.getAllQuestionsPaginated(1, 2);
+            expect(page1.data.length).toBe(2);
+            expect(page1.total).toBe(initialCount + 4);
+        });
+
+        it('deberia retornar apelaciones paginadas correctamente', async () => {
+            for (let i = 0; i < 3; i++) {
+                await service.createAppeal({
+                    userId: `user-${i}`,
+                    userName: `User ${i}`,
+                    answerId: `answer-${i}`,
+                    questionId: `q-${i}`,
+                    questionText: `Q${i}`,
+                    userAnswer: `A${i}`,
+                    originalRating: 'incorrect',
+                    originalFeedback: 'Try again',
+                    status: 'pending',
+                    createdAt: new Date(),
+                });
+            }
+
+            const page1 = await service.getAllAppealsPaginated(1, 2);
+            expect(page1.data.length).toBe(2);
+            expect(page1.total).toBeGreaterThanOrEqual(3);
+        });
+    });
+
+    describe('User Lock Operations', () => {
+        it('deberia bloquear usuario con lockedUntil en el futuro', async () => {
+            const userData = {
+                email: 'lock-test@test.com',
+                password: 'pwd',
+                role: 'STUDENT' as const,
+                streak: 0,
+                failedLoginAttempts: 0,
+                createdAt: new Date()
+            };
+
+            await service.createUser(userData);
+            const locked = await service.lockUser('lock-test@test.com', 15);
+
+            expect(locked).toBeDefined();
+            expect(locked?.failedLoginAttempts).toBe(3);
+            expect(locked?.lockedUntil).toBeDefined();
+            expect(locked?.lockedUntil!.getTime()).toBeGreaterThan(Date.now());
+        });
+
+        it('deberia desbloquear usuario removiendo lockedUntil', async () => {
+            const userData = {
+                email: 'unlock-test@test.com',
+                password: 'pwd',
+                role: 'STUDENT' as const,
+                streak: 0,
+                failedLoginAttempts: 3,
+                createdAt: new Date()
+            };
+
+            await service.createUser(userData);
+            await service.lockUser('unlock-test@test.com', 15);
+
+            const unlocked = await service.unlockUser('unlock-test@test.com');
+            expect(unlocked).toBeDefined();
+            expect(unlocked?.failedLoginAttempts).toBe(0);
+            expect(unlocked?.lockedUntil).toBeUndefined();
+        });
+
+        it('deberia resetear failedLoginAttempts y lockedUntil al reset', async () => {
+            const userData = {
+                email: 'reset-test@test.com',
+                password: 'pwd',
+                role: 'STUDENT' as const,
+                streak: 0,
+                failedLoginAttempts: 5,
+                createdAt: new Date()
+            };
+
+            await service.createUser(userData);
+            await service.lockUser('reset-test@test.com', 15);
+
+            await service.resetFailedLoginAttempts('reset-test@test.com');
+            const user = await service.findUserByEmail('reset-test@test.com');
+
+            expect(user?.failedLoginAttempts).toBe(0);
+            expect(user?.lockedUntil).toBeUndefined();
+        });
+    });
 });
