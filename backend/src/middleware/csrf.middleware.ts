@@ -2,25 +2,36 @@ import { Injectable, NestMiddleware, ForbiddenException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import Tokens = require('csrf');
 
+const CSRF_EXCLUDED_PATHS = ['/auth/login', '/users'];
+
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
-  private tokens: Tokens;
-
-  constructor() {
-    this.tokens = new Tokens();
-  }
+  private tokens = new Tokens();
 
   use(req: Request, res: Response, next: NextFunction) {
     if (req.path === '/health') {
       return next();
     }
 
+    // Use originalUrl because NestJS strips the prefix in sub-module routing
+    const fullPath = req.originalUrl || req.url;
+
+    if (CSRF_EXCLUDED_PATHS.some(p => fullPath.startsWith(p)) && req.method === 'POST') {
+      return next();
+    }
+
+    const session = (req as any).session;
+
     if (req.method === 'GET') {
-      const secret = (req as any).session?.secret;
-      if (!secret) {
+      if (!session) {
         return next();
       }
-      const csrfToken = this.tokens.create(secret);
+
+      if (!session._csrfSecret) {
+        session._csrfSecret = this.tokens.secretSync();
+      }
+
+      const csrfToken = this.tokens.create(session._csrfSecret);
       res.setHeader('X-CSRF-Token', csrfToken);
       return next();
     }
@@ -30,12 +41,11 @@ export class CsrfMiddleware implements NestMiddleware {
       throw new ForbiddenException('CSRF token missing');
     }
 
-    const secret = (req as any).session?.secret;
-    if (!secret) {
+    if (!session || !session._csrfSecret) {
       throw new ForbiddenException('CSRF secret not found in session');
     }
 
-    const isValid = this.tokens.verify(secret, csrfToken);
+    const isValid = this.tokens.verify(session._csrfSecret, csrfToken);
     if (!isValid) {
       throw new ForbiddenException('Invalid CSRF token');
     }

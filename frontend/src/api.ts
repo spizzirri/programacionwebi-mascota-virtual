@@ -1,6 +1,8 @@
 
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000';
 
+let csrfToken: string | null = null;
+
 interface User {
     _id: string;
     email: string;
@@ -57,14 +59,24 @@ async function apiRequest(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<any> {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...options.headers as Record<string, string>,
+    };
+
+    if (csrfToken && options.method && options.method !== 'GET') {
+        headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
+        headers,
     });
+
+    if (response.headers.has('X-CSRF-Token')) {
+        csrfToken = response.headers.get('X-CSRF-Token');
+    }
 
     if (!response.ok) {
         if (response.status === 401 && endpoint !== '/auth/login') {

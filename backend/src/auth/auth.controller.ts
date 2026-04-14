@@ -3,17 +3,28 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
+import Tokens = require('csrf');
 import { SessionData } from '../common/types/session.types';
 
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
+    private tokens = new Tokens();
 
     @Post('login')
     @UseGuards(ThrottlerGuard)
     @Throttle({ default: { limit: 10, ttl: 60000 } })
-    @UsePipes(new ValidationPipe({ transform: true }))
+    @UsePipes(new ValidationPipe({
+        transform: true,
+        exceptionFactory: (errors) => {
+            const messages = errors.flatMap(e => Object.values(e.constraints || {}));
+            return new HttpException(
+                { success: false, message: 'Validation failed', errors: messages },
+                HttpStatus.BAD_REQUEST
+            );
+        },
+    }))
     async login(
         @Body() loginDto: LoginDto,
         @Session() session: SessionData,
@@ -31,12 +42,13 @@ export class AuthController {
             const user = await this.authService.login(loginDto.email, loginDto.password);
             (req.session as any).userId = user._id;
 
-            const csrfToken = (req as any).csrfToken?.();
-            if (csrfToken) {
-                res.setHeader('X-CSRF-Token', csrfToken);
-            }
+            // Generate CSRF token for the new session
+            const csrfSecret = this.tokens.secretSync();
+            (req.session as any)._csrfSecret = csrfSecret;
+            const csrfToken = this.tokens.create(csrfSecret);
+            res.setHeader('X-CSRF-Token', csrfToken);
 
-            return { success: true, user };
+            res.json({ success: true, user });
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
         }
@@ -49,12 +61,10 @@ export class AuthController {
                 if (err) reject(err);
                 else {
                     res.clearCookie('tamagotchi.sid');
-                    resolve();
+                    res.json({ success: true });
                 }
             });
         });
-
-        return { success: true };
     }
 
     @Get('me')

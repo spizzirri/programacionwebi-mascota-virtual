@@ -30,7 +30,7 @@ export class DatabaseService {
         return this.userModel.findOneAndUpdate(
             { email },
             { $inc: { failedLoginAttempts: 1 } },
-            { new: true }
+            { returnDocument: 'after' }
         ).exec();
     }
 
@@ -46,7 +46,7 @@ export class DatabaseService {
         return this.userModel.findOneAndUpdate(
             { email },
             { $set: { failedLoginAttempts: 3, lockedUntil } },
-            { new: true }
+            { returnDocument: 'after' }
         ).exec();
     }
 
@@ -54,7 +54,7 @@ export class DatabaseService {
         return this.userModel.findOneAndUpdate(
             { email },
             { $set: { failedLoginAttempts: 0 }, $unset: { lockedUntil: '' } },
-            { new: true }
+            { returnDocument: 'after' }
         ).exec();
     }
 
@@ -149,11 +149,11 @@ export class DatabaseService {
     }
 
     async updateUser(id: string, data: Partial<User>): Promise<UserDocument | null> {
-        return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+        return this.userModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
     }
 
     async updateQuestion(id: string, data: Partial<Question>): Promise<QuestionDocument | null> {
-        return this.questionModel.findByIdAndUpdate(id, data, { new: true }).exec();
+        return this.questionModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
     }
 
     async deleteQuestion(id: string): Promise<void> {
@@ -206,7 +206,7 @@ export class DatabaseService {
         return this.topicModel.findOneAndUpdate(
             { name },
             { $setOnInsert: { name, enabled: true } },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         ).exec() as Promise<TopicDocument>;
     }
 
@@ -219,6 +219,6 @@ export class DatabaseService {
     }
 
     async updateTopic(name: string, data: Partial<Topic>): Promise<TopicDocument | null> {
-        return this.topicModel.findOneAndUpdate({ name }, data, { new: true }).exec();
+        return this.topicModel.findOneAndUpdate({ name }, data, { returnDocument: 'after' }).exec();
     }
 }

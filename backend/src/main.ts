@@ -66,18 +66,33 @@ async function bootstrap() {
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
+        exposedHeaders: ['X-CSRF-Token'],
     });
 
-    let sessionStore;
+    let sessionStore: any;
     if (process.env.USE_IN_MEMORY_DB !== 'true') {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tamagotchi';
         const maskedUri = maskMongoUri(mongoUri);
-        console.log(`Using MongoDB session store with URI: ${maskedUri}`);
-        sessionStore = MongoStore.create({
-            mongoUrl: mongoUri,
-            collectionName: 'sessions',
-            ttl: 24 * 60 * 60,
-        });
+        console.log(`Attempting MongoDB session store with URI: ${maskedUri}`);
+
+        // Test MongoDB connection with a timeout before using it
+        try {
+            const { MongoClient } = await import('mongodb');
+            const client = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 3000 });
+            await client.connect();
+            await client.db().command({ ping: 1 });
+            console.log('MongoDB connection successful, using MongoStore for sessions');
+            await client.close();
+
+            sessionStore = MongoStore.create({
+                mongoUrl: mongoUri,
+                collectionName: 'sessions',
+                ttl: 24 * 60 * 60,
+            });
+        } catch (error) {
+            console.warn(`MongoDB not available (${(error as Error).message}), falling back to in-memory session store`);
+            console.warn('Note: Sessions will be lost on server restart. Set USE_IN_MEMORY_DB=true or start MongoDB for persistence.');
+        }
     }
 
     app.use(
