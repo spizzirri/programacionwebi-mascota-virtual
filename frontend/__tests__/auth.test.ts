@@ -102,4 +102,92 @@ describe('Login', () => {
 
     loginSpy.mockRestore();
   });
+
+  it('deberia redirigir a /game cuando un usuario STUDENT inicia sesión exitosamente', async () => {
+    const testEmail = 'student@example.com';
+    const testPassword = 'password123';
+
+    const mockUser = {
+      _id: 'student1',
+      email: testEmail,
+      streak: 0,
+      role: 'STUDENT' as const,
+      currentQuestionId: null,
+      lastQuestionAssignedAt: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    const loginSpy = jest.spyOn(apiModule.api, 'login').mockResolvedValue(mockUser);
+
+    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((event: Event) => {
+      return true;
+    });
+
+    new AuthView();
+
+    const emailInput = document.getElementById('login-email') as HTMLInputElement;
+    const passwordInput = document.getElementById('login-password') as HTMLInputElement;
+    const loginButton = document.getElementById('login-button') as HTMLButtonElement;
+
+    emailInput.value = testEmail;
+    passwordInput.value = testPassword;
+
+    loginButton.click();
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(loginSpy).toHaveBeenCalledWith(testEmail, testPassword);
+    expect(navigateEventSpy).toHaveBeenCalled();
+    
+    const dispatchedEvent = navigateEventSpy.mock.calls[0][0] as CustomEvent<{ view: string }>;
+    expect(dispatchedEvent.type).toBe('navigate-to');
+    expect(dispatchedEvent.detail.view).toBe('/game');
+
+    navigateEventSpy.mockRestore();
+    loginSpy.mockRestore();
+  });
+
+  it('deberia redirigir a /admin-users cuando un usuario PROFESSOR inicia sesión exitosamente', async () => {
+    const testEmail = 'professor@example.com';
+    const testPassword = 'password123';
+
+    const mockUser = {
+      _id: 'professor1',
+      email: testEmail,
+      streak: 5,
+      role: 'PROFESSOR' as const,
+      currentQuestionId: null,
+      lastQuestionAssignedAt: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    const loginSpy = jest.spyOn(apiModule.api, 'login').mockResolvedValue(mockUser);
+
+    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((event: Event) => {
+      return true;
+    });
+
+    new AuthView();
+
+    const emailInput = document.getElementById('login-email') as HTMLInputElement;
+    const passwordInput = document.getElementById('login-password') as HTMLInputElement;
+    const loginButton = document.getElementById('login-button') as HTMLButtonElement;
+
+    emailInput.value = testEmail;
+    passwordInput.value = testPassword;
+
+    loginButton.click();
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(loginSpy).toHaveBeenCalledWith(testEmail, testPassword);
+    expect(navigateEventSpy).toHaveBeenCalled();
+    
+    const dispatchedEvent = navigateEventSpy.mock.calls[0][0] as CustomEvent<{ view: string }>;
+    expect(dispatchedEvent.type).toBe('navigate-to');
+    expect(dispatchedEvent.detail.view).toBe('/admin-users');
+
+    navigateEventSpy.mockRestore();
+    loginSpy.mockRestore();
+  });
 });

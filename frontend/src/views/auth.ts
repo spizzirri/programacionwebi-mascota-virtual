@@ -54,7 +54,9 @@ export class AuthView extends DOMManager {
     }
 
     notifyAuthenticationSuccess(): void {
-        this.dispatchCustomEvent('navigate-to', { view: '/game' });
+        const user = session.getUser();
+        const redirectPath = user?.role === 'PROFESSOR' ? '/admin-users' : '/game';
+        this.dispatchCustomEvent('navigate-to', { view: redirectPath });
     }
 
 
