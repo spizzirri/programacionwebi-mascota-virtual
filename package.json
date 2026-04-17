@@ -14,7 +14,7 @@
     "dev:backend": "npm run dev --workspace=backend",
     "dev:e2e": "concurrently \"dotenv -e backend/.e2e-local -- npm run dev:backend\" \"dotenv -e frontend/.e2e-local -- npm run dev:frontend\"",
     "start:e2e:env": "docker compose -f e2e-env/docker-compose.yml up -d",
-    "stop:e2e:env": "docker compose -f e2e-env/docker-compose.yml down",
+    "stop:e2e:env": "docker compose -f e2e-env/docker-compose.yml down --rmi local -v",
     "test:e2e": "playwright test --config=e2e-tests/playwright.config.ts",
     "db:up": "npm run db:up --workspace=backend",
     "db:down": "npm run db:down --workspace=backend",

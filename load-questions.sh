@@ -58,8 +58,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE=""
+BACKEND_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/backend" && pwd)"
+ENV_FILE="${BACKEND_DIR}/.env"
 MONGODB_URI=""
 CSV_FILES=()
 
@@ -84,8 +84,8 @@ show_help() {
     echo "  ./load-questions.sh --env <path_to_env> --files <csv1> [csv2] ..."
     echo ""
     echo -e "${BLUE}OPTIONS${NC}"
-    echo "  --uri <mongodb_uri>     MongoDB connection URI"
-    echo "  --env <path>            Path to .env file (default: ./backend/.env)"
+    echo "  --uri <mongodb_uri>     MongoDB connection URI (overrides .env)"
+    echo "  --env <path>            Path to .env file (default: backend/.env)"
     echo "  --files <csv1> [csv2]   CSV files to process"
     echo "  --help                  Show this help message"
     echo ""
@@ -184,11 +184,6 @@ if [ ${#CSV_FILES[@]} -eq 0 ]; then
     exit 1
 fi
 
-# If no --env or --uri specified, use default .env location
-if [ -z "$ENV_FILE" ] && [ -z "$MONGODB_URI" ]; then
-    ENV_FILE="${SCRIPT_DIR}/.env"
-fi
-
 # If --env specified, extract MONGODB_URI from it
 if [ -n "$ENV_FILE" ] && [ -z "$MONGODB_URI" ]; then
     if [ ! -f "$ENV_FILE" ]; then
@@ -281,40 +276,42 @@ for csv_file in "${CSV_FILES[@]}"; do
     # Create temporary mongosh script
     TEMP_JS=$(mktemp /tmp/mongo_load_XXXXXX.js)
 
+    # Add database selection to JS
+    echo "db = db.getSiblingDB('${DB_NAME}');" > "$TEMP_JS"
+
     # Read CSV and generate mongosh commands
     {
         # Skip header line
         read -r HEADER || true
 
         while IFS= read -r line || [ -n "$line" ]; do
-            # Skip empty lines
-            if [ -z "$(echo "$line" | tr -d '[:space:]')" ]; then
-                continue
-            fi
+            # Skip empty lines or lines that are just whitespace
+            [[ -z "${line// }" ]] && continue
 
-            # Split by semicolon
-            QUESTION=$(echo "$line" | cut -d';' -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-            ANSWER=$(echo "$line" | cut -d';' -f2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            # Split by semicolon more robustly
+            # Using parameter expansion to avoid subshells and issues with echo/sed
+            QUESTION=$(echo "$line" | cut -d';' -f1 | xargs)
+            ANSWER=$(echo "$line" | cut -d';' -f2 | xargs)
 
             if [ -z "$QUESTION" ]; then
                 continue
             fi
 
-            # Escape single quotes for JavaScript
-            QUESTION_ESCAPED=$(echo "$QUESTION" | sed "s/'/\\\\'/g")
-            ANSWER_ESCAPED=$(echo "$ANSWER" | sed "s/'/\\\\'/g")
-            TOPIC_ESCAPED=$(echo "$TOPIC" | sed "s/'/\\\\'/g")
+            # Escape single quotes for JavaScript by replacing ' with \'
+            QUESTION_JS="${QUESTION//\'/\\\'}"
+            ANSWER_JS="${ANSWER//\'/\\\'}"
+            TOPIC_JS="${TOPIC//\'/\\\'}"
 
-            # Generate upsert command
+            # Append upsert command
             cat << EOF
 try {
     const result = db.questions.updateOne(
-        { text: '${QUESTION_ESCAPED}', topic: '${TOPIC_ESCAPED}' },
+        { text: '${QUESTION_JS}', topic: '${TOPIC_JS}' },
         {
             \$set: {
-                text: '${QUESTION_ESCAPED}',
-                topic: '${TOPIC_ESCAPED}',
-                answer: '${ANSWER_ESCAPED}'
+                text: '${QUESTION_JS}',
+                topic: '${TOPIC_JS}',
+                answer: '${ANSWER_JS}'
             },
             \$setOnInsert: { createdAt: new Date() }
         },
@@ -322,32 +319,39 @@ try {
     );
 
     if (result.upsertedId) {
-        print('INSERTED');
+        print('RES_INSERTED');
     } else if (result.matchedCount > 0) {
-        print('UPDATED');
+        print('RES_UPDATED');
     }
 } catch (e) {
-    print('ERROR: ' + e.message);
+    print('RES_ERROR: ' + e.message);
 }
 EOF
         done
-    } < "$csv_file" > "$TEMP_JS"
+    } < "$csv_file" >> "$TEMP_JS"
 
     # Execute with mongosh
     echo -e "${YELLOW}   Importing...${NC}"
 
     OUTPUT=$(mongosh "$MONGODB_URI" --quiet "$TEMP_JS" 2>&1) || true
 
-    # Count results (grep for exact lines, mongosh adds prompts so we use word boundaries)
-    FILE_INSERTED=$(echo "$OUTPUT" | grep -c 'INSERTED' || true)
-    FILE_UPDATED=$(echo "$OUTPUT" | grep -c 'UPDATED' || true)
-    FILE_ERRORS=$(echo "$OUTPUT" | grep -c 'ERROR:' || true)
+    # Count results
+    FILE_INSERTED=$(echo "$OUTPUT" | grep -c 'RES_INSERTED' || true)
+    FILE_UPDATED=$(echo "$OUTPUT" | grep -c 'RES_UPDATED' || true)
+    FILE_ERRORS=$(echo "$OUTPUT" | grep -c 'RES_ERROR:' || true)
 
     # Show errors if any
     if [ "$FILE_ERRORS" -gt 0 ]; then
-        echo "$OUTPUT" | grep '^ERROR:' | head -5 | while read -r err; do
-            echo -e "${RED}   ${err}${NC}"
+        echo -e "${RED}   Errors found during import:${NC}"
+        echo "$OUTPUT" | grep 'RES_ERROR:' | head -5 | while read -r err; do
+            echo -e "${RED}   ${err#RES_}${NC}"
         done
+    fi
+
+    # Diagnostic: if total count is 0 but we expected more, show the output
+    if [ $((FILE_INSERTED + FILE_UPDATED + FILE_ERRORS)) -eq 0 ] && [ "$TOTAL_LINES" -gt 0 ]; then
+        log_warn "Import process produced no results. Raw output from mongosh:"
+        echo -e "${YELLOW}${OUTPUT}${NC}"
     fi
 
     log_info "Inserted: ${FILE_INSERTED}, Updated: ${FILE_UPDATED}, Errors: ${FILE_ERRORS}"

@@ -13,7 +13,7 @@
     "start:dev": "ts-node src/main.ts",
     "dev": "ts-node-dev --respawn src/main.ts",
     "db:up": "docker compose up -d",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down --rmi local -v"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
