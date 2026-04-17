@@ -4,23 +4,33 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseModule } from './database.module';
 import { DatabaseService } from "./database.service";
 
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
 describe('DatabaseService', () => {
     let service: DatabaseService;
     let module: TestingModule;
+    let mongod: MongoMemoryServer;
 
     beforeAll(async () => {
-        process.env.USE_IN_MEMORY_DB = 'true';
+        mongod = await MongoMemoryServer.create();
+        const uri = mongod.getUri();
+        process.env.MONGODB_URI = uri;
+
         module = await Test.createTestingModule({
             imports: [DatabaseModule],
         }).compile();
 
         service = module.get<DatabaseService>(DatabaseService);
-    }, 30000);
+    }, 60000);
 
     afterAll(async () => {
         if (module) {
             await module.close();
         }
+        if (mongod) {
+            await mongod.stop();
+        }
+        delete process.env.MONGODB_URI;
     });
 
     describe('User Operations', () => {

@@ -11,9 +11,6 @@ export class QuestionsService implements OnModuleInit {
     constructor(private readonly db: DatabaseService) { }
 
     async onModuleInit() {
-        if (process.env.USE_IN_MEMORY_DB === 'true') {
-            await this.seedQuestions();
-        }
         await this.syncTopics();
     }
 

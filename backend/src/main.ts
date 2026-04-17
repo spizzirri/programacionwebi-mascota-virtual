@@ -70,29 +70,26 @@ async function bootstrap() {
     });
 
     let sessionStore: any;
-    if (process.env.USE_IN_MEMORY_DB !== 'true') {
-        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tamagotchi';
-        const maskedUri = maskMongoUri(mongoUri);
-        console.log(`Attempting MongoDB session store with URI: ${maskedUri}`);
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tamagotchi';
+    const maskedUri = maskMongoUri(mongoUri);
+    console.log(`Attempting MongoDB session store with URI: ${maskedUri}`);
 
-        // Test MongoDB connection with a timeout before using it
-        try {
-            const { MongoClient } = await import('mongodb');
-            const client = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 3000 });
-            await client.connect();
-            await client.db().command({ ping: 1 });
-            console.log('MongoDB connection successful, using MongoStore for sessions');
-            await client.close();
+    try {
+        const { MongoClient } = await import('mongodb');
+        const client = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 3000 });
+        await client.connect();
+        await client.db().command({ ping: 1 });
+        console.log('MongoDB connection successful, using MongoStore for sessions');
+        await client.close();
 
-            sessionStore = MongoStore.create({
-                mongoUrl: mongoUri,
-                collectionName: 'sessions',
-                ttl: 24 * 60 * 60,
-            });
-        } catch (error) {
-            console.warn(`MongoDB not available (${(error as Error).message}), falling back to in-memory session store`);
-            console.warn('Note: Sessions will be lost on server restart. Set USE_IN_MEMORY_DB=true or start MongoDB for persistence.');
-        }
+        sessionStore = MongoStore.create({
+            mongoUrl: mongoUri,
+            collectionName: 'sessions',
+            ttl: 24 * 60 * 60,
+        });
+    } catch (error) {
+        console.error(`MongoDB connection failed: ${(error as Error).message}`);
+        throw new Error('Could not connect to MongoDB for session store. Persistence is required.');
     }
 
     app.use(

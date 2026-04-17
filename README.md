@@ -48,20 +48,12 @@ Para el frontend, navega a la carpeta `/frontend` o usa los comandos de npm work
 
 ---
 
-## Base de Datos en Memoria
-
-El proyecto soporta el uso de una base de datos en memoria para facilitar el desarrollo sin dependencias externas.
-
-- **Variable de control:** `USE_IN_MEMORY_DB=true` (en el `.env` del backend).
-
----
-
 ## Variables de Entorno Obligatorias
 
 ### Backend (`/backend/.env`)
 - `GEMINI_API_KEY`: Clave de API para el servicio de inteligencia artificial.
 - `SESSION_SECRET`: Secreto para la firma de cookies de sesión.
-- `MONGODB_URI`: URI de conexión a MongoDB (solo obligatoria si `USE_IN_MEMORY_DB` es `false`).
+- `MONGODB_URI`: URI de conexión a MongoDB.
 
 ### Frontend (`/frontend/.env`)
 - `VITE_API_BASE_URL`: URL base donde se encuentra corriendo el backend (ej. `http://localhost:3000`).
