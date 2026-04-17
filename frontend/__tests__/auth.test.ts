@@ -119,7 +119,7 @@ describe('Login', () => {
 
     const loginSpy = jest.spyOn(apiModule.api, 'login').mockResolvedValue(mockUser);
 
-    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((event: Event) => {
+    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((_event: Event) => {
       return true;
     });
 
@@ -163,7 +163,7 @@ describe('Login', () => {
 
     const loginSpy = jest.spyOn(apiModule.api, 'login').mockResolvedValue(mockUser);
 
-    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((event: Event) => {
+    const navigateEventSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation((_event: Event) => {
       return true;
     });
 

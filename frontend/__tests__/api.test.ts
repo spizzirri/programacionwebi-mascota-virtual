@@ -16,8 +16,9 @@ describe('apiRequest - manejo de sesion', () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: false,
             status: 401,
+            headers: new Headers(),
             text: async () => 'Unauthorized',
-        });
+        } as unknown as Partial<Response>);
         global.fetch = mockFetch as unknown as typeof fetch;
 
         await expect(api.getCurrentUser()).rejects.toThrow('Sesión vencida');
@@ -30,8 +31,9 @@ describe('apiRequest - manejo de sesion', () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: false,
             status: 401,
+            headers: new Headers(),
             text: async () => JSON.stringify({ message: 'usuario o contraseña incorrectos' }),
-        });
+        } as unknown as Partial<Response>);
         global.fetch = mockFetch as unknown as typeof fetch;
 
         await expect(api.login('test@test.com', 'wrong')).rejects.toThrow('usuario o contraseña incorrectos');
@@ -44,8 +46,9 @@ describe('apiRequest - manejo de sesion', () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: false,
             status: 401,
+            headers: new Headers(),
             text: async () => 'Unauthorized',
-        });
+        } as unknown as Partial<Response>);
         global.fetch = mockFetch as unknown as typeof fetch;
 
         await expect(api.getRandomQuestion()).rejects.toThrow('Sesión vencida');
@@ -58,8 +61,9 @@ describe('apiRequest - manejo de sesion', () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: false,
             status: 403,
+            headers: new Headers(),
             text: async () => JSON.stringify({ message: 'Acceso denegado' }),
-        });
+        } as unknown as Partial<Response>);
         global.fetch = mockFetch as unknown as typeof fetch;
 
         await expect(api.getCurrentUser()).rejects.toThrow('Acceso denegado');
@@ -82,8 +86,9 @@ describe('apiRequest - manejo de sesion', () => {
         const mockFetch = jest.fn<() => Promise<Partial<Response>>>().mockResolvedValue({
             ok: true,
             status: 200,
+            headers: new Headers(),
             json: async () => ({ user: mockUser }),
-        });
+        } as unknown as Partial<Response>);
         global.fetch = mockFetch as unknown as typeof fetch;
 
         const user = await api.getCurrentUser();

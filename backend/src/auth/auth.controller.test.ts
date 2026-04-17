@@ -24,6 +24,7 @@ describe('AuthController', () => {
     const mockResponse = {
         setHeader: jest.fn(),
         clearCookie: jest.fn(),
+        json: jest.fn().mockImplementation((val) => val),
     } as unknown as Response;
 
     beforeEach(async () => {
@@ -58,9 +59,9 @@ describe('AuthController', () => {
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
 
-            const result = await controller.login(body as any, session, mockRequest, mockResponse);
+            await controller.login(body as any, session, mockRequest, mockResponse);
 
-            expect(result).toEqual({ success: true, user: mockUser });
+            expect(mockResponse.json).toHaveBeenCalledWith({ success: true, user: mockUser });
             expect(mockSession.regenerate).toHaveBeenCalled();
             expect(authService.login).toHaveBeenCalledWith(body.email, body.password);
         });
@@ -81,9 +82,9 @@ describe('AuthController', () => {
         it('deberia destruir la sesion completamente al cerrar sesion', async () => {
             const session: any = { userId: 'user123' };
 
-            const result = await controller.logout(session, mockRequest, mockResponse);
+            await controller.logout(session, mockRequest, mockResponse);
 
-            expect(result).toEqual({ success: true });
+            expect(mockResponse.json).toHaveBeenCalledWith({ success: true });
             expect(mockSession.destroy).toHaveBeenCalled();
             expect(mockResponse.clearCookie).toHaveBeenCalledWith('tamagotchi.sid');
         });

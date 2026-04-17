@@ -3,7 +3,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
-import Tokens = require('csrf');
+import Tokens from 'csrf';
 import { SessionData } from '../common/types/session.types';
 
 @Controller('auth')
@@ -62,6 +62,7 @@ export class AuthController {
                 else {
                     res.clearCookie('tamagotchi.sid');
                     res.json({ success: true });
+                    resolve();
                 }
             });
         });
