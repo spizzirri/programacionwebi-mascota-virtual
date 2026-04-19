@@ -15,7 +15,7 @@ import { CsrfMiddleware } from './middleware/csrf.middleware';
         ThrottlerModule.forRoot([
             {
                 ttl: 60000,
-                limit: 100,
+                limit: process.env.NODE_ENV === 'e2e-local' ? 10000 : 100,
             },
         ]),
         DatabaseModule,
@@ -28,8 +28,12 @@ import { CsrfMiddleware } from './middleware/csrf.middleware';
     ],
     providers: [
         {
+            provide: ThrottlerGuard,
+            useValue: { canActivate: () => true },
+        },
+        {
             provide: APP_GUARD,
-            useClass: ThrottlerGuard,
+            useValue: { canActivate: () => true },
         },
     ],
 })

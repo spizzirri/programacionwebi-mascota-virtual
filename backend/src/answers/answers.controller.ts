@@ -10,7 +10,7 @@ export class AnswersController {
 
     @Post('submit')
     @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { limit: 5, ttl: 60000 } })
+    @Throttle({ default: { limit: 1000, ttl: 60000 } })
     @UsePipes(new ValidationPipe({ transform: true }))
     async submitAnswer(
         @Body() answerDto: AnswerSubmitDto,

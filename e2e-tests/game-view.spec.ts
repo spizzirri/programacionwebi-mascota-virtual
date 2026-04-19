@@ -6,7 +6,17 @@ async function login(page: Page, email: string, password: string) {
     await page.fill('#login-email', email);
     await page.fill('#login-password', password);
     await page.click('#login-button');
-    await expect(page.locator('#game-page')).toBeVisible({ timeout: 10000 });
+
+    // Si es admin o profesor, redirigimos a /admin-users por defecto en el front, 
+    // pero los tests suelen esperar estar en la página del juego o al menos haber logueado.
+    if (email.includes('admin')) {
+        await expect(page.locator('.profile-container')).toBeVisible({ timeout: 10000 });
+        // Si el test continúa con acciones de juego, forzamos navegación a /game
+        await page.goto('/game');
+        await expect(page.locator('#game-page')).toBeVisible({ timeout: 10000 });
+    } else {
+        await expect(page.locator('#game-page')).toBeVisible({ timeout: 10000 });
+    }
 }
 
 async function logout(page: Page) {
@@ -32,7 +42,7 @@ async function cleanDatabase() {
     const db = client.db('tamagotchi_e2e');
 
     await db.collection('users').deleteMany({});
-    const passwordHash = "$2b$10$eyTT939IAmBiXRyRlpHEQeE91NRJ4WxfwSiDUtvXnFLgal99qAJ2q";
+    const passwordHash = "$2b$12$4QX2.DQYp9RgqiOnSoVI2OuE2y1aK92ZBoOfxoSuizRjNFhsQW6E2";
     await db.collection('users').insertMany([
         {
             email: 'admin@gmail.com',
@@ -76,11 +86,16 @@ async function cleanDatabase() {
     ]);
 
     await db.collection('questions').deleteMany({})
-    await db.collection('topic').deleteMany({})
+    await db.collection('topics').deleteMany({})
+    await db.collection('topics').insertMany([
+        { name: "html", enabled: true },
+        { name: "javascript", enabled: true },
+        { name: "css", enabled: true }
+    ]);
     await db.collection('questions').insertMany([
         {
             text: "¿Qué es el DOM?",
-            topic: "html_semantico",
+            topic: "html",
         },
         {
             text: "¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?",
@@ -88,7 +103,7 @@ async function cleanDatabase() {
         },
         {
             text: "¿Por qué es importante entender el modelo de caja (box model) en CSS?",
-            topic: "css_modelo_caja"
+            topic: "css"
         }
     ]);
     await db.collection('answers').deleteMany({});
@@ -118,19 +133,19 @@ test.describe('game-view', () => {
             await page.fill('#login-email', 'estudiante@gmail.com');
             await page.fill('#login-password', 'wrong-password');
             await page.click('#login-button');
-            await expect(page.locator('#login-error')).toHaveText('usuario bloqueado, contacte al administrador');
-            
+            await expect(page.locator('#login-error')).toHaveText(/usuario bloqueado por 15 minutos/);
+
             await page.fill('#login-email', 'estudiante@gmail.com');
-            await page.fill('#login-password', '123456');
+            await page.fill('#login-password', '123456789');
             await page.click('#login-button');
-            await expect(page.locator('#login-error')).toHaveText('usuario bloqueado, contacte al administrador');
+            await expect(page.locator('#login-error')).toHaveText(/usuario bloqueado, intente nuevamente en \d+ minutos/);
         });
     });
 
     test.describe('estudiante responde', () => {
 
         test('[wiremock 001] debería mostrar racha de 1 cuando el estudiante responde correctamente y no puede volver a responder', async ({ page }) => {
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -146,7 +161,7 @@ test.describe('game-view', () => {
         });
 
         test('[wiremock 003] debería mostrar racha de 0.5 cuando el estudiante responde parcialmente y no puede volver a responder', async ({ page }) => {
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -164,7 +179,7 @@ test.describe('game-view', () => {
 
     test.describe('estudiante navega al perfil', () => {
         test('[wiremock 001] estudiante navega al perfil y ve el historial de sus preguntas mostrando la respuesta dada y la fecha en la que la respondió y su email en el header', async ({ page }) => {
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -192,7 +207,7 @@ test.describe('game-view', () => {
     test.describe('estudiante apela', () => {
 
         test('[wiremock 001] debería permitir apelar una respuesta incorrecta y que el profesor la acepte actualizando la racha del estudiante', async ({ page }) => {
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -210,7 +225,7 @@ test.describe('game-view', () => {
 
             await logout(page);
 
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.goto('/admin-appeals');
             await expect(page.locator('#admin-appeals-page')).toBeVisible({ timeout: 5000 });
@@ -230,7 +245,7 @@ test.describe('game-view', () => {
 
             await logout(page);
 
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
             expect(await getStreak(page)).toBe('1');
 
             await page.goto('/my-appeals');
@@ -240,7 +255,7 @@ test.describe('game-view', () => {
         });
 
         test('[wiremock 002] debería permitir apelar una respuesta incorrecta y que el profesor la rechace manteniendo la racha en 0', async ({ page }) => {
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -256,7 +271,7 @@ test.describe('game-view', () => {
 
             await logout(page);
 
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.goto('/admin-appeals');
             await expect(page.locator('#admin-appeals-table-body tr')).toHaveCount(1, { timeout: 5000 });
@@ -275,7 +290,7 @@ test.describe('game-view', () => {
 
             await logout(page);
 
-            await login(page, 'estudiante@gmail.com', '123456');
+            await login(page, 'estudiante@gmail.com', '123456789');
             expect(await getStreak(page)).toBe('0');
 
             await page.goto('/my-appeals');
@@ -287,7 +302,7 @@ test.describe('game-view', () => {
 
     test.describe('profesor responde', () => {
         test('[wiremock 001] [wiremock 002] [wiremock 003] debería permitir que un profesor responda varias preguntas alternando entre bien, mal y regular y acumulando racha. Al responder mal la racha vuelve a cero', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -318,7 +333,7 @@ test.describe('game-view', () => {
 
     test.describe('profesor navega al perfil', () => {
         test('[wiremock 001] profesor navega al perfil y ve el historial de sus preguntas mostrando la respuesta dada y la fecha en la que la respondió y su email en el header', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             expect(await getStreak(page)).toBe('0');
 
@@ -346,7 +361,7 @@ test.describe('game-view', () => {
     test.describe('profesor administra preguntas', () => {
 
         test('El profesor navega a la pantalla de administración de preguntas y ve la lista de preguntas actuales. Agrega la pregunta "¿Que es CSS?" con el topico CSS y la guarda. El usuario ahora visualiza "¿Que es CSS?" en la lista de preguntas.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-questions-nav-btn');
             await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
@@ -355,7 +370,7 @@ test.describe('game-view', () => {
             await expect(page.locator('#question-modal')).not.toHaveClass(/hidden/);
 
             await page.fill('#question-modal #question-text', '¿Que es CSS?');
-            await page.fill('#question-modal #question-topic', 'css_modelo_caja');
+            await page.fill('#question-modal #question-topic', 'css');
             await page.click('#question-modal #question-form button[type="submit"]');
 
             await expect(page.locator('#question-modal')).toHaveClass(/hidden/);
@@ -365,7 +380,7 @@ test.describe('game-view', () => {
         });
 
         test('El profesor elimina la pregunta "¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?" y ahora el usuario no visualiza la pregunta en la lista de preguntas.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-questions-nav-btn');
             await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
@@ -386,7 +401,7 @@ test.describe('game-view', () => {
         });
 
         test('El profesor edita la pregunta "¿Qué es el DOM?" y cambia su texto a "¿Qué es el DOMO?" y ahora el usuario visualiza "¿Qué es el DOMO?" en la lista de preguntas y no visualiza "¿Qué es el DOM?".', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-questions-nav-btn');
             await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
@@ -407,17 +422,17 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
-        test('El profesor visualiza los topicos "css_modelo_caja", "html_semantico" y "javascript" en la vista y todos estan activos.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+        test('El profesor visualiza los topicos "css", "html" y "javascript" en la vista y todos estan activos.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-questions-nav-btn');
             await expect(page.locator('.admin-questions-layout')).toBeVisible({ timeout: 5000 });
 
-            await expect(page.locator('#topics-list .topic-item', { hasText: 'css_modelo_caja' })).toBeVisible();
-            await expect(page.locator('#topics-list .topic-item', { hasText: 'css_modelo_caja' })).toContainText('Activo');
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'css' })).toBeVisible();
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'css' })).toContainText('Activo');
 
-            await expect(page.locator('#topics-list .topic-item', { hasText: 'html_semantico' })).toBeVisible();
-            await expect(page.locator('#topics-list .topic-item', { hasText: 'html_semantico' })).toContainText('Activo');
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'html' })).toBeVisible();
+            await expect(page.locator('#topics-list .topic-item', { hasText: 'html' })).toContainText('Activo');
 
             await expect(page.locator('#topics-list .topic-item', { hasText: 'javascript' })).toBeVisible();
             await expect(page.locator('#topics-list .topic-item', { hasText: 'javascript' })).toContainText('Activo');
@@ -429,7 +444,7 @@ test.describe('game-view', () => {
     test.describe('profesor administra usuarios', () => {
 
         test('El profesor navega a administracion de usuario y visualiza estudiante@gmail.com, estudiantenoche@gmail.com y admin@gmail.com. Ve las columnas "Email, Rol, Racha, Comisión, Pregunta Actual, Fecha Asignación y Acciones". Acciones tiene tres botones, uno para ver el perfil, otro para editar y otro para eliminar.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
@@ -455,7 +470,7 @@ test.describe('game-view', () => {
         });
 
         test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante y comision NOCHE) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
@@ -464,7 +479,7 @@ test.describe('game-view', () => {
             await expect(page.locator('#user-modal')).not.toHaveClass(/hidden/);
 
             await page.fill('#user-email', 'estudiante2@gmail.com');
-            await page.fill('#user-password', '123456');
+            await page.fill('#user-password', '123456789');
             await page.selectOption('#user-role', 'STUDENT');
             await page.selectOption('#user-commission', 'NOCHE');
             await page.click('#user-form button[type="submit"]');
@@ -474,21 +489,21 @@ test.describe('game-view', () => {
 
             await logout(page);
 
-            await login(page, 'estudiante2@gmail.com', '123456');
+            await login(page, 'estudiante2@gmail.com', '123456789');
             await expect(page.locator('#game-page')).toBeVisible();
 
             await logout(page);
         });
 
         test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante) y luego modifica el email de estudiante2 a otroestudiante. Verifica que el cambio se vea reflejado en la tabla. Elimina el usuario otroestudiante y verifica que no este en la lista.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
 
             await page.click('#add-user-btn');
             await page.fill('#user-email', 'estudiante3@gmail.com');
-            await page.fill('#user-password', '123456');
+            await page.fill('#user-password', '123456789');
             await page.selectOption('#user-role', 'STUDENT');
             await page.click('#user-form button[type="submit"]');
             await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
@@ -517,7 +532,7 @@ test.describe('game-view', () => {
         });
 
         test('El profesor navega a administracion de usuario, y navega al perfil del usuario estudiante@gmail.com.', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
@@ -530,7 +545,7 @@ test.describe('game-view', () => {
         });
 
         test('debería mostrar solo usuarios de la comision manana al seleccionar la pestaña Mañana', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
@@ -545,7 +560,7 @@ test.describe('game-view', () => {
         });
 
         test('debería mostrar solo usuarios de la comision noche al seleccionar la pestaña Noche', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
@@ -560,7 +575,7 @@ test.describe('game-view', () => {
         });
 
         test('debería filtrar usuarios sin distincion de mayusculas ni tildes al escribir en el campo de busqueda', async ({ page }) => {
-            await login(page, 'admin@gmail.com', '123456');
+            await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });

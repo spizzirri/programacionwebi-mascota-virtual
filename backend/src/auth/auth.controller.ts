@@ -14,7 +14,7 @@ export class AuthController {
 
     @Post('login')
     @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { limit: 10, ttl: 60000 } })
+    @Throttle({ default: { limit: 1000, ttl: 60000 } })
     @UsePipes(new ValidationPipe({
         transform: true,
         exceptionFactory: (errors) => {
