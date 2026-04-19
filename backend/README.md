@@ -124,11 +124,11 @@ Campos disponibles:
 # Con API Key
 curl -X POST http://localhost:3000/users \
      -H "Content-Type: application/json" \
-     -H "x-api-key: tu_api_key_aqui" \
+     -H "x-api-key: your_api_key_for_direct_access" \
      -d '{
-       "email": "estudiante@ejemplo.com",
-       "password": "mi-password",
-       "role": "STUDENT",
+       "email": "profesor@ejemplo.com",
+       "password": "123456789",
+       "role": "PROFESSOR",
        "commission": "NOCHE"
      }'
 
