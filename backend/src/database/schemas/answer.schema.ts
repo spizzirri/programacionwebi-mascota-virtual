@@ -23,6 +23,9 @@ export class Answer {
     @Prop()
     feedback: string;
 
+    @Prop()
+    suggestedAnswer: string;
+
     @Prop({ default: Date.now })
     timestamp: Date;
 

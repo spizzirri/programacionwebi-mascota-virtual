@@ -47,6 +47,7 @@ describe('AnswersController', () => {
                 userAnswer: 'answer',
                 rating: 'correct' as const,
                 feedback: 'feedback',
+                suggestedAnswer: 'suggested',
                 timestamp: new Date(),
                 userId: "1",
                 streakAtMoment: 0
@@ -58,7 +59,9 @@ describe('AnswersController', () => {
             success: true,
             rating: 'correct',
             feedback: 'feedback',
-            newStreak: 1
+            suggestedAnswer: 'suggested',
+            newStreak: 1,
+            answerId: undefined
         };
 
         (service.submitAnswer as any).mockResolvedValue(sampleResponse);

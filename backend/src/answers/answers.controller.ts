@@ -31,6 +31,7 @@ export class AnswersController {
                 success: true,
                 rating: result.answer.rating,
                 feedback: result.answer.feedback,
+                suggestedAnswer: (result.answer as any).suggestedAnswer,
                 newStreak: result.newStreak,
                 answerId: (result.answer as any)._id,
             };

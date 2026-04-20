@@ -152,13 +152,15 @@ describe('GameManager', () => {
         const mockResponse: {
             rating: 'correct' | 'partial' | 'incorrect';
             feedback: string;
+            suggestedAnswer?: string;
             newStreak: number;
             answerId: string;
         } = {
             rating: 'correct',
             feedback: 'Muy bien!',
             newStreak: 1,
-            answerId: 'a1'
+            answerId: 'a1',
+            suggestedAnswer: undefined
         };
         const submitSpy = jest.spyOn(apiModule.api, 'submitAnswer').mockResolvedValue(mockResponse);
 
@@ -213,6 +215,63 @@ describe('GameManager', () => {
         expect(alertContainer).toBeTruthy();
         expect(alertContainer?.textContent).toContain('Error al enviar la respuesta. Por favor, intenta de nuevo.');
         expect(submitBtn.disabled).toBe(false);
+    });
+
+    it('deberia mostrar la respuesta sugerida cuando la respuesta es incorrecta', async () => {
+        const mockQuestion = { _id: 'q1', text: 'Question', topic: 'Topic' };
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ streak: 0 } as any);
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
+        const mockResponse = {
+            rating: 'incorrect' as const,
+            feedback: 'Mal!',
+            suggestedAnswer: 'Esta es la respuesta correcta',
+            newStreak: 0,
+            answerId: 'a2'
+        };
+        jest.spyOn(apiModule.api, 'submitAnswer').mockResolvedValue(mockResponse);
+
+        new GameView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const submitBtn = document.getElementById('submit-answer-btn') as HTMLButtonElement;
+        const input = document.getElementById('answer-input') as HTMLTextAreaElement;
+        const suggestedAnswerContainer = document.getElementById('suggested-answer-container') as HTMLElement;
+        const suggestedAnswerText = document.getElementById('suggested-answer-text') as HTMLElement;
+
+        input.value = 'Wrong Answer';
+        submitBtn.click();
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(suggestedAnswerContainer.classList.contains('hidden')).toBe(false);
+        expect(suggestedAnswerText.textContent).toBe(mockResponse.suggestedAnswer);
+    });
+
+    it('deberia proponer reintentar mas tarde si hay un fallo de conexion con el LLM', async () => {
+        const mockQuestion = { _id: 'q1', text: 'Question', topic: 'Topic' };
+        jest.spyOn(apiModule.api, 'getRandomQuestion').mockResolvedValue({ question: mockQuestion, hasAnswered: false });
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ streak: 5 } as any);
+        jest.spyOn(session, 'getUser').mockReturnValue({ role: 'STUDENT' } as any);
+
+        jest.spyOn(apiModule.api, 'submitAnswer').mockRejectedValue(new Error('LLM_CONNECTION_ERROR'));
+
+        new GameView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const submitBtn = document.getElementById('submit-answer-btn') as HTMLButtonElement;
+        const input = document.getElementById('answer-input') as HTMLTextAreaElement;
+
+        input.value = 'My Answer';
+        submitBtn.click();
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const alertContainer = document.querySelector('.alert-modal-container');
+        expect(alertContainer?.textContent).toContain('Hubo un problema de conexión con el servicio de validación. Por favor, intenta de nuevo en unos momentos.');
+        expect(submitBtn.disabled).toBe(false);
+        expect(input.disabled).toBe(false);
     });
 
     it('deberia ocultar el boton siguiente pregunta para estudiantes', async () => {

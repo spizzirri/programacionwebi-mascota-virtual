@@ -84,7 +84,7 @@ describe('AnswersService', () => {
             });
 
             const mockUser = { _id: 'user123', email: 'test@test.com', password: 'pwd', streak: 5, createdAt: new Date() };
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue({ text: 'Question?' } as any);
+            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue({ text: 'Question?', answer: 'Database Answer' } as any);
             jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
             jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
             const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
@@ -95,6 +95,7 @@ describe('AnswersService', () => {
                 userAnswer: 'Answer',
                 rating: 'correct',
                 feedback: 'Excellent',
+                suggestedAnswer: 'Database Answer',
                 timestamp: new Date()
             } as any);
 
@@ -109,6 +110,7 @@ describe('AnswersService', () => {
                 userAnswer: 'Answer',
                 rating: 'correct',
                 feedback: 'Excellent',
+                suggestedAnswer: 'Database Answer',
                 timestamp: expect.any(Date),
                 streakAtMoment: 5
             });
@@ -197,7 +199,7 @@ describe('AnswersService', () => {
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: JSON.stringify({
                     rating: 'correct',
-                    feedback: 'Muy bien'
+                    feedback: 'Muy bien',
                 })
             });
             (service as any).client = {
@@ -209,7 +211,7 @@ describe('AnswersService', () => {
             const result = await service.validateAnswer('q', 'a');
             expect(result).toEqual({
                 rating: 'correct',
-                feedback: 'Muy bien'
+                feedback: 'Muy bien',
             });
         });
 
@@ -257,7 +259,7 @@ describe('AnswersService', () => {
             });
         });
 
-        it('deberia retornar fallback si la respuesta de la API no tiene texto', async () => {
+        it('deberia lanzar LLM_CONNECTION_ERROR si la respuesta de la API no tiene texto', async () => {
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({});
             (service as any).client = {
@@ -266,14 +268,10 @@ describe('AnswersService', () => {
                 }
             };
 
-            const result = await service.validateAnswer('q', 'a');
-            expect(result).toEqual({
-                rating: 'incorrect',
-                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
-            });
+            await expect(service.validateAnswer('q', 'a')).rejects.toThrow('LLM_CONNECTION_ERROR');
         });
 
-        it('deberia retornar fallback si el JSON es invalido', async () => {
+        it('deberia lanzar LLM_CONNECTION_ERROR si el JSON es invalido', async () => {
 
             const mockGenerateContent = jest.fn<any>().mockResolvedValue({
                 text: 'invalid json'
@@ -284,14 +282,10 @@ describe('AnswersService', () => {
                 }
             };
 
-            const result = await service.validateAnswer('q', 'a');
-            expect(result).toEqual({
-                rating: 'incorrect',
-                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
-            });
+            await expect(service.validateAnswer('q', 'a')).rejects.toThrow('LLM_CONNECTION_ERROR');
         });
 
-        it('deberia retornar fallback si la API falla', async () => {
+        it('deberia lanzar LLM_CONNECTION_ERROR si la API falla', async () => {
 
             const mockGenerateContent = jest.fn<any>().mockRejectedValue(new Error('API failure'));
             (service as any).client = {
@@ -300,11 +294,7 @@ describe('AnswersService', () => {
                 }
             };
 
-            const result = await service.validateAnswer('q', 'a');
-            expect(result).toEqual({
-                rating: 'incorrect',
-                feedback: 'No se pudo validar la respuesta automáticamente. La respuesta será revisada manualmente.'
-            });
+            await expect(service.validateAnswer('q', 'a')).rejects.toThrow('LLM_CONNECTION_ERROR');
         });
 
         it('deberia detectar un intento de inyeccion de prompt', async () => {

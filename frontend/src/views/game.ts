@@ -19,6 +19,8 @@ export class GameView extends DOMManager {
     private appealButton: HTMLButtonElement;
     private streakNumber: SVGTextElement;
     private streakDisplay: HTMLElement;
+    private suggestedAnswerContainer: HTMLElement;
+    private suggestedAnswerText: HTMLElement;
     private lastAnswerId: string | null = null;
 
     constructor() {
@@ -34,6 +36,8 @@ export class GameView extends DOMManager {
         this.appealButton = this.getElementSafe<HTMLButtonElement>('#appeal-btn');
         this.streakNumber = this.getElementSafe<SVGTextElement>('.streak-number');
         this.streakDisplay = this.getElementSafe<HTMLElement>('.streak-display');
+        this.suggestedAnswerContainer = this.getElementSafe<HTMLElement>('#suggested-answer-container');
+        this.suggestedAnswerText = this.getElementSafe<HTMLElement>('#suggested-answer-text');
 
         const user = session.getUser();
         if (user && user.role === 'STUDENT') {
@@ -80,6 +84,7 @@ export class GameView extends DOMManager {
             this.removeClass(this.feedbackSection, 'partial');
             this.removeClass(this.feedbackSection, 'incorrect');
             this.addClass(this.appealButton, 'hidden');
+            this.addClass(this.suggestedAnswerContainer, 'hidden');
 
             const answerSection = this.getElementSafe<HTMLElement>('.answer-section');
             this.removeClass(answerSection, 'hidden');
@@ -159,8 +164,16 @@ export class GameView extends DOMManager {
                 this.removeClass(this.appealButton, 'hidden');
                 this.appealButton.disabled = false;
                 this.setTextContent(this.appealButton, 'SOLICITAR REVISION');
+
+                if (result.suggestedAnswer) {
+                    this.setTextContent(this.suggestedAnswerText, result.suggestedAnswer);
+                    this.removeClass(this.suggestedAnswerContainer, 'hidden');
+                } else {
+                    this.addClass(this.suggestedAnswerContainer, 'hidden');
+                }
             } else {
                 this.addClass(this.appealButton, 'hidden');
+                this.addClass(this.suggestedAnswerContainer, 'hidden');
             }
 
 
@@ -173,8 +186,12 @@ export class GameView extends DOMManager {
                 this.nextQuestionButton.disabled = false;
                 this.removeClass(this.nextQuestionButton, 'hidden');
             }
-        } catch (error) {
-            this.showAlert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
+        } catch (error: any) {
+            if (error.message === 'LLM_CONNECTION_ERROR') {
+                this.showAlert('Hubo un problema de conexión con el servicio de validación. Por favor, intenta de nuevo en unos momentos.');
+            } else {
+                this.showAlert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
+            }
             this.answerInput.disabled = false;
             this.submitButton.disabled = false;
             this.setTextContent(this.submitButton, 'Enviar Respuesta');

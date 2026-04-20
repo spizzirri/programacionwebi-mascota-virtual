@@ -96,14 +96,17 @@ async function cleanDatabase() {
         {
             text: "¿Qué es el DOM?",
             topic: "html",
+            answer: "El DOM es el Document Object Model."
         },
         {
             text: "¿Por qué deberíamos usar const y let en lugar de var en JavaScript moderno?",
-            topic: "javascript"
+            topic: "javascript",
+            answer: "Para evitar el hoisting y tener block scope."
         },
         {
             text: "¿Por qué es importante entender el modelo de caja (box model) en CSS?",
-            topic: "css"
+            topic: "css",
+            answer: "Porque determina el tamaño y posición de los elementos."
         }
     ]);
     await db.collection('answers').deleteMany({});
@@ -169,6 +172,9 @@ test.describe('game-view', () => {
 
             expect(await getStreak(page)).toBe('0.5');
 
+            await expect(page.locator('#suggested-answer-container')).toBeVisible();
+            await expect(page.locator('#suggested-answer-text')).not.toBeEmpty();
+
             await page.reload();
 
             await expect(page.locator('#question-text')).toHaveText('Ya has respondido la pregunta del día, vuelve mañana', { timeout: 10000 });
@@ -214,6 +220,9 @@ test.describe('game-view', () => {
             await answerQuestion(page, 'Mi respuesta mala');
 
             expect(await getStreak(page)).toBe('0');
+
+            await expect(page.locator('#suggested-answer-container')).toBeVisible();
+            await expect(page.locator('#suggested-answer-text')).not.toBeEmpty();
 
             await page.click('#appeal-btn');
             await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
@@ -262,6 +271,9 @@ test.describe('game-view', () => {
             await answerQuestion(page, 'Mi respuesta mala');
 
             expect(await getStreak(page)).toBe('0');
+
+            await expect(page.locator('#suggested-answer-container')).toBeVisible();
+            await expect(page.locator('#suggested-answer-text')).not.toBeEmpty();
 
             await page.click('#appeal-btn');
             await expect(page.locator('#appeal-btn')).toHaveText('Revision Solicitada', { timeout: 5000 });
@@ -327,6 +339,9 @@ test.describe('game-view', () => {
             await answerQuestion(page, 'Mi respuesta mala');
 
             expect(await getStreak(page)).toBe('0');
+
+            await expect(page.locator('#suggested-answer-container')).toBeVisible();
+            await expect(page.locator('#suggested-answer-text')).not.toBeEmpty();
 
         });
     })

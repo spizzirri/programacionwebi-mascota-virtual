@@ -36,6 +36,7 @@ interface Answer {
     userAnswer: string;
     rating: 'correct' | 'partial' | 'incorrect';
     feedback: string;
+    suggestedAnswer?: string;
     timestamp: string;
 }
 
@@ -191,6 +192,7 @@ export const api = {
     ): Promise<{
         rating: 'correct' | 'partial' | 'incorrect';
         feedback: string;
+        suggestedAnswer?: string;
         newStreak: number;
         answerId: string;
     }> {
@@ -201,6 +203,7 @@ export const api = {
         return {
             rating: data.rating!,
             feedback: data.feedback!,
+            suggestedAnswer: data.suggestedAnswer,
             newStreak: data.newStreak!,
             answerId: data.answer?._id || data.answerId,
         };
