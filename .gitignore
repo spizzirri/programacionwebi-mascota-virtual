@@ -1,4 +1,6 @@
 node_modules
 playwright-report
 test-results
+listado_alumnos.csv
+listado_preguntas.csv
 .qwen

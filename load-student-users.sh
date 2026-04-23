@@ -291,6 +291,7 @@ if [ -z "$DB_NAME" ]; then
     DB_NAME="tamagotchi"
     log_warn "Could not extract database name from URI, using default: ${DB_NAME}"
 fi
+echo "Using DB_NAME: ${DB_NAME}"
 
 log_info "Database: ${DB_NAME}"
 echo ""
@@ -344,12 +345,10 @@ for csv_file in "${CSV_FILES[@]}"; do
         exit 1
     fi
 
-    # Use Node.js to parse CSV, hash passwords, and generate mongosh script
-    (cd "$BACKEND_DIR" && node "${SCRIPT_DIR}/generate-users.js" "$csv_file" "$ROLE" "$COMMISSION") > "$TEMP_JS" 2>&1
-    
-    # Check if generation succeeded
-    if [ ! -s "$TEMP_JS" ]; then
-        log_error "Failed to generate import script"
+    CSV_FILE_ABS=$(realpath "$csv_file")
+
+    if ! (cd "$BACKEND_DIR" && node "${SCRIPT_DIR}/generate-users.js" "$CSV_FILE_ABS" "$ROLE" "$COMMISSION") > "$TEMP_JS" 2>&1; then
+        log_error "Failed to generate import script for $csv_file"
         cat "$TEMP_JS"
         rm -f "$TEMP_JS"
         exit 1
