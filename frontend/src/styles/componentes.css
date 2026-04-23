@@ -12,6 +12,7 @@
 
 .admin-table {
     width: 100%;
+    min-width: 600px;
     border-collapse: collapse;
     text-align: left;
     font-size: 0.95rem;
@@ -185,6 +186,30 @@
     background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     color: white;
     border-color: transparent;
+}
+
+.filters-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+
+.tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-group, .filter-group-topic {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.filter-group-text {
+    flex: 2;
+    margin-bottom: 0;
 }
 
 .sortable {

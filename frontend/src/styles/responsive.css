@@ -2,6 +2,10 @@
 
 @media (max-width: 800px) {
 
+    .profile-container {
+        max-width: 100%;
+    }
+
     /* Navbar & Navigation */
     .nav-content {
         flex-wrap: wrap;
@@ -64,13 +68,143 @@
         font-size: 2rem;
     }
 
+    #tamagotchi-container {
+        position: relative;
+        right: 0;
+        top: 0;
+        margin: 0 auto var(--spacing-lg);
+        width: 160px;
+        height: 160px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
     .tamagotchi-svg {
-        width: 200px;
-        height: 200px;
+        width: 150px;
+        height: 150px;
     }
 
     .question-text {
         font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --spacing-xl: 1.5rem;
+        --spacing-lg: 1rem;
+        --spacing-md: 0.75rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.75rem;
+    }
+
+    #tamagotchi-container {
+        width: 140px;
+        height: 140px;
+    }
+
+    .tamagotchi-svg {
+        width: 120px;
+        height: 120px;
+    }
+
+    .game-container {
+        padding-top: var(--spacing-md);
+    }
+
+    .auth-container,
+    .game-container,
+    .profile-container {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
+
+    .admin-questions-layout {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+}
+
+/* Specific fixes for ultra-mobile devices (< 400px) */
+@media (max-width: 400px) {
+    :root {
+        --spacing-xl: 1rem;
+        --spacing-lg: 0.75rem;
+        --spacing-md: 0.5rem;
+        --spacing-sm: 0.5rem;
+    }
+
+    html {
+        font-size: 14px;
+    }
+
+    .nav-content {
+        padding: 0 var(--spacing-sm);
+    }
+
+    .profile-container,
+    .game-container,
+    .auth-container {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr; /* Force single column earlier */
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+
+    .admin-table th, 
+    .admin-table td {
+        padding: var(--spacing-sm);
+    }
+
+    .auth-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .filters-container {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding: 0 var(--spacing-sm);
+    }
+
+    .tabs-container {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: 0 var(--spacing-sm);
+    }
+
+    .tabs-container .tab-btn {
+        width: 100%;
+    }
+}
+
+/* Specific fixes for micro-mobile devices (< 300px) */
+@media (max-width: 300px) {
+    html {
+        font-size: 12px;
+    }
+
+    :root {
+        --spacing-xl: 0.75rem;
+        --spacing-lg: 0.5rem;
+        --spacing-md: 0.25rem;
+        --spacing-sm: 0.25rem;
+    }
+
+    .admin-questions-layout, .profile-container {
+        padding: var(--spacing-sm) 0;
+    }
+    
+    .filters-container, .tabs-container {
+        padding: 0;
     }
 }
 
