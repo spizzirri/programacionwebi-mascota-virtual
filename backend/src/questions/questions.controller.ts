@@ -1,20 +1,26 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Session, HttpException, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Session, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
-import { DatabaseService } from '../database/database.service';
-import { SessionData } from '../common/types/session.types';
+import { QuestionService } from './services/question.service';
+import type { SessionData } from '../common/types/session.types';
 import { paginate } from '../common/types/pagination.types';
+import { DEFAULT_PAGINATION_PAGE, DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT } from '../common/constants/pagination.constants';
+import { ProfessorGuard } from '../common/guards/professor.guard';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
+import { BulkCreateQuestionsDto } from './dto/bulk-create-questions.dto';
+import { UpdateTopicDto } from './dto/update-topic.dto';
 
 @Controller('questions')
 export class QuestionsController {
     constructor(
         private readonly questionsService: QuestionsService,
-        private readonly db: DatabaseService,
-    ) { }
+        private readonly questionService: QuestionService,
+    ) {}
 
     @Get('random')
     async getRandomQuestion(@Session() session: SessionData) {
         if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+            throw new Error('Not authenticated');
         }
 
         const result = await this.questionsService.getRandomQuestion(session.userId);
@@ -22,87 +28,73 @@ export class QuestionsController {
     }
 
     @Get()
-    async getAllQuestions(
-        @Session() session: SessionData,
-        @Query('page') page?: string,
-        @Query('limit') limit?: string,
-    ) {
-        await this.checkProfessor(session);
+    @UseGuards(ProfessorGuard)
+    async getAllQuestions(@Query('page') page?: string, @Query('limit') limit?: string) {
+        const pageNum = Math.max(MIN_PAGINATION_LIMIT, parseInt(page || String(DEFAULT_PAGINATION_PAGE), 10));
+        const limitNum = Math.min(MAX_PAGINATION_LIMIT, Math.max(MIN_PAGINATION_LIMIT, parseInt(limit || String(DEFAULT_PAGINATION_LIMIT), 10)));
 
-        const pageNum = Math.max(1, parseInt(page || '1', 10));
-        const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
-
-        const { data: questions, total } = await this.db.getAllQuestionsPaginated(pageNum, limitNum);
+        const { data: questions, total } = await this.questionService.getAllQuestionsPaginated(pageNum, limitNum);
         return {
             questions: paginate(questions, total, pageNum, limitNum),
         };
     }
 
     @Post()
-    async createQuestion(@Session() session: SessionData, @Body() body: any) {
-        await this.checkProfessor(session);
-        const question = await this.db.createQuestion(body);
+    @UseGuards(ProfessorGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async createQuestion(@Body() body: CreateQuestionDto) {
+        const question = await this.questionService.createQuestion(body);
         return { question };
     }
 
     @Patch(':id')
-    async updateQuestion(@Session() session: SessionData, @Param('id') id: string, @Body() body: any) {
-        await this.checkProfessor(session);
-        const question = await this.db.updateQuestion(id, body);
+    @UseGuards(ProfessorGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async updateQuestion(@Param('id') id: string, @Body() body: UpdateQuestionDto) {
+        const question = await this.questionService.updateQuestion(id, body);
         if (!question) {
-            throw new HttpException('Question not found', HttpStatus.NOT_FOUND);
+            throw new Error('Question not found');
         }
         return { question };
     }
 
     @Delete(':id')
-    async deleteQuestion(@Session() session: SessionData, @Param('id') id: string) {
-        await this.checkProfessor(session);
-        await this.db.deleteQuestion(id);
+    @UseGuards(ProfessorGuard)
+    async deleteQuestion(@Param('id') id: string) {
+        await this.questionService.deleteQuestion(id);
         return { success: true };
     }
 
     @Post('bulk')
-    async createQuestionsBulk(@Session() session: SessionData, @Body() body: { questions: { text: string, topic: string }[] }) {
-        await this.checkProfessor(session);
-        if (!body.questions || !Array.isArray(body.questions)) {
-            throw new HttpException('Invalid questions data', HttpStatus.BAD_REQUEST);
-        }
-        const questions = await this.db.createQuestions(body.questions);
+    @UseGuards(ProfessorGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async createQuestionsBulk(@Body() body: BulkCreateQuestionsDto) {
+        const questions = await this.questionService.createQuestions(body.questions);
         return { questions };
     }
 
     @Get('topics')
-    async getAllTopics(@Session() session: SessionData) {
-        await this.checkProfessor(session);
-        const topics = await this.db.getAllTopics();
+    @UseGuards(ProfessorGuard)
+    async getAllTopics() {
+        const topics = await this.questionService.getAllTopics();
         return { topics };
     }
 
     @Patch('topics/:name')
-    async updateTopic(@Session() session: SessionData, @Param('name') name: string, @Body() body: any) {
-        await this.checkProfessor(session);
-        const topic = await this.db.updateTopic(name, body);
+    @UseGuards(ProfessorGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async updateTopic(@Param('name') name: string, @Body() body: UpdateTopicDto) {
+        const topic = await this.questionService.updateTopic(name, body);
         if (!topic) {
-            throw new HttpException('Topic not found', HttpStatus.NOT_FOUND);
+            throw new Error('Topic not found');
         }
         return { topic };
     }
 
     @Delete()
-    async deleteAllQuestions(@Session() session: SessionData) {
-        await this.checkProfessor(session);
-        await this.db.deleteAllQuestions();
+    @UseGuards(ProfessorGuard)
+    async deleteAllQuestions() {
+        await this.questionService.deleteAllQuestions();
         return { success: true };
-    }
-
-    private async checkProfessor(session: SessionData) {
-        if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
-        }
-        const user = await this.db.findUserById(session.userId);
-        if (!user || user.role !== 'PROFESSOR') {
-            throw new HttpException('Forbidden: Only professors can access this resource', HttpStatus.FORBIDDEN);
-        }
     }
 }

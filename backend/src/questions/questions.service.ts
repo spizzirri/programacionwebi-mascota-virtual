@@ -1,5 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
+import { QuestionService } from './services/question.service';
+import { UserService } from '../users/services/user.service';
+import { AnswerService } from '../answers/services/answer.service';
 import { Question } from '../database/schemas/question.schema';
 import { questionsData } from './questions.data';
 import { QuestionPool } from './question-pool';
@@ -8,39 +10,42 @@ import { Questioner, QuestionResult } from './questioner';
 
 @Injectable()
 export class QuestionsService implements OnModuleInit {
-    constructor(private readonly db: DatabaseService) { }
+    constructor(
+        private readonly questionService: QuestionService,
+        private readonly userService: UserService,
+        private readonly answerService: AnswerService,
+    ) {}
 
     async onModuleInit() {
         await this.syncTopics();
     }
 
     private async syncTopics() {
-        const questions = await this.db.getAllQuestions();
-        const detectedTopics = [...new Set(questions.map(q => q.topic).filter(Boolean))];
+        const questions = await this.questionService.getAllQuestions();
+        const detectedTopics = [...new Set(questions.map((q) => q.topic).filter(Boolean))];
         for (const topicName of detectedTopics) {
-            await this.db.upsertTopic(topicName!);
+            await this.questionService.upsertTopic(topicName!);
         }
     }
 
     public async seedQuestions() {
-        const existingQuestions = await this.db.getAllQuestions();
+        const existingQuestions = await this.questionService.getAllQuestions();
         if (existingQuestions.length > 0) {
             return;
         }
 
         for (const question of questionsData) {
-            await this.db.createQuestion(question);
+            await this.questionService.createQuestion(question);
         }
     }
 
     async getRandomQuestion(userId: string): Promise<QuestionResult> {
-        const user = await this.db.findUserById(userId);
+        const user = await this.userService.findUserById(userId);
 
         const currentQuestion =
-            await this.findTodaysAssignedQuestion(user)
-            ?? await this.assignNewQuestion(userId);
+            (await this.findTodaysAssignedQuestion(user)) ?? (await this.assignNewQuestion(userId));
 
-        const questioner = Questioner.create(user?.role, this.db, userId, currentQuestion);
+        const questioner = Questioner.create(user?.role, this.questionService, this.userService, this.answerService, userId, currentQuestion);
         return questioner.getRandomQuestion();
     }
 
@@ -59,12 +64,12 @@ export class QuestionsService implements OnModuleInit {
             return null;
         }
 
-        return this.db.getQuestionById(user.currentQuestionId);
+        return this.questionService.getQuestionById(user.currentQuestionId);
     }
 
     private async assignNewQuestion(userId: string): Promise<Question> {
-        const allQuestions = await this.db.getAllQuestions();
-        const allTopics = await this.db.getAllTopics();
+        const allQuestions = await this.questionService.getAllQuestions();
+        const allTopics = await this.questionService.getAllTopics();
 
         const all = new QuestionPool(allQuestions);
         const activeTopicNames = new ActiveTopicFilter(allTopics).getActiveNames();
@@ -76,7 +81,7 @@ export class QuestionsService implements OnModuleInit {
         }
 
         const question = pool.pickRandom();
-        await this.db.assignQuestionToUser(userId, (question as any)._id.toString());
+        await this.userService.assignQuestionToUser(userId, (question as any)._id.toString());
         return question;
     }
 }

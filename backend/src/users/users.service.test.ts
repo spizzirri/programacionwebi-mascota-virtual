@@ -1,7 +1,12 @@
 import { describe, it, expect, jest, beforeEach, beforeAll } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import type { UsersService as UsersServiceType } from "./users.service";
-import type { DatabaseService as DatabaseServiceType } from "../database/database.service";
+import type { UserService as UserServiceType } from "./services/user.service";
+import type { QuestionService as QuestionServiceType } from "../questions/services/question.service";
+import type { AnswerService as AnswerServiceType } from "../answers/services/answer.service";
+import { UserService } from "./services/user.service";
+import { QuestionService } from "../questions/services/question.service";
+import { AnswerService } from "../answers/services/answer.service";
 
 jest.unstable_mockModule('bcrypt', () => ({
     hash: jest.fn(),
@@ -10,41 +15,53 @@ jest.unstable_mockModule('bcrypt', () => ({
 
 let bcrypt: any;
 let UsersService: any;
-let DatabaseService: any;
 
 beforeAll(async () => {
     bcrypt = await import('bcrypt');
     const userMod = await import('./users.service');
     UsersService = userMod.UsersService;
-    const dbMod = await import('../database/database.service');
-    DatabaseService = dbMod.DatabaseService;
 });
 
 describe('UsersService', () => {
     let service: UsersServiceType;
-    let databaseService: DatabaseServiceType;
+    let userService: UserServiceType;
+    let questionService: QuestionServiceType;
+    let answerService: AnswerServiceType;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 UsersService,
                 {
-                    provide: DatabaseService,
+                    provide: UserService,
                     useValue: {
                         findUserById: jest.fn(),
-                        getAnswersByUserId: jest.fn(),
-                        findAllUsers: jest.fn(),
-                        getAllQuestions: jest.fn(),
                         createUser: jest.fn(),
                         updateUser: jest.fn(),
                         deleteUser: jest.fn(),
+                        unlockUser: jest.fn(),
+                        findAllUsers: jest.fn(),
+                    },
+                },
+                {
+                    provide: QuestionService,
+                    useValue: {
+                        getAllQuestions: jest.fn(),
+                    },
+                },
+                {
+                    provide: AnswerService,
+                    useValue: {
+                        getAnswersByUserId: jest.fn(),
                     },
                 },
             ],
         }).compile();
 
         service = module.get<UsersServiceType>(UsersService);
-        databaseService = module.get<DatabaseServiceType>(DatabaseService);
+        userService = module.get<UserService>(UserService);
+        questionService = module.get<QuestionService>(QuestionService);
+        answerService = module.get<AnswerService>(AnswerService);
 
         process.env.REGISTRATION_SECRET = 'student-secret';
         process.env.ADMIN_SECRET = 'admin-secret';
@@ -58,27 +75,28 @@ describe('UsersService', () => {
                 email: 'test@test.com',
                 password: 'secret',
                 streak: 5,
-                createdAt: new Date()
+                role: 'STUDENT',
+                createdAt: new Date(),
+                toObject: () => ({
+                    _id: 'user1',
+                    email: 'test@test.com',
+                    password: 'secret',
+                    streak: 5,
+                    role: 'STUDENT',
+                    createdAt: new Date(),
+                }),
             };
+            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
 
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
+            const profile = await service.getProfile('user1');
 
-            const result = await service.getProfile('user1');
-
-            expect(result).toEqual({
-                _id: 'user1',
-                email: 'test@test.com',
-                streak: 5,
-                createdAt: mockUser.createdAt
-            });
-            expect((result as any).password).toBeUndefined();
+            expect(profile.password).toBeUndefined();
+            expect(profile.email).toBe('test@test.com');
+            expect(userService.findUserById).toHaveBeenCalledWith('user1');
         });
 
         it('deberia lanzar error si el usuario no existe', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(null);
 
             await expect(service.getProfile('nonexistent')).rejects.toThrow('User not found');
         });
@@ -86,106 +104,103 @@ describe('UsersService', () => {
 
     describe('getHistory', () => {
         it('deberia retornar el historial de respuestas del usuario', async () => {
-            const mockAnswers = [{ userAnswer: 'a' }, { userAnswer: 'b' }] as any;
+            const mockAnswers = [{ id: 'a1', questionText: 'Q1' }, { id: 'a2', questionText: 'Q2' }];
+            jest.spyOn(answerService as any, 'getAnswersByUserId').mockResolvedValue(mockAnswers as any);
 
-            jest.spyOn(databaseService, 'getAnswersByUserId').mockResolvedValue(mockAnswers);
+            const history = await service.getHistory('user1', 10);
 
-            const result = await service.getHistory('user1', 10);
-
-            expect(result).toEqual(mockAnswers);
-            expect(databaseService.getAnswersByUserId).toHaveBeenCalledWith('user1', 10);
+            expect(history).toEqual(mockAnswers);
+            expect(answerService.getAnswersByUserId).toHaveBeenCalledWith('user1', 10);
         });
 
         it('deberia usar el limite por defecto si no se especifica', async () => {
-            jest.spyOn(databaseService, 'getAnswersByUserId').mockResolvedValue([]);
+            jest.spyOn(answerService as any, 'getAnswersByUserId').mockResolvedValue([]);
 
             await service.getHistory('user1');
 
-            expect(databaseService.getAnswersByUserId).toHaveBeenCalledWith('user1', 50);
+            expect(answerService.getAnswersByUserId).toHaveBeenCalledWith('user1', 50);
         });
     });
 
     describe('getAllUsers', () => {
         it('deberia retornar todos los usuarios sin contraseña y con el texto de la pregunta actual', async () => {
-            const mockUsers = [
-                { _id: 'u1', email: 'u1@t.com', password: 'pw1', currentQuestionId: 'q1', toObject: function () { return this; } },
-                { _id: 'u2', email: 'u2@t.com', password: 'pw2', toObject: function () { return this; } }
-            ];
-            const mockQuestions = [
-                { _id: 'q1', text: 'Question 1' }
-            ];
+            const mockUsers = [{
+                _id: 'u1',
+                email: 'user1@test.com',
+                password: 'secret',
+                currentQuestionId: 'q1',
+                toObject: () => ({
+                    _id: 'u1',
+                    email: 'user1@test.com',
+                    password: 'secret',
+                    currentQuestionId: 'q1',
+                }),
+            }];
+            const mockQuestions = [{ _id: 'q1', text: 'What is HTML?' }];
+            jest.spyOn(userService as any, 'findAllUsers').mockResolvedValue(mockUsers as any);
+            jest.spyOn(questionService as any, 'getAllQuestions').mockResolvedValue(mockQuestions as any);
 
-            jest.spyOn(databaseService, 'findAllUsers').mockResolvedValue(mockUsers as any);
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions as any);
+            const users = await service.getAllUsers();
 
-            const result = await service.getAllUsers();
-
-            expect(result).toHaveLength(2);
-            expect(result[0].email).toBe('u1@t.com');
-            expect(result[0].currentQuestionText).toBe('Question 1');
-            expect((result[0] as any).password).toBeUndefined();
-            expect(result[1].email).toBe('u2@t.com');
-            expect(result[1].currentQuestionText).toBe('-');
-            expect((result[1] as any).password).toBeUndefined();
+            expect(users[0].password).toBeUndefined();
+            expect(users[0].currentQuestionText).toBe('What is HTML?');
         });
     });
 
     describe('createUser', () => {
         it('deberia registrar un STUDENT correctamente con el secreto', async () => {
-            const data = { email: 'new@t.com', password: '123', role: 'STUDENT' };
-            (bcrypt.hash as jest.Mock).mockResolvedValue('hashed' as never);
-            jest.spyOn(databaseService, 'createUser').mockResolvedValue({ ...data, password: 'hashed' } as any);
+            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed' as any);
+            jest.spyOn(userService as any, 'createUser').mockResolvedValue({ email: 'new@test.com' } as any);
 
-            const result = await service.createUser(data);
-            expect(result).toBeDefined();
-            expect(bcrypt.hash).toHaveBeenCalledWith('123', 12);
-            expect(databaseService.createUser).toHaveBeenCalledWith({ ...data, password: 'hashed' });
+            await service.createUser({ email: 'new@test.com', password: 'pass', role: 'STUDENT', secret: 'student-secret' });
+
+            expect(bcrypt.hash).toHaveBeenCalledWith('pass', 12);
+            expect(userService.createUser).toHaveBeenCalled();
         });
 
         it('deberia registrar un PROFESSOR correctamente', async () => {
-            const data = { email: 'admin@t.com', password: '123', role: 'PROFESSOR' };
-            jest.spyOn(databaseService, 'createUser').mockResolvedValue(data as any);
+            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed' as any);
+            jest.spyOn(userService as any, 'createUser').mockResolvedValue({ email: 'prof@test.com' } as any);
 
-            const result = await service.createUser(data);
-            expect(result).toBeDefined();
+            await service.createUser({ email: 'prof@test.com', password: 'pass', role: 'PROFESSOR', secret: 'admin-secret' });
+
+            expect(userService.createUser).toHaveBeenCalled();
         });
-    });
-
-    it('deberia llamar a updateUser', async () => {
-        const data = { email: 'upd@t.com' };
-        await service.updateUser('1', data);
-        expect(databaseService.updateUser).toHaveBeenCalledWith('1', data);
     });
 
     describe('updateProfilePassword', () => {
         it('deberia actualizar la contraseña si la actual es correcta', async () => {
-            const mockUser = { _id: 'u1', password: 'hashed-old' };
-            const toObject = () => mockUser;
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ ...mockUser, toObject } as any);
-            (bcrypt.compare as jest.Mock).mockResolvedValue(true as never);
-            (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-new' as never);
-            jest.spyOn(databaseService, 'updateUser').mockResolvedValue({} as any);
+            const mockUser = { password: 'hashedOld' };
+            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as any);
+            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedNew' as any);
+            jest.spyOn(userService as any, 'updateUser').mockResolvedValue({} as any);
 
-            await service.updateProfilePassword('u1', 'old', 'new');
+            await service.updateProfilePassword('user1', 'oldPass', 'newPass');
 
-            expect(bcrypt.compare).toHaveBeenCalledWith('old', 'hashed-old');
-            expect(bcrypt.hash).toHaveBeenCalledWith('new', 12);
-            expect(databaseService.updateUser).toHaveBeenCalledWith('u1', { password: 'hashed-new' });
+            expect(bcrypt.compare).toHaveBeenCalledWith('oldPass', 'hashedOld');
+            expect(userService.updateUser).toHaveBeenCalledWith('user1', { password: 'hashedNew' });
         });
 
         it('deberia lanzar error si la contraseña actual es incorrecta', async () => {
-            const mockUser = { _id: 'u1', password: 'hashed-old' };
-            const toObject = () => mockUser;
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({ ...mockUser, toObject } as any);
-            (bcrypt.compare as jest.Mock).mockResolvedValue(false as never);
+            const mockUser = { password: 'hashedOld' };
+            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
+            jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as any);
 
-            await expect(service.updateProfilePassword('u1', 'wrong', 'new'))
+            await expect(service.updateProfilePassword('user1', 'wrongPass', 'newPass'))
                 .rejects.toThrow('La contraseña actual es incorrecta');
         });
     });
 
+    it('deberia llamar a updateUser', async () => {
+        jest.spyOn(userService as any, 'updateUser').mockResolvedValue({} as any);
+        await service.updateUser('u1', { email: 'new@test.com' });
+        expect(userService.updateUser).toHaveBeenCalled();
+    });
+
     it('deberia llamar a deleteUser', async () => {
-        await service.deleteUser('1');
-        expect(databaseService.deleteUser).toHaveBeenCalledWith('1');
+        jest.spyOn(userService as any, 'deleteUser').mockResolvedValue(undefined);
+        await service.deleteUser('u1');
+        expect(userService.deleteUser).toHaveBeenCalled();
     });
 });

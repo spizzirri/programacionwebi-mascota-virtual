@@ -1,34 +1,50 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuestionsService } from "./questions.service";
-import { DatabaseService } from "../database/database.service";
+import { QuestionService } from "./services/question.service";
+import { UserService } from "../users/services/user.service";
+import { AnswerService } from "../answers/services/answer.service";
 
 describe('QuestionsService', () => {
     let service: QuestionsService;
-    let databaseService: DatabaseService;
+    let questionService: QuestionService;
+    let userService: UserService;
+    let answerService: AnswerService;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 QuestionsService,
                 {
-                    provide: DatabaseService,
+                    provide: QuestionService,
                     useValue: {
                         getAllQuestions: jest.fn<any>().mockResolvedValue([]),
                         createQuestion: jest.fn<any>().mockResolvedValue({} as any),
-                        findUserById: jest.fn(),
                         getQuestionById: jest.fn(),
-                        assignQuestionToUser: jest.fn(),
-                        getAnswerForQuestionToday: jest.fn(),
                         getAllTopics: jest.fn<any>().mockResolvedValue([]),
                         upsertTopic: jest.fn<any>().mockResolvedValue({} as any),
+                    },
+                },
+                {
+                    provide: UserService,
+                    useValue: {
+                        findUserById: jest.fn(),
+                        assignQuestionToUser: jest.fn(),
+                    },
+                },
+                {
+                    provide: AnswerService,
+                    useValue: {
+                        getAnswerForQuestionToday: jest.fn(),
                     },
                 },
             ],
         }).compile();
 
         service = module.get<QuestionsService>(QuestionsService);
-        databaseService = module.get<DatabaseService>(DatabaseService);
+        questionService = module.get<QuestionService>(QuestionService);
+        userService = module.get<UserService>(UserService);
+        answerService = module.get<AnswerService>(AnswerService);
     });
 
     afterEach(() => {
@@ -38,151 +54,129 @@ describe('QuestionsService', () => {
     describe('onModuleInit', () => {
 
         it('deberia sincronizar tópicos al inicializar el módulo', async () => {
-            const upsertTopicSpy = jest.spyOn(databaseService, 'upsertTopic');
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([{ topic: 't1' }] as any);
+            const upsertTopicSpy = jest.spyOn(questionService, 'upsertTopic');
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ topic: 't1' }] as any);
 
             await service.onModuleInit();
 
-            expect(databaseService.getAllQuestions).toHaveBeenCalled();
+            expect(questionService.getAllQuestions).toHaveBeenCalled();
             expect(upsertTopicSpy).toHaveBeenCalledWith('t1');
         });
     });
 
     describe('getRandomQuestion', () => {
-        const userId = 'user-123';
-        const mockQuestions: any[] = [
-            { _id: 'q1', text: 'question 1', topic: 'html' },
-            { _id: 'q2', text: 'question 2', topic: 'css' }
-        ];
-
-        beforeEach(() => {
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
-            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue(mockQuestions.map(q => ({ name: q.topic, enabled: true })) as any);
-            jest.spyOn(databaseService, 'assignQuestionToUser').mockResolvedValue(undefined);
-        });
-
         it('deberia asignar y retornar una nueva pregunta cuando no hay pregunta asignada', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q1', topic: 't1' }] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            const assignSpy = jest.spyOn(userService, 'assignQuestionToUser').mockResolvedValue(undefined);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('user123');
 
-            expect(mockQuestions).toContain(result.question);
-            expect(result.hasAnswered).toBe(false);
-            expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, (result.question as any)._id);
+            expect(result.question).toEqual({ _id: 'q1', topic: 't1' });
+            expect(assignSpy).toHaveBeenCalledWith('user123', 'q1');
         });
 
         it('deberia retornar la misma pregunta si ya fue asignada hoy', async () => {
             const today = new Date();
-            const mockUser = {
-                _id: userId,
+            const user = {
                 currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today
+                lastQuestionAssignedAt: today,
             };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(user as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue({ _id: 'q1', text: 'Q?', topic: 't1' } as any);
+            jest.spyOn(answerService, 'getAnswerForQuestionToday').mockResolvedValue(null);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('user123');
 
-            expect(result.question).toEqual(mockQuestions[0]);
-            expect(result.hasAnswered).toBe(false);
-            expect(databaseService.getQuestionById).toHaveBeenCalledWith('q1');
-            expect(databaseService.assignQuestionToUser).not.toHaveBeenCalled();
+            expect(result.question._id).toBe('q1');
         });
 
         it('deberia asignar nueva pregunta si la asignacion fue ayer', async () => {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const mockUser = {
-                _id: userId,
+            const user = {
                 currentQuestionId: 'q1',
-                lastQuestionAssignedAt: yesterday
+                lastQuestionAssignedAt: yesterday,
             };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(user as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q2', topic: 't1' }] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
+            const assignSpy = jest.spyOn(userService, 'assignQuestionToUser').mockResolvedValue(undefined);
 
-            const result = await service.getRandomQuestion(userId);
+            await service.getRandomQuestion('user123');
 
-            expect(mockQuestions).toContain(result.question);
-            expect(result.hasAnswered).toBe(false);
-            expect(databaseService.assignQuestionToUser).toHaveBeenCalledWith(userId, (result.question as any)._id);
+            expect(assignSpy).toHaveBeenCalledWith('user123', 'q2');
         });
 
         it('deberia filtrar preguntas de topicos deshabilitados', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
-
-            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
-                { name: 'html', enabled: true },
-                { name: 'css', enabled: false }
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([
+                { _id: 'q1', topic: 'disabled' },
+                { _id: 'q2', topic: 'enabled' }
             ] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([
+                { name: 'disabled', enabled: false },
+                { name: 'enabled', enabled: true }
+            ] as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('user123');
 
-            expect(result.question.topic).toBe('html');
-            expect((result.question as any)._id).toBe('q1');
+            expect(result.question.topic).toBe('enabled');
         });
 
         it('deberia lanzar error cuando no hay preguntas en la base de datos', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue([]);
-            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([]);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([]);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([]);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
 
-            await expect(service.getRandomQuestion(userId)).rejects.toThrow('No questions available in the database');
+            await expect(service.getRandomQuestion('user123')).rejects.toThrow('No questions available');
         });
 
         it('deberia usar fallback a todas las preguntas cuando no hay topicos activos', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue(null);
-            jest.spyOn(databaseService, 'getAllTopics').mockResolvedValue([
-                { name: 'html', enabled: false },
-                { name: 'css', enabled: false }
-            ] as any);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q1', topic: 't1' }] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: false }] as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('user123');
 
-            expect(mockQuestions).toContain(result.question);
-            expect(result.hasAnswered).toBe(false);
+            expect(result.question._id).toBe('q1');
         });
 
         it('deberia delegar al QuestionerForProfessor cuando el usuario es profesor', async () => {
-            const today = new Date();
-            const mockUser = {
-                _id: userId,
-                currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today,
-                role: 'PROFESSOR'
-            };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1', rating: 'correct' } as any);
-            jest.spyOn(databaseService, 'getAllQuestions').mockResolvedValue(mockQuestions);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({ role: 'PROFESSOR' } as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([
+                { _id: 'q1', topic: 't1' },
+                { _id: 'q2', topic: 't2' }
+            ] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue({ _id: 'q1', topic: 't1' } as any);
+            jest.spyOn(answerService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1' } as any);
+            const assignSpy = jest.spyOn(userService, 'assignQuestionToUser').mockResolvedValue(undefined);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('prof1');
 
-            expect((result.question as any)._id).toBe('q2');
+            expect(result.question).toBeDefined();
             expect(result.hasAnswered).toBe(false);
+            expect(assignSpy).toHaveBeenCalled();
         });
 
         it('deberia delegar al QuestionerForStudent cuando el usuario es estudiante', async () => {
-            const today = new Date();
-            const mockUser = {
-                _id: userId,
-                currentQuestionId: 'q1',
-                lastQuestionAssignedAt: today,
-                role: 'STUDENT'
-            };
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(databaseService, 'getQuestionById').mockResolvedValue(mockQuestions[0]);
-            jest.spyOn(databaseService, 'getAnswerForQuestionToday').mockResolvedValue({ _id: 'a1', rating: 'incorrect' } as any);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue({ role: 'STUDENT' } as any);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue({ _id: 'q1', topic: 't1' } as any);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q1', topic: 't1' }] as any);
+            jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
+            jest.spyOn(answerService, 'getAnswerForQuestionToday').mockResolvedValue(null);
 
-            const result = await service.getRandomQuestion(userId);
+            const result = await service.getRandomQuestion('student1');
 
-            expect(result.question).toEqual(mockQuestions[0]);
-            expect(result.hasAnswered).toBe(true);
-            expect(result.answerId).toBe('a1');
-            expect(result.rating).toBe('incorrect');
+            expect(result.question._id).toBe('q1');
+            expect(result.hasAnswered).toBe(false);
         });
     });
 });

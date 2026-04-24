@@ -1,20 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { Appeal } from '../database/schemas/appeal.schema';
+import { UserService } from '../users/services/user.service';
+import { AnswerService } from '../answers/services/answer.service';
+import { AppealService } from './services/appeal.service';
+import { PROFESSOR_ROLE } from '../common/constants/roles.constants';
 
 @Injectable()
 export class AppealsService {
-    constructor(private readonly db: DatabaseService) { }
+    constructor(
+        private readonly appealService: AppealService,
+        private readonly answerService: AnswerService,
+        private readonly userService: UserService,
+    ) {}
 
     async createAppeal(userId: string, userName: string, answerId: string) {
-        const answers = await this.db.getAnswersByUserId(userId);
-        const answer = answers.find(a => a._id.toString() === answerId);
+        const answers = await this.answerService.getAnswersByUserId(userId);
+        const answer = answers.find((a) => a._id.toString() === answerId);
 
         if (!answer) {
             throw new NotFoundException('Respuesta no encontrada');
         }
 
-        return this.db.createAppeal({
+        return this.appealService.createAppeal({
             userId,
             userName,
             answerId,
@@ -30,31 +36,31 @@ export class AppealsService {
     }
 
     async getMyAppeals(userId: string) {
-        return this.db.getAppealsByUserId(userId);
+        return this.appealService.getAppealsByUserId(userId);
     }
 
     async getAllAppeals() {
-        return this.db.getAllAppeals();
+        return this.appealService.getAllAppeals();
     }
 
     async getAllAppealsPaginated(page: number, limit: number) {
-        return this.db.getAllAppealsPaginated(page, limit);
+        return this.appealService.getAllAppealsPaginated(page, limit);
     }
 
     async resolveAppeal(appealId: string, status: 'accepted' | 'rejected', professorFeedback: string) {
-        const appeal = await this.db.getAppealById(appealId);
+        const appeal = await this.appealService.getAppealById(appealId);
         if (!appeal) {
             throw new NotFoundException('Apelación no encontrada');
         }
 
-        const updatedAppeal = await this.db.updateAppeal(appealId, {
+        const updatedAppeal = await this.appealService.updateAppeal(appealId, {
             status,
             professorFeedback,
             resolvedAt: new Date(),
         });
 
         if (status === 'accepted') {
-            const user = await this.db.findUserById(appeal.userId);
+            const user = await this.userService.findUserById(appeal.userId);
             if (user) {
                 let newStreak = user.streak;
 
@@ -64,7 +70,7 @@ export class AppealsService {
                     newStreak = user.streak + 0.5;
                 }
 
-                await this.db.updateUserStreak(appeal.userId, newStreak, true);
+                await this.userService.updateUserStreak(appeal.userId, newStreak, true);
             }
         }
 

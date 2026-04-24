@@ -8,12 +8,19 @@ import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import {
+    SESSION_TTL_SECONDS,
+    SESSION_COOKIE_MAX_AGE_MS,
+    DEFAULT_THROTTLE_TTL_MS,
+    DEFAULT_THROTTLE_LIMIT,
+    E2E_THROTTLE_LIMIT,
+} from './common/constants/auth.constants';
 
 dotenv.config();
 
 function parseCorsOrigins(envVar: string | undefined, fallback: string[]): string[] {
     if (!envVar) return fallback;
-    return envVar.split(',').map(origin => origin.trim()).filter(Boolean);
+    return envVar.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
 
 function maskMongoUri(uri: string): string {
@@ -38,7 +45,9 @@ async function bootstrap() {
 
     const sessionSecret = process.env.SESSION_SECRET;
     if (!sessionSecret) {
-        throw new Error('SESSION_SECRET environment variable must be set. Generate one using a random string generator.');
+        throw new Error(
+            'SESSION_SECRET environment variable must be set. Generate one using a random string generator.',
+        );
     }
 
     const nodeEnv = process.env.NODE_ENV;
@@ -85,7 +94,7 @@ async function bootstrap() {
         sessionStore = MongoStore.create({
             mongoUrl: mongoUri,
             collectionName: 'sessions',
-            ttl: 24 * 60 * 60,
+            ttl: SESSION_TTL_SECONDS,
         });
     } catch (error) {
         console.error(`MongoDB connection failed: ${(error as Error).message}`);
@@ -100,7 +109,7 @@ async function bootstrap() {
             saveUninitialized: false,
             name: 'tamagotchi.sid',
             cookie: {
-                maxAge: 15 * 60 * 60 * 1000,
+                maxAge: SESSION_COOKIE_MAX_AGE_MS,
                 httpOnly: true,
                 secure: isProduction,
                 sameSite: isProduction ? 'none' : 'lax',
@@ -108,11 +117,13 @@ async function bootstrap() {
         }),
     );
 
-    app.useGlobalPipes(new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-    }));
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        }),
+    );
 
     const port = process.env.PORT || 3000;
     await app.listen(port);

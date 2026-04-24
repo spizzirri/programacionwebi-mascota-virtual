@@ -1,28 +1,26 @@
-import { Controller, Post, Get, Body, Session, HttpException, HttpStatus, UsePipes, ValidationPipe, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Session, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Tokens from 'csrf';
-import { SessionData } from '../common/types/session.types';
+import type { SessionData } from '../common/types/session.types';
+import { DEFAULT_THROTTLE_TTL_MS } from '../common/constants/auth.constants';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(private readonly authService: AuthService) {}
 
     private tokens = new Tokens();
 
     @Post('login')
     @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { limit: 1000, ttl: 60000 } })
+    @Throttle({ default: { limit: 1000, ttl: DEFAULT_THROTTLE_TTL_MS } })
     @UsePipes(new ValidationPipe({
         transform: true,
         exceptionFactory: (errors) => {
-            const messages = errors.flatMap(e => Object.values(e.constraints || {}));
-            return new HttpException(
-                { success: false, message: 'Validation failed', errors: messages },
-                HttpStatus.BAD_REQUEST
-            );
+            const messages = errors.flatMap((e) => Object.values(e.constraints || {}));
+            return new Error('Validation failed');
         },
     }))
     async login(
@@ -42,7 +40,6 @@ export class AuthController {
             const user = await this.authService.login(loginDto.email, loginDto.password);
             (req.session as any).userId = user._id;
 
-            // Generate CSRF token for the new session
             const csrfSecret = this.tokens.secretSync();
             (req.session as any)._csrfSecret = csrfSecret;
             const csrfToken = this.tokens.create(csrfSecret);
@@ -50,7 +47,7 @@ export class AuthController {
 
             res.json({ success: true, user });
         } catch (error) {
-            throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+            throw new Error(error.message);
         }
     }
 
@@ -71,12 +68,12 @@ export class AuthController {
     @Get('me')
     async getCurrentUser(@Session() session: SessionData) {
         if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+            throw new Error('Not authenticated');
         }
 
         const user = await this.authService.getUserById(session.userId);
         if (!user) {
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+            throw new Error('User not found');
         }
 
         return { user };

@@ -1,50 +1,42 @@
-import { Controller, Get, Post, Patch, Delete, Param, Session, HttpException, HttpStatus, Query, Body, Headers, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Session, Query, Body, Headers, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PasswordUpdateDto } from './dto/password-update.dto';
 import { UserUpdateDto } from './dto/user-update.dto';
-import { SessionData } from '../common/types/session.types';
+import { CreateUserDto } from './dto/create-user.dto';
+import type { SessionData } from '../common/types/session.types';
 import { paginate } from '../common/types/pagination.types';
+import { DEFAULT_PAGINATION_PAGE, DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT } from '../common/constants/pagination.constants';
+import { ProfessorGuard } from '../common/guards/professor.guard';
 
 @Controller('users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+    constructor(private readonly usersService: UsersService) {}
 
     @Get('profile')
     async getProfile(@Session() session: SessionData) {
         if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+            throw new Error('Not authenticated');
         }
 
-        try {
-            const profile = await this.usersService.getProfile(session.userId);
-            return { profile };
-        } catch (error) {
-            throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-        }
+        const profile = await this.usersService.getProfile(session.userId);
+        return { profile };
     }
 
     @Patch('profile/password')
     @UsePipes(new ValidationPipe({ transform: true }))
     async updateProfilePassword(@Session() session: SessionData, @Body() body: PasswordUpdateDto) {
         if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+            throw new Error('Not authenticated');
         }
 
-        try {
-            await this.usersService.updateProfilePassword(session.userId, body.currentPassword, body.newPassword);
-            return { success: true };
-        } catch (error) {
-            throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-        }
+        await this.usersService.updateProfilePassword(session.userId, body.currentPassword, body.newPassword);
+        return { success: true };
     }
 
     @Get('history')
-    async getHistory(
-        @Session() session: SessionData,
-        @Query('limit') limit?: string,
-    ) {
+    async getHistory(@Session() session: SessionData, @Query('limit') limit?: string) {
         if (!session.userId) {
-            throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
+            throw new Error('Not authenticated');
         }
 
         const parsedLimit = limit ? parseInt(limit, 10) : 50;
@@ -53,16 +45,13 @@ export class UsersController {
     }
 
     @Get()
+    @UseGuards(ProfessorGuard)
     async getAllUsers(
-        @Session() session: SessionData,
-        @Headers('x-api-key') apiKey?: string,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
     ) {
-        await this.validateAccess(session, apiKey);
-
-        const pageNum = Math.max(1, parseInt(page || '1', 10));
-        const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
+        const pageNum = Math.max(MIN_PAGINATION_LIMIT, parseInt(page || String(DEFAULT_PAGINATION_PAGE), 10));
+        const limitNum = Math.min(MAX_PAGINATION_LIMIT, Math.max(MIN_PAGINATION_LIMIT, parseInt(limit || String(DEFAULT_PAGINATION_LIMIT), 10)));
 
         const { data: users, total } = await this.usersService.getAllUsersPaginated(pageNum, limitNum);
         return {
@@ -71,26 +60,16 @@ export class UsersController {
     }
 
     @Post()
-    async createUser(@Body() body: any, @Session() session: SessionData, @Headers('x-api-key') apiKey?: string) {
-        await this.validateAccess(session, apiKey);
-
-        const { email, password, role } = body;
-        const userData = { email, password, role };
-
-        const user = await this.usersService.createUser(userData);
+    @UseGuards(ProfessorGuard)
+    async createUser(@Body() body: CreateUserDto) {
+        const user = await this.usersService.createUser(body);
         return { user };
     }
 
     @Patch(':id')
+    @UseGuards(ProfessorGuard)
     @UsePipes(new ValidationPipe({ transform: true }))
-    async updateUser(
-        @Session() session: SessionData,
-        @Param('id') id: string,
-        @Body() body: UserUpdateDto,
-        @Headers('x-api-key') apiKey?: string,
-    ) {
-        await this.validateAccess(session, apiKey);
-
+    async updateUser(@Param('id') id: string, @Body() body: UserUpdateDto) {
         const updateData: any = {};
         const allowedFields: (keyof UserUpdateDto)[] = [
             'email', 'password', 'role', 'streak', 'currentQuestionId',
@@ -107,57 +86,31 @@ export class UsersController {
     }
 
     @Delete(':id')
-    async deleteUser(@Session() session: SessionData, @Param('id') id: string, @Headers('x-api-key') apiKey?: string) {
-        await this.validateAccess(session, apiKey);
+    @UseGuards(ProfessorGuard)
+    async deleteUser(@Param('id') id: string) {
         await this.usersService.deleteUser(id);
         return { success: true };
     }
 
     @Get(':id/profile')
-    async getUserProfile(@Session() session: SessionData, @Param('id') id: string, @Headers('x-api-key') apiKey?: string) {
-        await this.validateAccess(session, apiKey);
+    @UseGuards(ProfessorGuard)
+    async getUserProfile(@Param('id') id: string) {
         const profile = await this.usersService.getProfile(id);
         return { profile };
     }
 
     @Get(':id/history')
-    async getUserHistory(
-        @Session() session: SessionData,
-        @Param('id') id: string,
-        @Headers('x-api-key') apiKey?: string,
-        @Query('limit') limit?: string,
-    ) {
-        await this.validateAccess(session, apiKey);
+    @UseGuards(ProfessorGuard)
+    async getUserHistory(@Param('id') id: string, @Query('limit') limit?: string) {
         const parsedLimit = limit ? parseInt(limit, 10) : 50;
         const history = await this.usersService.getHistory(id, parsedLimit);
         return { history };
     }
 
     @Post(':id/unlock')
-    async unlockUser(
-        @Session() session: SessionData,
-        @Param('id') id: string,
-        @Headers('x-api-key') apiKey?: string,
-    ) {
-        await this.validateAccess(session, apiKey);
+    @UseGuards(ProfessorGuard)
+    async unlockUser(@Param('id') id: string) {
         await this.usersService.unlockUser(id);
         return { success: true, message: 'User unlocked successfully' };
-    }
-
-    private async validateAccess(session: SessionData, apiKey?: string) {
-        if (apiKey && process.env.API_KEY && apiKey === process.env.API_KEY) {
-            return;
-        }
-        if (session.userId) {
-            try {
-                const currentUser = await this.usersService.getProfile(session.userId);
-                if (currentUser.role === 'PROFESSOR') {
-                    return;
-                }
-            } catch (e) {
-            }
-        }
-
-        throw new HttpException('Forbidden: Invalid session or API Key', HttpStatus.FORBIDDEN);
     }
 }

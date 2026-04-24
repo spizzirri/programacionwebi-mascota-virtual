@@ -7,6 +7,10 @@ import { Answer, AnswerSchema } from './schemas/answer.schema';
 import { Appeal, AppealSchema } from './schemas/appeal.schema';
 import { Topic, TopicSchema } from './schemas/topic.schema';
 import { DatabaseController } from './database.controller';
+import { UserService } from '../users/services/user.service';
+import { QuestionService } from '../questions/services/question.service';
+import { AnswerService } from '../answers/services/answer.service';
+import { AppealService } from '../appeals/services/appeal.service';
 
 @Module({
     imports: [
@@ -24,7 +28,7 @@ import { DatabaseController } from './database.controller';
         ]),
     ],
     controllers: [DatabaseController],
-    providers: [DatabaseService],
-    exports: [DatabaseService, MongooseModule],
+    providers: [DatabaseService, UserService, QuestionService, AnswerService, AppealService],
+    exports: [DatabaseService, UserService, QuestionService, AnswerService, AppealService, MongooseModule],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

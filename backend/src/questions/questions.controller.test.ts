@@ -2,23 +2,25 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuestionsController } from "./questions.controller";
 import { QuestionsService } from "./questions.service";
-import { HttpException, HttpStatus } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service";
+import { QuestionService } from "./services/question.service";
+import { ProfessorGuard } from '../common/guards/professor.guard';
+import { DatabaseService } from '../database/database.service';
 
 describe('QuestionsController', () => {
     let controller: QuestionsController;
-    let service: QuestionsService;
-    let databaseService: DatabaseService;
+    let questionsService: QuestionsService;
+    let questionService: QuestionService;
 
-    const mockDbService = {
-        getAllQuestions: jest.fn<() => Promise<any>>(),
-        getAllQuestionsPaginated: jest.fn<() => Promise<any>>(),
-        createQuestion: jest.fn<() => Promise<any>>(),
-        updateQuestion: jest.fn<() => Promise<any>>(),
-        deleteQuestion: jest.fn<() => Promise<any>>(),
-        findUserById: jest.fn<() => Promise<any>>(),
-        createQuestions: jest.fn<() => Promise<any>>(),
-        deleteAllQuestions: jest.fn<() => Promise<any>>(),
+    const mockQuestionService = {
+        getAllQuestions: jest.fn(),
+        getAllQuestionsPaginated: jest.fn(),
+        createQuestion: jest.fn(),
+        updateQuestion: jest.fn(),
+        deleteQuestion: jest.fn(),
+        createQuestions: jest.fn(),
+        deleteAllQuestions: jest.fn(),
+        getAllTopics: jest.fn(),
+        updateTopic: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -32,15 +34,23 @@ describe('QuestionsController', () => {
                     },
                 },
                 {
+                    provide: QuestionService,
+                    useValue: mockQuestionService,
+                },
+                {
+                    provide: ProfessorGuard,
+                    useValue: { canActivate: jest.fn().mockReturnValue(true) },
+                },
+                {
                     provide: DatabaseService,
-                    useValue: mockDbService,
+                    useValue: {},
                 },
             ],
-        }).compile();
+        }).overrideGuard(ProfessorGuard).useValue({ canActivate: jest.fn().mockReturnValue(true) }).compile();
 
         controller = module.get<QuestionsController>(QuestionsController);
-        service = module.get<QuestionsService>(QuestionsService);
-        databaseService = module.get<DatabaseService>(DatabaseService);
+        questionsService = module.get<QuestionsService>(QuestionsService);
+        questionService = module.get<QuestionService>(QuestionService);
     });
 
     describe('getRandomQuestion', () => {
@@ -49,82 +59,65 @@ describe('QuestionsController', () => {
             const mockQuestion = { _id: '1', text: 'Question?', topic: 'HTML' };
             const mockResponse = { question: mockQuestion, hasAnswered: false };
 
-            jest.spyOn(service, 'getRandomQuestion').mockResolvedValue(mockResponse as any);
+            jest.spyOn(questionsService, 'getRandomQuestion').mockResolvedValue(mockResponse as any);
 
             const result = await controller.getRandomQuestion(session);
 
             expect(result).toEqual(mockResponse);
-            expect(service.getRandomQuestion).toHaveBeenCalled();
+            expect(questionsService.getRandomQuestion).toHaveBeenCalled();
         });
 
-        it('deberia lanzar HttpException UNAUTHORIZED si no hay userId en la sesion', async () => {
+        it('deberia lanzar Error si no hay userId en la sesion', async () => {
             const session: any = {};
 
-            await expect(controller.getRandomQuestion(session)).rejects.toThrow(
-                new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
-            );
+            await expect(controller.getRandomQuestion(session)).rejects.toThrow('Not authenticated');
         });
     });
 
     describe('ABMC', () => {
-        const session = { userId: 'prof-id' };
         const mockQuestions = [{ _id: '1', text: 'Q1' }];
 
-        it('getAllQuestions should return paginated questions if PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 });
+        it('getAllQuestions should return paginated questions', async () => {
+            mockQuestionService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 });
 
-            const result = await controller.getAllQuestions(session as any, '1', '10');
+            const result = await controller.getAllQuestions('1', '10');
             expect(result.questions.data).toEqual(mockQuestions);
             expect(result.questions.meta.page).toBe(1);
         });
 
-        it('createQuestion should create and return question if PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.createQuestion.mockResolvedValue(mockQuestions[0] as any);
+        it('createQuestion should create and return question', async () => {
+            mockQuestionService.createQuestion.mockResolvedValue(mockQuestions[0] as any);
 
-            const result = await controller.createQuestion(session as any, { text: 'Q1' });
+            const result = await controller.createQuestion({ text: 'Q1', topic: 'html' } as any);
             expect(result).toEqual({ question: mockQuestions[0] });
         });
 
-        it('updateQuestion should update and return question if PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.updateQuestion.mockResolvedValue(mockQuestions[0] as any);
+        it('updateQuestion should update and return question', async () => {
+            mockQuestionService.updateQuestion.mockResolvedValue(mockQuestions[0] as any);
 
-            const result = await controller.updateQuestion(session as any, '1', { text: 'Updated' });
+            const result = await controller.updateQuestion('1', { text: 'Updated' } as any);
             expect(result).toEqual({ question: mockQuestions[0] });
         });
 
-        it('deleteQuestion should delete if PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.deleteQuestion.mockResolvedValue(undefined);
+        it('deleteQuestion should delete', async () => {
+            mockQuestionService.deleteQuestion.mockResolvedValue(undefined);
 
-            const result = await controller.deleteQuestion(session as any, '1');
+            const result = await controller.deleteQuestion('1');
             expect(result).toEqual({ success: true });
         });
 
-        it('createQuestionsBulk deberia crear todas si es PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.createQuestions.mockResolvedValue(mockQuestions as any);
+        it('createQuestionsBulk deberia crear todas', async () => {
+            mockQuestionService.createQuestions.mockResolvedValue(mockQuestions as any);
 
-            const result = await controller.createQuestionsBulk(session as any, { questions: mockQuestions as any });
+            const result = await controller.createQuestionsBulk({ questions: mockQuestions } as any);
             expect(result).toEqual({ questions: mockQuestions });
         });
 
-        it('deleteAllQuestions deberia borrar todas si es PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
-            mockDbService.deleteAllQuestions.mockResolvedValue(undefined);
+        it('deleteAllQuestions deberia borrar todas', async () => {
+            mockQuestionService.deleteAllQuestions.mockResolvedValue(undefined);
 
-            const result = await controller.deleteAllQuestions(session as any);
+            const result = await controller.deleteAllQuestions();
             expect(result).toEqual({ success: true });
-        });
-
-        it('should throw FORBIDDEN if NOT PROFESSOR', async () => {
-            mockDbService.findUserById.mockResolvedValue({ role: 'STUDENT' } as any);
-
-            await expect(controller.getAllQuestions(session as any)).rejects.toThrow(
-                new HttpException('Forbidden: Only professors can access this resource', HttpStatus.FORBIDDEN)
-            );
         });
     });
 });
