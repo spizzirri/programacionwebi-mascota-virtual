@@ -9,7 +9,7 @@ describe('AppealService', () => {
     beforeEach(() => {
         mockAppealModel = jest.fn().mockImplementation((data: any) => {
             const mockInstance: any = Object.assign({}, data);
-            (mockInstance.save as any) = jest.fn().mockResolvedValue(Object.assign({}, data, { _id: 'ap1' }));
+            (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: 'ap1' }));
             return mockInstance;
         });
         (mockAppealModel as any).save = jest.fn();

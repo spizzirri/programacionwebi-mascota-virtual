@@ -90,7 +90,7 @@ describe('UsersService', () => {
 
             const profile = await service.getProfile('user1');
 
-            expect(profile.password).toBeUndefined();
+            expect((profile as any).password).toBeUndefined();
             expect(profile.email).toBe('test@test.com');
             expect(userService.findUserById).toHaveBeenCalledWith('user1');
         });
@@ -142,7 +142,7 @@ describe('UsersService', () => {
 
             const users = await service.getAllUsers();
 
-            expect(users[0].password).toBeUndefined();
+            expect((users[0] as any).password).toBeUndefined();
             expect(users[0].currentQuestionText).toBe('What is HTML?');
         });
     });

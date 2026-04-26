@@ -40,7 +40,7 @@ export class QuestionService {
         return { data, total };
     }
 
-    async getQuestionById(id: string): Promise<QuestionDocument | null> {
+    async getQuestionById(id: string): Promise<QuestionDocument> {
         const question = await this.questionModel.findById(id).exec();
         if (!question) {
             throw new NotFoundException('Question not found');

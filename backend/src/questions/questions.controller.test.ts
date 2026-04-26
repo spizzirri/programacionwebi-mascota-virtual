@@ -12,15 +12,15 @@ describe('QuestionsController', () => {
     let questionService: QuestionService;
 
     const mockQuestionService = {
-        getAllQuestions: jest.fn(),
-        getAllQuestionsPaginated: jest.fn(),
-        createQuestion: jest.fn(),
-        updateQuestion: jest.fn(),
-        deleteQuestion: jest.fn(),
-        createQuestions: jest.fn(),
-        deleteAllQuestions: jest.fn(),
-        getAllTopics: jest.fn(),
-        updateTopic: jest.fn(),
+        getAllQuestions: jest.fn<any>(),
+        getAllQuestionsPaginated: jest.fn<any>(),
+        createQuestion: jest.fn<any>(),
+        updateQuestion: jest.fn<any>(),
+        deleteQuestion: jest.fn<any>(),
+        createQuestions: jest.fn<any>(),
+        deleteAllQuestions: jest.fn<any>(),
+        getAllTopics: jest.fn<any>(),
+        updateTopic: jest.fn<any>(),
     };
 
     beforeEach(async () => {

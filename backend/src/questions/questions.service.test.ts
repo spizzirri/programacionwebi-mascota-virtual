@@ -20,7 +20,7 @@ describe('QuestionsService', () => {
                     useValue: {
                         getAllQuestions: jest.fn<any>().mockResolvedValue([]),
                         createQuestion: jest.fn<any>().mockResolvedValue({} as any),
-                        getQuestionById: jest.fn(),
+                        getQuestionById: jest.fn<any>(),
                         getAllTopics: jest.fn<any>().mockResolvedValue([]),
                         upsertTopic: jest.fn<any>().mockResolvedValue({} as any),
                     },
@@ -69,7 +69,7 @@ describe('QuestionsService', () => {
             jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
             jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q1', topic: 't1' }] as any);
             jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
-            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null as any);
             const assignSpy = jest.spyOn(userService, 'assignQuestionToUser').mockResolvedValue(undefined);
 
             const result = await service.getRandomQuestion('user123');
@@ -101,7 +101,7 @@ describe('QuestionsService', () => {
                 lastQuestionAssignedAt: yesterday,
             };
             jest.spyOn(userService, 'findUserById').mockResolvedValue(user as any);
-            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null as any);
             jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q2', topic: 't1' }] as any);
             jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: true }] as any);
             const assignSpy = jest.spyOn(userService, 'assignQuestionToUser').mockResolvedValue(undefined);
@@ -121,7 +121,7 @@ describe('QuestionsService', () => {
                 { name: 'disabled', enabled: false },
                 { name: 'enabled', enabled: true }
             ] as any);
-            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null as any);
 
             const result = await service.getRandomQuestion('user123');
 
@@ -132,7 +132,7 @@ describe('QuestionsService', () => {
             jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
             jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([]);
             jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([]);
-            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null as any);
 
             await expect(service.getRandomQuestion('user123')).rejects.toThrow('No questions available');
         });
@@ -141,7 +141,7 @@ describe('QuestionsService', () => {
             jest.spyOn(userService, 'findUserById').mockResolvedValue({} as any);
             jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue([{ _id: 'q1', topic: 't1' }] as any);
             jest.spyOn(questionService, 'getAllTopics').mockResolvedValue([{ name: 't1', enabled: false }] as any);
-            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null);
+            jest.spyOn(questionService, 'getQuestionById').mockResolvedValue(null as any);
 
             const result = await service.getRandomQuestion('user123');
 

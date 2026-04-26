@@ -11,7 +11,7 @@ describe('UserService', () => {
     beforeEach(() => {
         mockUserModel = jest.fn().mockImplementation((data: any) => {
             const mockInstance: any = Object.assign({}, data);
-            (mockInstance.save as any) = jest.fn().mockResolvedValue(Object.assign({}, data, { _id: new Types.ObjectId() }));
+            (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: new Types.ObjectId() }));
             return mockInstance;
         });
         (mockUserModel as any).save = jest.fn();
@@ -37,7 +37,7 @@ describe('UserService', () => {
             const savedUser = { ...userData, _id: mockId };
             
             const mockInstance: any = { ...userData };
-            mockInstance.save = jest.fn().mockResolvedValue(savedUser);
+            mockInstance.save = jest.fn<any>().mockResolvedValue(savedUser);
             mockUserModel.mockImplementation(() => mockInstance);
 
             const result = await service.createUser(userData);

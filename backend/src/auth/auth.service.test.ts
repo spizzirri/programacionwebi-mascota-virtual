@@ -92,7 +92,7 @@ describe('AuthService', () => {
 
             const result = await service.login('test@test.com', 'correctpass');
 
-            expect(result.password).toBeUndefined();
+            expect((result as any).password).toBeUndefined();
             expect(userService.resetFailedLoginAttempts).toHaveBeenCalled();
         });
 

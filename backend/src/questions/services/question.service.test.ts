@@ -10,7 +10,7 @@ describe('QuestionService', () => {
     beforeEach(() => {
         mockQuestionModel = jest.fn().mockImplementation((data: any) => {
             const mockInstance: any = Object.assign({}, data);
-            (mockInstance.save as any) = jest.fn().mockResolvedValue(Object.assign({}, data, { _id: 'q1' }));
+            (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: 'q1' }));
             return mockInstance;
         });
         (mockQuestionModel as any).save = jest.fn();

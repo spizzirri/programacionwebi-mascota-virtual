@@ -7,6 +7,8 @@ export type QuestionBase = Omit<Question, '_id'>;
 
 @Schema()
 export class Question {
+    _id?: any;
+
     @Prop({ required: true })
     text: string;
 
