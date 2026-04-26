@@ -4,6 +4,7 @@ import { UserService } from '../users/services/user.service';
 import { AnswerService } from '../answers/services/answer.service';
 import { QuestionPool } from './question-pool';
 import { ActiveTopicFilter } from './active-topic-filter';
+import { AnswerDocument } from '../database/schemas/answer.schema';
 
 export interface QuestionResult {
     question: Question;
@@ -20,6 +21,10 @@ export abstract class Questioner {
         protected readonly userId: string,
         protected readonly currentQuestion: Question,
     ) {}
+
+    protected getId(document: { _id?: any } | AnswerDocument): string {
+        return document._id?.toString() ?? '';
+    }
 
     static create(
         role: string | undefined,
@@ -53,7 +58,7 @@ export class QuestionerForProfessor extends Questioner {
     async getRandomQuestion(): Promise<QuestionResult> {
         const answer = await this.answerService.getAnswerForQuestionToday(
             this.userId,
-            (this.currentQuestion as any)._id.toString(),
+            this.getId(this.currentQuestion),
         );
 
         if (!answer) {
@@ -64,7 +69,7 @@ export class QuestionerForProfessor extends Questioner {
         const pool = active.isEmpty() ? all : active;
         const nextQuestion = pool.pickDifferentFrom(this.currentQuestion);
 
-        await this.userService.assignQuestionToUser(this.userId, (nextQuestion as any)._id.toString());
+        await this.userService.assignQuestionToUser(this.userId, this.getId(nextQuestion));
 
         return { question: nextQuestion, hasAnswered: false, answerId: undefined, rating: undefined };
     }
@@ -74,14 +79,14 @@ export class QuestionerForStudent extends Questioner {
     async getRandomQuestion(): Promise<QuestionResult> {
         const answer = await this.answerService.getAnswerForQuestionToday(
             this.userId,
-            (this.currentQuestion as any)._id.toString(),
+            this.getId(this.currentQuestion),
         );
         const hasAnswered = !!answer;
 
         return {
             question: this.currentQuestion,
             hasAnswered,
-            answerId: answer ? (answer as any)._id.toString() : undefined,
+            answerId: answer ? this.getId(answer) : undefined,
             rating: answer?.rating,
         };
     }

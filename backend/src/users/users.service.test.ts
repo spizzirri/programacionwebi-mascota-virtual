@@ -7,17 +7,18 @@ import type { AnswerService as AnswerServiceType } from "../answers/services/ans
 import { UserService } from "./services/user.service";
 import { QuestionService } from "../questions/services/question.service";
 import { AnswerService } from "../answers/services/answer.service";
+import { Types } from "mongoose";
 
-jest.unstable_mockModule('bcrypt', () => ({
+jest.mock('bcrypt', () => ({
     hash: jest.fn(),
     compare: jest.fn(),
 }));
 
-let bcrypt: any;
-let UsersService: any;
+const bcrypt = jest.requireMock('bcrypt') as { hash: jest.Mock; compare: jest.Mock };
+
+let UsersService: typeof import('./users.service').UsersService;
 
 beforeAll(async () => {
-    bcrypt = await import('bcrypt');
     const userMod = await import('./users.service');
     UsersService = userMod.UsersService;
 });
@@ -71,22 +72,22 @@ describe('UsersService', () => {
     describe('getProfile', () => {
         it('deberia retornar el perfil del usuario sin contraseña', async () => {
             const mockUser = {
-                _id: 'user1',
+                _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
                 email: 'test@test.com',
                 password: 'secret',
                 streak: 5,
                 role: 'STUDENT',
                 createdAt: new Date(),
                 toObject: () => ({
-                    _id: 'user1',
+                    _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
                     email: 'test@test.com',
                     password: 'secret',
                     streak: 5,
                     role: 'STUDENT',
                     createdAt: new Date(),
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
+            } as unknown as Awaited<ReturnType<UserServiceType['findUserById']>>;
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(mockUser);
 
             const profile = await service.getProfile('user1');
 
@@ -96,7 +97,7 @@ describe('UsersService', () => {
         });
 
         it('deberia lanzar error si el usuario no existe', async () => {
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(null);
 
             await expect(service.getProfile('nonexistent')).rejects.toThrow('User not found');
         });
@@ -104,8 +105,8 @@ describe('UsersService', () => {
 
     describe('getHistory', () => {
         it('deberia retornar el historial de respuestas del usuario', async () => {
-            const mockAnswers = [{ id: 'a1', questionText: 'Q1' }, { id: 'a2', questionText: 'Q2' }];
-            jest.spyOn(answerService as any, 'getAnswersByUserId').mockResolvedValue(mockAnswers as any);
+            const mockAnswers = [{ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), questionText: 'Q1' }, { _id: new Types.ObjectId('507f1f77bcf86cd799439012'), questionText: 'Q2' }] as unknown as Awaited<ReturnType<AnswerServiceType['getAnswersByUserId']>>;
+            jest.spyOn(answerService, 'getAnswersByUserId').mockResolvedValue(mockAnswers);
 
             const history = await service.getHistory('user1', 10);
 
@@ -114,7 +115,7 @@ describe('UsersService', () => {
         });
 
         it('deberia usar el limite por defecto si no se especifica', async () => {
-            jest.spyOn(answerService as any, 'getAnswersByUserId').mockResolvedValue([]);
+            jest.spyOn(answerService, 'getAnswersByUserId').mockResolvedValue([] as unknown as Awaited<ReturnType<AnswerServiceType['getAnswersByUserId']>>);
 
             await service.getHistory('user1');
 
@@ -124,21 +125,22 @@ describe('UsersService', () => {
 
     describe('getAllUsers', () => {
         it('deberia retornar todos los usuarios sin contraseña y con el texto de la pregunta actual', async () => {
+            const questionId = new Types.ObjectId('507f1f77bcf86cd799439011');
             const mockUsers = [{
-                _id: 'u1',
+                _id: new Types.ObjectId('507f1f77bcf86cd799439012'),
                 email: 'user1@test.com',
                 password: 'secret',
-                currentQuestionId: 'q1',
+                currentQuestionId: questionId.toString(),
                 toObject: () => ({
-                    _id: 'u1',
+                    _id: new Types.ObjectId('507f1f77bcf86cd799439012'),
                     email: 'user1@test.com',
                     password: 'secret',
-                    currentQuestionId: 'q1',
+                    currentQuestionId: questionId.toString(),
                 }),
-            }];
-            const mockQuestions = [{ _id: 'q1', text: 'What is HTML?' }];
-            jest.spyOn(userService as any, 'findAllUsers').mockResolvedValue(mockUsers as any);
-            jest.spyOn(questionService as any, 'getAllQuestions').mockResolvedValue(mockQuestions as any);
+            }] as unknown as Awaited<ReturnType<UserServiceType['findAllUsers']>>;
+            const mockQuestions = [{ _id: questionId, text: 'What is HTML?' }] as unknown as Awaited<ReturnType<QuestionServiceType['getAllQuestions']>>;
+            jest.spyOn(userService, 'findAllUsers').mockResolvedValue(mockUsers);
+            jest.spyOn(questionService, 'getAllQuestions').mockResolvedValue(mockQuestions);
 
             const users = await service.getAllUsers();
 
@@ -149,8 +151,8 @@ describe('UsersService', () => {
 
     describe('createUser', () => {
         it('deberia registrar un STUDENT correctamente con el secreto', async () => {
-            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed' as any);
-            jest.spyOn(userService as any, 'createUser').mockResolvedValue({ email: 'new@test.com' } as any);
+            (bcrypt.hash as any).mockResolvedValue('hashed');
+            jest.spyOn(userService, 'createUser').mockResolvedValue({ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'new@test.com' } as unknown as Awaited<ReturnType<UserServiceType['createUser']>>);
 
             await service.createUser({ email: 'new@test.com', password: 'pass', role: 'STUDENT', secret: 'student-secret' });
 
@@ -159,8 +161,8 @@ describe('UsersService', () => {
         });
 
         it('deberia registrar un PROFESSOR correctamente', async () => {
-            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed' as any);
-            jest.spyOn(userService as any, 'createUser').mockResolvedValue({ email: 'prof@test.com' } as any);
+            (bcrypt.hash as any).mockResolvedValue('hashed');
+            jest.spyOn(userService, 'createUser').mockResolvedValue({ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'prof@test.com' } as unknown as Awaited<ReturnType<UserServiceType['createUser']>>);
 
             await service.createUser({ email: 'prof@test.com', password: 'pass', role: 'PROFESSOR', secret: 'admin-secret' });
 
@@ -170,11 +172,11 @@ describe('UsersService', () => {
 
     describe('updateProfilePassword', () => {
         it('deberia actualizar la contraseña si la actual es correcta', async () => {
-            const mockUser = { password: 'hashedOld' };
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as any);
-            jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedNew' as any);
-            jest.spyOn(userService as any, 'updateUser').mockResolvedValue({} as any);
+            const mockUser = { password: 'hashedOld' } as unknown as Awaited<ReturnType<UserServiceType['findUserById']>>;
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(mockUser);
+            (bcrypt.compare as any).mockResolvedValue(true);
+            (bcrypt.hash as any).mockResolvedValue('hashedNew');
+            jest.spyOn(userService, 'updateUser').mockResolvedValue({ _id: new Types.ObjectId('507f1f77bcf86cd799439011') } as unknown as Awaited<ReturnType<UserServiceType['updateUser']>>);
 
             await service.updateProfilePassword('user1', 'oldPass', 'newPass');
 
@@ -183,9 +185,9 @@ describe('UsersService', () => {
         });
 
         it('deberia lanzar error si la contraseña actual es incorrecta', async () => {
-            const mockUser = { password: 'hashedOld' };
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
-            jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as any);
+            const mockUser = { password: 'hashedOld' } as unknown as Awaited<ReturnType<UserServiceType['findUserById']>>;
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(mockUser);
+            (bcrypt.compare as any).mockResolvedValue(false);
 
             await expect(service.updateProfilePassword('user1', 'wrongPass', 'newPass'))
                 .rejects.toThrow('La contraseña actual es incorrecta');
@@ -193,13 +195,13 @@ describe('UsersService', () => {
     });
 
     it('deberia llamar a updateUser', async () => {
-        jest.spyOn(userService as any, 'updateUser').mockResolvedValue({} as any);
+        jest.spyOn(userService, 'updateUser').mockResolvedValue({ _id: new Types.ObjectId('507f1f77bcf86cd799439011') } as unknown as Awaited<ReturnType<UserServiceType['updateUser']>>);
         await service.updateUser('u1', { email: 'new@test.com' });
         expect(userService.updateUser).toHaveBeenCalled();
     });
 
     it('deberia llamar a deleteUser', async () => {
-        jest.spyOn(userService as any, 'deleteUser').mockResolvedValue(undefined);
+        jest.spyOn(userService, 'deleteUser').mockResolvedValue(undefined);
         await service.deleteUser('u1');
         expect(userService.deleteUser).toHaveBeenCalled();
     });

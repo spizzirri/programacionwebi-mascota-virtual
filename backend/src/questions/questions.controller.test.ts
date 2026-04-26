@@ -5,6 +5,7 @@ import { QuestionsService } from "./questions.service";
 import { QuestionService } from "./services/question.service";
 import { ProfessorGuard } from '../common/guards/professor.guard';
 import { DatabaseService } from '../database/database.service';
+import { SessionData } from '../common/types/session.types';
 
 describe('QuestionsController', () => {
     let controller: QuestionsController;
@@ -12,15 +13,15 @@ describe('QuestionsController', () => {
     let questionService: QuestionService;
 
     const mockQuestionService = {
-        getAllQuestions: jest.fn<any>(),
-        getAllQuestionsPaginated: jest.fn<any>(),
-        createQuestion: jest.fn<any>(),
-        updateQuestion: jest.fn<any>(),
-        deleteQuestion: jest.fn<any>(),
-        createQuestions: jest.fn<any>(),
-        deleteAllQuestions: jest.fn<any>(),
-        getAllTopics: jest.fn<any>(),
-        updateTopic: jest.fn<any>(),
+        getAllQuestions: jest.fn(),
+        getAllQuestionsPaginated: jest.fn(),
+        createQuestion: jest.fn(),
+        updateQuestion: jest.fn(),
+        deleteQuestion: jest.fn(),
+        createQuestions: jest.fn(),
+        deleteAllQuestions: jest.fn(),
+        getAllTopics: jest.fn(),
+        updateTopic: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -55,11 +56,11 @@ describe('QuestionsController', () => {
 
     describe('getRandomQuestion', () => {
         it('deberia retornar una pregunta si el usuario esta autenticado', async () => {
-            const session: any = { userId: 'user123' };
+            const session: Partial<SessionData> = { userId: 'user123' };
             const mockQuestion = { _id: '1', text: 'Question?', topic: 'HTML' };
             const mockResponse = { question: mockQuestion, hasAnswered: false };
 
-            jest.spyOn(questionsService, 'getRandomQuestion').mockResolvedValue(mockResponse as any);
+            jest.spyOn(questionsService, 'getRandomQuestion').mockResolvedValue(mockResponse);
 
             const result = await controller.getRandomQuestion(session);
 
@@ -68,7 +69,7 @@ describe('QuestionsController', () => {
         });
 
         it('deberia lanzar Error si no hay userId en la sesion', async () => {
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             await expect(controller.getRandomQuestion(session)).rejects.toThrow('Not authenticated');
         });
@@ -78,7 +79,8 @@ describe('QuestionsController', () => {
         const mockQuestions = [{ _id: '1', text: 'Q1' }];
 
         it('getAllQuestions should return paginated questions', async () => {
-            mockQuestionService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 });
+            // @ts-ignore - Mock for testing
+            mockQuestionService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 } as any);
 
             const result = await controller.getAllQuestions('1', '10');
             expect(result.questions.data).toEqual(mockQuestions);
@@ -86,35 +88,41 @@ describe('QuestionsController', () => {
         });
 
         it('createQuestion should create and return question', async () => {
+            // @ts-ignore - Mock for testing
             mockQuestionService.createQuestion.mockResolvedValue(mockQuestions[0] as any);
 
-            const result = await controller.createQuestion({ text: 'Q1', topic: 'html' } as any);
+            const result = await controller.createQuestion({ text: 'Q1', topic: 'html' });
             expect(result).toEqual({ question: mockQuestions[0] });
         });
 
         it('updateQuestion should update and return question', async () => {
+            // @ts-ignore - Mock for testing
             mockQuestionService.updateQuestion.mockResolvedValue(mockQuestions[0] as any);
 
-            const result = await controller.updateQuestion('1', { text: 'Updated' } as any);
+            const result = await controller.updateQuestion('1', { text: 'Updated' });
             expect(result).toEqual({ question: mockQuestions[0] });
         });
 
         it('deleteQuestion should delete', async () => {
-            mockQuestionService.deleteQuestion.mockResolvedValue(undefined);
+            // @ts-ignore - Mock for testing
+            mockQuestionService.deleteQuestion.mockResolvedValue(undefined as any);
 
             const result = await controller.deleteQuestion('1');
             expect(result).toEqual({ success: true });
         });
 
         it('createQuestionsBulk deberia crear todas', async () => {
+            // @ts-ignore - Mock for testing
             mockQuestionService.createQuestions.mockResolvedValue(mockQuestions as any);
 
-            const result = await controller.createQuestionsBulk({ questions: mockQuestions } as any);
+            // @ts-ignore - Mock for testing
+            const result = await controller.createQuestionsBulk({ questions: mockQuestions });
             expect(result).toEqual({ questions: mockQuestions });
         });
 
         it('deleteAllQuestions deberia borrar todas', async () => {
-            mockQuestionService.deleteAllQuestions.mockResolvedValue(undefined);
+            // @ts-ignore - Mock for testing
+            mockQuestionService.deleteAllQuestions.mockResolvedValue(undefined as any);
 
             const result = await controller.deleteAllQuestions();
             expect(result).toEqual({ success: true });

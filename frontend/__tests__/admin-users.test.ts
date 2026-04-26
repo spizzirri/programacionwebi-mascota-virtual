@@ -17,17 +17,19 @@ describe('AdminUsersView', () => {
     });
 
     it('deberia cargar y renderizar los usuarios al iniciar', async () => {
-        const mockUsers: any[] = [
+        const mockUsers = [
             {
                 _id: 'u1',
                 email: 'admin@test.com',
-                role: 'PROFESSOR',
+                role: 'PROFESSOR' as const,
                 streak: 10,
-                commission: 'MAÑANA',
+                commission: 'MAÑANA' as const,
                 currentQuestionText: 'Pregunta de prueba',
                 lastQuestionAssignedAt: new Date().toISOString(),
+                currentQuestionId: null,
+                createdAt: new Date().toISOString(),
             },
-        ];
+        ] as (apiModule.User & { currentQuestionText: string })[];
 
         const usersSpy = jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
 
@@ -83,8 +85,8 @@ describe('AdminUsersView', () => {
     });
 
     it('deberia mostrar el modal de confirmacion al eliminar', async () => {
-        const mockUser = { _id: 'u1', email: 'delete@test.com', role: 'STUDENT', streak: 0, currentQuestionText: '' };
-        jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue([mockUser] as any);
+        const mockUser = { _id: 'u1', email: 'delete@test.com', role: 'STUDENT' as const, streak: 0, currentQuestionText: '' } as (apiModule.User & { currentQuestionText: string });
+        jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue([mockUser]);
 
         new AdminUsersView();
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -98,10 +100,10 @@ describe('AdminUsersView', () => {
     });
 
     it('deberia filtrar usuarios por texto ignorando mayusculas y tildes cuando se escribe en el campo de busqueda', async () => {
-        const mockUsers: any[] = [
-            { _id: 'u1', email: 'quequeque@test.com', role: 'STUDENT', streak: 0, currentQuestionText: '' },
-            { _id: 'u2', email: 'otrouser@test.com', role: 'STUDENT', streak: 0, currentQuestionText: '' },
-        ];
+        const mockUsers = [
+            { _id: 'u1', email: 'quequeque@test.com', role: 'STUDENT' as const, streak: 0, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'u2', email: 'otrouser@test.com', role: 'STUDENT' as const, streak: 0, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+        ] as (apiModule.User & { currentQuestionText: string })[];
         jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
 
         new AdminUsersView();
@@ -117,11 +119,11 @@ describe('AdminUsersView', () => {
     });
 
     it('deberia mostrar solo usuarios de la comision manana cuando se selecciona la pestana manana', async () => {
-        const mockUsers: any[] = [
-            { _id: 'u1', email: 'manana@test.com', role: 'STUDENT', streak: 0, commission: 'MAÑANA', currentQuestionText: '' },
-            { _id: 'u2', email: 'noche@test.com', role: 'STUDENT', streak: 0, commission: 'NOCHE', currentQuestionText: '' },
-            { _id: 'u3', email: 'sin@test.com', role: 'PROFESSOR', streak: 0, currentQuestionText: '' },
-        ];
+        const mockUsers = [
+            { _id: 'u1', email: 'manana@test.com', role: 'STUDENT' as const, streak: 0, commission: 'MAÑANA' as const, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'u2', email: 'noche@test.com', role: 'STUDENT' as const, streak: 0, commission: 'NOCHE' as const, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'u3', email: 'sin@test.com', role: 'PROFESSOR' as const, streak: 0, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+        ] as (apiModule.User & { currentQuestionText: string })[];
         jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
 
         new AdminUsersView();
@@ -137,10 +139,10 @@ describe('AdminUsersView', () => {
     });
 
     it('deberia mostrar solo usuarios de la comision noche cuando se selecciona la pestana noche', async () => {
-        const mockUsers: any[] = [
-            { _id: 'u1', email: 'manana@test.com', role: 'STUDENT', streak: 0, commission: 'MAÑANA', currentQuestionText: '' },
-            { _id: 'u2', email: 'noche@test.com', role: 'STUDENT', streak: 0, commission: 'NOCHE', currentQuestionText: '' },
-        ];
+        const mockUsers = [
+            { _id: 'u1', email: 'manana@test.com', role: 'STUDENT' as const, streak: 0, commission: 'MAÑANA' as const, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'u2', email: 'noche@test.com', role: 'STUDENT' as const, streak: 0, commission: 'NOCHE' as const, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+        ] as (apiModule.User & { currentQuestionText: string })[];
         jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
 
         new AdminUsersView();

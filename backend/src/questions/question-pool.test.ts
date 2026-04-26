@@ -1,11 +1,12 @@
 import { describe, it, expect } from '@jest/globals';
 import { QuestionPool } from './question-pool';
+import { QuestionDocument } from '../database/schemas/question.schema';
 
 describe('QuestionPool', () => {
-    const mockQuestions: any[] = [
-        { _id: 'q1', text: 'question 1', topic: 'html' },
-        { _id: 'q2', text: 'question 2', topic: 'css' },
-        { _id: 'q3', text: 'question 3', topic: 'javascript' }
+    const mockQuestions: QuestionDocument[] = [
+        { _id: 'q1', text: 'question 1', topic: 'html' } as QuestionDocument,
+        { _id: 'q2', text: 'question 2', topic: 'css' } as QuestionDocument,
+        { _id: 'q3', text: 'question 3', topic: 'javascript' } as QuestionDocument
     ];
 
     describe('isEmpty', () => {

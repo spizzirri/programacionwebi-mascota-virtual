@@ -6,13 +6,13 @@ import { DatabaseService } from '../../database/database.service';
 
 describe('ProfessorGuard', () => {
     let guard: ProfessorGuard;
-    let mockDatabaseService: any;
+    let mockDatabaseService: { findUserById: jest.Mock };
 
     beforeEach(() => {
         mockDatabaseService = {
             findUserById: jest.fn(),
         };
-        guard = new ProfessorGuard(mockDatabaseService);
+        guard = new ProfessorGuard(mockDatabaseService as any) as any;
     });
 
     const createMockContext = (session: Partial<SessionData>, apiKey?: string) => {
@@ -46,7 +46,8 @@ describe('ProfessorGuard', () => {
         });
 
         it('deberia retornar true si el usuario es PROFESSOR', async () => {
-            mockDatabaseService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any);
+            // @ts-ignore - Mock for testing
+            mockDatabaseService.findUserById.mockResolvedValue({ role: 'PROFESSOR' } as any) as any;
             const context = createMockContext({ userId: 'user-123' });
 
             const result = await guard.canActivate(context);
@@ -63,7 +64,8 @@ describe('ProfessorGuard', () => {
         });
 
         it('deberia lanzar ForbiddenException si el usuario no es PROFESSOR', async () => {
-            mockDatabaseService.findUserById.mockResolvedValue({ role: 'STUDENT' } as any);
+            // @ts-ignore - Mock for testing
+            mockDatabaseService.findUserById.mockResolvedValue({ role: 'STUDENT' } as any) as any;
             const context = createMockContext({ userId: 'user-123' });
 
             await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
@@ -71,7 +73,8 @@ describe('ProfessorGuard', () => {
         });
 
         it('deberia lanzar ForbiddenException si el usuario no existe', async () => {
-            mockDatabaseService.findUserById.mockResolvedValue(null);
+            // @ts-ignore - Mock for testing
+            mockDatabaseService.findUserById.mockResolvedValue(null as any);
             const context = createMockContext({ userId: 'user-123' });
 
             await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
@@ -79,7 +82,8 @@ describe('ProfessorGuard', () => {
 
         it('deberia retornar false si el API key no coincide', async () => {
             process.env.API_KEY = 'test-key';
-            mockDatabaseService.findUserById.mockResolvedValue({ role: 'STUDENT' } as any);
+            // @ts-ignore - Mock for testing
+            mockDatabaseService.findUserById.mockResolvedValue({ role: 'STUDENT' } as any) as any;
             const context = createMockContext({ userId: 'user-123' }, 'wrong-key');
 
             await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);

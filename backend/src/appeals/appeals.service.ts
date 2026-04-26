@@ -31,7 +31,7 @@ export class AppealsService {
             originalFeedback: answer.feedback,
             status: 'pending',
             createdAt: new Date(),
-            streakAtMoment: (answer as any).streakAtMoment || 0,
+            streakAtMoment: answer.streakAtMoment || 0,
         });
     }
 

@@ -22,7 +22,7 @@ export class QuestionPool {
         }
 
         let next = current;
-        while ((next as any)._id.toString() === (current as any)._id.toString()) {
+        while (next._id?.toString() === current._id?.toString()) {
             next = this.pickRandom();
         }
         return next;

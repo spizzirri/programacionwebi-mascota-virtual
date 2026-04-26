@@ -1,36 +1,50 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { QuestionService } from './question.service';
 import { NotFoundException } from '@nestjs/common';
+import { Model, Types } from 'mongoose';
+import { Question, QuestionDocument } from '../../database/schemas/question.schema';
+import { Topic, TopicDocument } from '../../database/schemas/topic.schema';
 
 describe('QuestionService', () => {
     let service: QuestionService;
     let mockQuestionModel: any;
     let mockTopicModel: any;
+    let mockQuery: any;
 
     beforeEach(() => {
-        mockQuestionModel = jest.fn().mockImplementation((data: any) => {
-            const mockInstance: any = Object.assign({}, data);
-            (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: 'q1' }));
+        mockQuery = {
+            exec: jest.fn(),
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockReturnThis(),
+            sort: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            skip: jest.fn().mockReturnThis(),
+        };
+
+        const mockQuestionModelFn = jest.fn().mockImplementation((data: Partial<QuestionDocument>) => {
+            const mockInstance: any = { ...data };
+            const mockSave: any = jest.fn();
+            mockSave.mockResolvedValue({ ...data, _id: 'q1' });
+            mockInstance.save = mockSave;
             return mockInstance;
         });
-        (mockQuestionModel as any).save = jest.fn();
-        (mockQuestionModel as any).findById = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).find = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).findByIdAndUpdate = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).findByIdAndDelete = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).insertMany = jest.fn();
-        (mockQuestionModel as any).countDocuments = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).deleteMany = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).skip = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).limit = jest.fn().mockReturnThis();
-        (mockQuestionModel as any).exec = jest.fn();
+        
+        (mockQuestionModelFn as any).save = jest.fn();
+        (mockQuestionModelFn as any).findById = jest.fn().mockReturnValue(mockQuery);
+        (mockQuestionModelFn as any).find = jest.fn().mockReturnValue(mockQuery);
+        (mockQuestionModelFn as any).findByIdAndUpdate = jest.fn().mockReturnValue(mockQuery);
+        (mockQuestionModelFn as any).findByIdAndDelete = jest.fn().mockReturnValue(mockQuery);
+        (mockQuestionModelFn as any).insertMany = jest.fn();
+        (mockQuestionModelFn as any).countDocuments = jest.fn().mockReturnValue(mockQuery);
+        (mockQuestionModelFn as any).deleteMany = jest.fn().mockReturnValue(mockQuery);
+
+        mockQuestionModel = mockQuestionModelFn;
 
         mockTopicModel = {
-            findOneAndUpdate: jest.fn().mockReturnThis(),
-            find: jest.fn().mockReturnThis(),
-            findOne: jest.fn().mockReturnThis(),
+            findOneAndUpdate: jest.fn().mockReturnValue(mockQuery),
+            find: jest.fn().mockReturnValue(mockQuery),
+            findOne: jest.fn().mockReturnValue(mockQuery),
             sort: jest.fn().mockReturnThis(),
-            exec: jest.fn(),
         };
 
         service = new QuestionService(mockQuestionModel, mockTopicModel);
@@ -39,13 +53,18 @@ describe('QuestionService', () => {
     describe('createQuestion', () => {
         it('deberia crear una pregunta correctamente', async () => {
             const questionData = { text: 'Test question', topic: 'html' };
-            const savedQuestion = { ...questionData, _id: 'q1' };
-            mockQuestionModel.save.mockResolvedValue(savedQuestion);
-            mockTopicModel.exec.mockResolvedValue({ name: 'html' });
+            const savedQuestion: any = { ...questionData, _id: 'q1' };
+            
+            const mockSaveFn: any = jest.fn();
+            mockSaveFn.mockResolvedValue(savedQuestion);
+            (mockQuestionModel as any).mockImplementationOnce(() => ({
+                save: mockSaveFn,
+            }));
+            mockQuery.exec.mockResolvedValue({ name: 'html' });
 
             const result = await service.createQuestion(questionData);
 
-            expect(result).toEqual(savedQuestion);
+            expect(result).toEqual(expect.objectContaining(savedQuestion));
         });
     });
 
@@ -55,8 +74,8 @@ describe('QuestionService', () => {
                 { text: 'Q1', topic: 'html' },
                 { text: 'Q2', topic: 'css' },
             ];
-            mockQuestionModel.insertMany.mockReturnValue(questions);
-            mockTopicModel.exec.mockResolvedValue({ name: 'html' });
+            (mockQuestionModel.insertMany as any).mockResolvedValue(questions);
+            mockQuery.exec.mockResolvedValue({ name: 'html' });
 
             const result = await service.createQuestions(questions);
 
@@ -67,7 +86,7 @@ describe('QuestionService', () => {
     describe('getAllQuestions', () => {
         it('deberia retornar todas las preguntas', async () => {
             const questions = [{ text: 'Q1' }, { text: 'Q2' }];
-            mockQuestionModel.exec.mockResolvedValue(questions);
+            mockQuery.exec.mockResolvedValue(questions);
 
             const result = await service.getAllQuestions();
 
@@ -78,7 +97,7 @@ describe('QuestionService', () => {
     describe('getAllQuestionsPaginated', () => {
         it('deberia retornar preguntas paginadas con total', async () => {
             const questions = [{ text: 'Q1' }];
-            mockQuestionModel.exec.mockResolvedValueOnce(questions).mockResolvedValueOnce(10);
+            mockQuery.exec.mockResolvedValueOnce(questions).mockResolvedValueOnce(10);
 
             const result = await service.getAllQuestionsPaginated(1, 10);
 
@@ -90,7 +109,7 @@ describe('QuestionService', () => {
     describe('getQuestionById', () => {
         it('deberia retornar una pregunta por id', async () => {
             const question = { _id: 'q1', text: 'Test question' };
-            mockQuestionModel.exec.mockResolvedValue(question);
+            mockQuery.exec.mockResolvedValue(question);
 
             const result = await service.getQuestionById('q1');
 
@@ -98,7 +117,7 @@ describe('QuestionService', () => {
         });
 
         it('deberia lanzar NotFoundException si no encuentra la pregunta', async () => {
-            mockQuestionModel.exec.mockResolvedValue(null);
+            mockQuery.exec.mockResolvedValue(null);
 
             await expect(service.getQuestionById('invalid-id')).rejects.toThrow(NotFoundException);
         });
@@ -107,8 +126,8 @@ describe('QuestionService', () => {
     describe('updateQuestion', () => {
         it('deberia actualizar una pregunta', async () => {
             const updatedQuestion = { _id: 'q1', text: 'Updated question' };
-            mockQuestionModel.exec.mockResolvedValue(updatedQuestion);
-            mockTopicModel.exec.mockResolvedValue({ name: 'html' });
+            mockQuery.exec.mockResolvedValueOnce(updatedQuestion);
+            mockQuery.exec.mockResolvedValueOnce({ name: 'html' });
 
             const result = await service.updateQuestion('q1', { text: 'Updated question' });
 
@@ -118,7 +137,7 @@ describe('QuestionService', () => {
 
     describe('deleteQuestion', () => {
         it('deberia eliminar una pregunta', async () => {
-            mockQuestionModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.deleteQuestion('q1');
 
@@ -128,7 +147,7 @@ describe('QuestionService', () => {
 
     describe('deleteAllQuestions', () => {
         it('deberia eliminar todas las preguntas', async () => {
-            mockQuestionModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.deleteAllQuestions();
 
@@ -139,7 +158,7 @@ describe('QuestionService', () => {
     describe('upsertTopic', () => {
         it('deberia crear o actualizar un topico', async () => {
             const topic = { name: 'html', enabled: true };
-            mockTopicModel.exec.mockResolvedValue(topic);
+            mockQuery.exec.mockResolvedValue(topic);
 
             const result = await service.upsertTopic('html');
 
@@ -150,19 +169,19 @@ describe('QuestionService', () => {
     describe('getAllTopics', () => {
         it('deberia retornar todos los topicos ordenados', async () => {
             const topics = [{ name: 'css' }, { name: 'html' }];
-            mockTopicModel.exec.mockResolvedValue(topics);
+            mockQuery.exec.mockResolvedValue(topics);
 
             const result = await service.getAllTopics();
 
             expect(result).toEqual(topics);
-            expect(mockTopicModel.sort).toHaveBeenCalledWith({ name: 1 });
+            expect(mockQuery.sort).toHaveBeenCalledWith({ name: 1 });
         });
     });
 
     describe('getTopicByName', () => {
         it('deberia retornar un topico por nombre', async () => {
             const topic = { name: 'html', enabled: true };
-            mockTopicModel.exec.mockResolvedValue(topic);
+            mockQuery.exec.mockResolvedValue(topic);
 
             const result = await service.getTopicByName('html');
 
@@ -173,7 +192,7 @@ describe('QuestionService', () => {
     describe('updateTopic', () => {
         it('deberia actualizar un topico', async () => {
             const updatedTopic = { name: 'html', enabled: false };
-            mockTopicModel.exec.mockResolvedValue(updatedTopic);
+            mockQuery.exec.mockResolvedValue(updatedTopic);
 
             const result = await service.updateTopic('html', { enabled: false });
 

@@ -81,7 +81,7 @@ export class QuestionsService implements OnModuleInit {
         }
 
         const question = pool.pickRandom();
-        await this.userService.assignQuestionToUser(userId, (question as any)._id.toString());
+        await this.userService.assignQuestionToUser(userId, question._id!.toString());
         return question;
     }
 }

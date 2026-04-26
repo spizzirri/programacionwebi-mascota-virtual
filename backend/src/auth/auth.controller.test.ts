@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { ThrottlerModule } from '@nestjs/throttler';
+import { SessionData } from '../common/types/session.types';
 
 describe('AuthController', () => {
 
@@ -22,7 +23,7 @@ describe('AuthController', () => {
     const mockResponse = {
         setHeader: jest.fn(),
         clearCookie: jest.fn(),
-        json: jest.fn().mockImplementation((val) => val),
+        json: jest.fn().mockReturnValue(undefined),
     } as any;
 
     beforeEach(async () => {
@@ -52,7 +53,7 @@ describe('AuthController', () => {
     describe('login', () => {
         it('deberia loguear un usuario correctamente y regenerar la sesion (Fix Session Fixation)', async () => {
             const body = { email: 'test@test.com', password: 'password123' };
-            const session: any = {};
+            const session: Partial<SessionData> = {};
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
@@ -66,7 +67,7 @@ describe('AuthController', () => {
 
         it('deberia lanzar Error si las credenciales son invalidas', async () => {
             const body = { email: 'test@test.com', password: 'wrongpassword' };
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             jest.spyOn(authService, 'login').mockRejectedValue(new Error('usuario o contraseña incorrectos'));
 
@@ -78,7 +79,7 @@ describe('AuthController', () => {
 
     describe('logout', () => {
         it('deberia destruir la sesion completamente al cerrar sesion', async () => {
-            const session: any = { userId: 'user123' };
+            const session: Partial<SessionData> = { userId: 'user123' };
 
             await controller.logout(session, mockRequest, mockResponse);
 
@@ -90,7 +91,7 @@ describe('AuthController', () => {
 
     describe('getCurrentUser', () => {
         it('deberia retornar el usuario si la sesion es valida', async () => {
-            const session: any = { userId: 'user123' };
+            const session: Partial<SessionData> = { userId: 'user123' };
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(mockUser);
@@ -102,7 +103,7 @@ describe('AuthController', () => {
         });
 
         it('deberia lanzar Error si no hay userId en la sesion', async () => {
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             await expect(controller.getCurrentUser(session)).rejects.toThrow(
                 'Not authenticated'
@@ -110,7 +111,7 @@ describe('AuthController', () => {
         });
 
         it('deberia lanzar Error si el usuario no existe en base de datos', async () => {
-            const session: any = { userId: 'nonexistent' };
+            const session: Partial<SessionData> = { userId: 'nonexistent' };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(null);
 

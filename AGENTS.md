@@ -1,1 +1,1 @@
-Leer reglas del proyecto en @.agents/rules/s
+Leer reglas del proyecto en @.agents/rules/

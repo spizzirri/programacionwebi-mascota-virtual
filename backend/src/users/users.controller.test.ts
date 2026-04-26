@@ -9,6 +9,7 @@ import { DatabaseService } from '../database/database.service';
 import { QuestionService } from '../questions/services/question.service';
 import { AnswerService } from '../answers/services/answer.service';
 import { UserService } from '../users/services/user.service';
+import { SessionData } from '../common/types/session.types';
 
 describe('UsersController', () => {
     let controller: UsersController;
@@ -81,10 +82,10 @@ describe('UsersController', () => {
 
     describe('getProfile', () => {
         it('deberia retornar el perfil si el usuario esta autenticado', async () => {
-            const session: any = { userId: '507f1f77bcf86cd799439011' };
-            const mockProfile: Partial<UserDocument> = { _id: new Types.ObjectId("507f1f77bcf86cd799439011"), email: 'test@test.com', streak: 5, createdAt: new Date() };
+            const session: Partial<SessionData> = { userId: '507f1f77bcf86cd799439011' };
+            const mockProfile = { _id: new Types.ObjectId("507f1f77bcf86cd799439011"), email: 'test@test.com', streak: 5, createdAt: new Date() } as unknown as UserDocument;
 
-            jest.spyOn(service, 'getProfile').mockResolvedValue(mockProfile as any);
+            jest.spyOn(service, 'getProfile').mockResolvedValue(mockProfile);
 
             const result = await controller.getProfile(session);
 
@@ -93,7 +94,7 @@ describe('UsersController', () => {
         });
 
         it('deberia lanzar Error si no hay userId en sesion', async () => {
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             await expect(controller.getProfile(session)).rejects.toThrow('Not authenticated');
         });
@@ -101,10 +102,10 @@ describe('UsersController', () => {
 
     describe('updateProfilePassword', () => {
         it('deberia actualizar la contrasena si el usuario esta autenticado', async () => {
-            const session: any = { userId: '507f1f77bcf86cd799439011' };
+            const session: Partial<SessionData> = { userId: '507f1f77bcf86cd799439011' };
             const body = { currentPassword: 'oldPassword', newPassword: 'newPassword123' };
 
-            jest.spyOn(service, 'updateProfilePassword').mockResolvedValue({} as any);
+            jest.spyOn(service, 'updateProfilePassword').mockResolvedValue({} as unknown as Awaited<ReturnType<typeof service.updateProfilePassword>>);
 
             const result = await controller.updateProfilePassword(session, body);
 
@@ -113,7 +114,7 @@ describe('UsersController', () => {
         });
 
         it('deberia lanzar Error si no hay userId en sesion', async () => {
-            const session: any = {};
+            const session: Partial<SessionData> = {};
             const body = { currentPassword: 'old', newPassword: 'newPassword123' };
 
             await expect(controller.updateProfilePassword(session, body)).rejects.toThrow('Not authenticated');
@@ -122,10 +123,10 @@ describe('UsersController', () => {
 
     describe('getHistory', () => {
         it('deberia retornar el historial si el usuario esta autenticado', async () => {
-            const session: any = { userId: 'user1' };
-            const mockHistory = [{ id: 1 }, { id: 2 }];
+            const session: Partial<SessionData> = { userId: 'user1' };
+            const mockHistory = [{ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), questionText: 'Q1' }, { _id: new Types.ObjectId('507f1f77bcf86cd799439012'), questionText: 'Q2' }] as unknown as Awaited<ReturnType<typeof service.getHistory>>;
 
-            jest.spyOn(service, 'getHistory').mockResolvedValue(mockHistory as any);
+            jest.spyOn(service, 'getHistory').mockResolvedValue(mockHistory);
 
             const result = await controller.getHistory(session, '10');
 
@@ -134,8 +135,8 @@ describe('UsersController', () => {
         });
 
         it('deberia usar limite de 50 si no se provee query param', async () => {
-            const session: any = { userId: 'user1' };
-            const mockHistory: any[] = [];
+            const session: Partial<SessionData> = { userId: 'user1' };
+            const mockHistory = [] as unknown as Awaited<ReturnType<typeof service.getHistory>>;
 
             jest.spyOn(service, 'getHistory').mockResolvedValue(mockHistory);
 
@@ -145,7 +146,7 @@ describe('UsersController', () => {
         });
 
         it('deberia lanzar Error si no hay userId en sesion', async () => {
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             await expect(controller.getHistory(session)).rejects.toThrow('Not authenticated');
         });
@@ -153,9 +154,9 @@ describe('UsersController', () => {
 
     describe('getAllUsers', () => {
         it('deberia retornar usuarios paginados', async () => {
-            const mockUsers: any[] = [{ email: 'user1@test.com' }, { email: 'user2@test.com' }];
+            const mockUsers = [{ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'user1@test.com', currentQuestionText: 'Q1' }, { _id: new Types.ObjectId('507f1f77bcf86cd799439012'), email: 'user2@test.com', currentQuestionText: 'Q2' }] as unknown as Awaited<ReturnType<typeof service.getAllUsersPaginated>>['data'];
 
-            jest.spyOn(service, 'getAllUsersPaginated').mockResolvedValue({ data: mockUsers, total: 2 });
+            jest.spyOn(service, 'getAllUsersPaginated').mockResolvedValue({ data: mockUsers, total: 2 } as unknown as Awaited<ReturnType<typeof service.getAllUsersPaginated>>);
 
             const result = await controller.getAllUsers('1', '10');
 
@@ -169,9 +170,9 @@ describe('UsersController', () => {
     describe('createUser', () => {
         it('deberia crear un usuario', async () => {
             const body = { email: 'new@test.com', password: '12345678', role: 'STUDENT' };
-            const mockUser = { email: 'new@test.com' };
+            const mockUser = { _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'new@test.com' } as unknown as Awaited<ReturnType<typeof service.createUser>>;
 
-            jest.spyOn(service, 'createUser').mockResolvedValue(mockUser as any);
+            jest.spyOn(service, 'createUser').mockResolvedValue(mockUser);
 
             const result = await controller.createUser(body);
             expect(result).toEqual({ user: mockUser });
@@ -181,10 +182,10 @@ describe('UsersController', () => {
 
     describe('updateUser', () => {
         it('deberia actualizar un usuario', async () => {
-            const mockUser = { email: 'updated@test.com' };
-            jest.spyOn(service, 'updateUser').mockResolvedValue(mockUser as any);
+            const mockUser = { _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'updated@test.com' } as unknown as Awaited<ReturnType<typeof service.updateUser>>;
+            jest.spyOn(service, 'updateUser').mockResolvedValue(mockUser);
 
-            const result = await controller.updateUser('u1', { email: 'updated@test.com' } as any);
+            const result = await controller.updateUser('u1', { email: 'updated@test.com' });
             expect(result).toEqual({ user: mockUser });
         });
     });
@@ -200,7 +201,8 @@ describe('UsersController', () => {
 
     describe('unlockUser', () => {
         it('deberia desbloquear un usuario', async () => {
-            jest.spyOn(service, 'unlockUser').mockResolvedValue({ email: 'user@test.com' } as any);
+            const mockUser = { _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'user@test.com' } as unknown as Awaited<ReturnType<typeof service.unlockUser>>;
+            jest.spyOn(service, 'unlockUser').mockResolvedValue(mockUser);
 
             const result = await controller.unlockUser('u1');
             expect(result).toEqual({ success: true, message: 'User unlocked successfully' });

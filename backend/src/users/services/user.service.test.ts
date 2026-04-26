@@ -6,26 +6,33 @@ import { MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MINUTES } from '../../common/constant
 
 describe('UserService', () => {
     let service: UserService;
-    let mockUserModel: any;
+    let mockUserModel: Model<UserDocument>;
+    let mockQuery: any;
 
     beforeEach(() => {
-        mockUserModel = jest.fn().mockImplementation((data: any) => {
-            const mockInstance: any = Object.assign({}, data);
+        mockQuery = {
+            exec: jest.fn(),
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockReturnThis(),
+            sort: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            skip: jest.fn().mockReturnThis(),
+        };
+
+        mockUserModel = jest.fn().mockImplementation((data: Partial<UserDocument>) => {
+            const mockInstance: Partial<UserDocument> = Object.assign({}, data);
             (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: new Types.ObjectId() }));
             return mockInstance;
-        });
-        (mockUserModel as any).save = jest.fn();
-        (mockUserModel as any).findOne = jest.fn().mockReturnThis();
-        (mockUserModel as any).findById = jest.fn().mockReturnThis();
-        (mockUserModel as any).find = jest.fn().mockReturnThis();
-        (mockUserModel as any).findByIdAndUpdate = jest.fn().mockReturnThis();
-        (mockUserModel as any).findOneAndUpdate = jest.fn().mockReturnThis();
-        (mockUserModel as any).updateOne = jest.fn().mockReturnThis();
-        (mockUserModel as any).findByIdAndDelete = jest.fn().mockReturnThis();
-        (mockUserModel as any).countDocuments = jest.fn().mockReturnThis();
-        (mockUserModel as any).skip = jest.fn().mockReturnThis();
-        (mockUserModel as any).limit = jest.fn().mockReturnThis();
-        (mockUserModel as any).exec = jest.fn();
+        }) as unknown as Model<UserDocument>;
+
+        (mockUserModel as any).findOne = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).findById = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).find = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).findByIdAndUpdate = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).findOneAndUpdate = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).updateOne = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).findByIdAndDelete = jest.fn().mockReturnValue(mockQuery);
+        (mockUserModel as any).countDocuments = jest.fn().mockReturnValue(mockQuery);
 
         service = new UserService(mockUserModel);
     });
@@ -36,9 +43,9 @@ describe('UserService', () => {
             const mockId = new Types.ObjectId();
             const savedUser = { ...userData, _id: mockId };
             
-            const mockInstance: any = { ...userData };
+            const mockInstance: Partial<UserDocument> = { ...userData };
             mockInstance.save = jest.fn<any>().mockResolvedValue(savedUser);
-            mockUserModel.mockImplementation(() => mockInstance);
+            (mockUserModel as unknown as jest.Mock).mockReturnValue(mockInstance);
 
             const result = await service.createUser(userData);
 
@@ -51,7 +58,7 @@ describe('UserService', () => {
     describe('findUserByEmail', () => {
         it('deberia retornar un usuario por email', async () => {
             const user = { email: 'test@test.com' };
-            mockUserModel.exec.mockResolvedValue(user);
+            mockQuery.exec.mockResolvedValue(user);
 
             const result = await service.findUserByEmail('test@test.com');
 
@@ -60,7 +67,7 @@ describe('UserService', () => {
         });
 
         it('deberia retornar null si no encuentra el usuario', async () => {
-            mockUserModel.exec.mockResolvedValue(null);
+            mockQuery.exec.mockResolvedValue(null);
 
             const result = await service.findUserByEmail('nonexistent@test.com');
 
@@ -71,7 +78,7 @@ describe('UserService', () => {
     describe('findUserById', () => {
         it('deberia retornar un usuario por id', async () => {
             const user = { _id: 'user-123', email: 'test@test.com' };
-            mockUserModel.exec.mockResolvedValue(user);
+            mockQuery.exec.mockResolvedValue(user);
 
             const result = await service.findUserById('user-123');
 
@@ -82,7 +89,7 @@ describe('UserService', () => {
     describe('findAllUsers', () => {
         it('deberia retornar todos los usuarios', async () => {
             const users = [{ email: 'user1@test.com' }, { email: 'user2@test.com' }];
-            mockUserModel.exec.mockResolvedValue(users);
+            mockQuery.exec.mockResolvedValue(users);
 
             const result = await service.findAllUsers();
 
@@ -93,7 +100,7 @@ describe('UserService', () => {
     describe('findAllUsersPaginated', () => {
         it('deberia retornar usuarios paginados con total', async () => {
             const users = [{ email: 'user1@test.com' }];
-            mockUserModel.exec.mockResolvedValueOnce(users).mockResolvedValueOnce(10);
+            mockQuery.exec.mockResolvedValueOnce(users).mockResolvedValueOnce(10);
 
             const result = await service.findAllUsersPaginated(1, 10);
 
@@ -105,7 +112,7 @@ describe('UserService', () => {
     describe('updateUser', () => {
         it('deberia actualizar un usuario', async () => {
             const updatedUser = { email: 'updated@test.com' };
-            mockUserModel.exec.mockResolvedValue(updatedUser);
+            mockQuery.exec.mockResolvedValue(updatedUser);
 
             const result = await service.updateUser('user-123', { email: 'updated@test.com' });
 
@@ -115,7 +122,7 @@ describe('UserService', () => {
 
     describe('deleteUser', () => {
         it('deberia eliminar un usuario', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.deleteUser('user-123');
 
@@ -126,7 +133,7 @@ describe('UserService', () => {
     describe('incrementFailedLoginAttempts', () => {
         it('deberia incrementar los intentos fallidos', async () => {
             const user = { email: 'test@test.com', failedLoginAttempts: 1 };
-            mockUserModel.exec.mockResolvedValue(user);
+            mockQuery.exec.mockResolvedValue(user);
 
             const result = await service.incrementFailedLoginAttempts('test@test.com');
 
@@ -136,7 +143,7 @@ describe('UserService', () => {
 
     describe('resetFailedLoginAttempts', () => {
         it('deberia resetear los intentos fallidos', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.resetFailedLoginAttempts('test@test.com');
 
@@ -150,7 +157,7 @@ describe('UserService', () => {
     describe('lockUser', () => {
         it('deberia bloquear un usuario por 15 minutos por defecto', async () => {
             const lockedUser = { email: 'test@test.com', lockedUntil: new Date() };
-            mockUserModel.exec.mockResolvedValue(lockedUser);
+            mockQuery.exec.mockResolvedValue(lockedUser);
 
             const result = await service.lockUser('test@test.com');
 
@@ -159,7 +166,7 @@ describe('UserService', () => {
 
         it('deberia bloquear un usuario por el tiempo especificado', async () => {
             const lockedUser = { email: 'test@test.com', lockedUntil: new Date() };
-            mockUserModel.exec.mockResolvedValue(lockedUser);
+            mockQuery.exec.mockResolvedValue(lockedUser);
 
             await service.lockUser('test@test.com', 30);
 
@@ -170,7 +177,7 @@ describe('UserService', () => {
     describe('unlockUser', () => {
         it('deberia desbloquear un usuario', async () => {
             const unlockedUser = { email: 'test@test.com', failedLoginAttempts: 0 };
-            mockUserModel.exec.mockResolvedValue(unlockedUser);
+            mockQuery.exec.mockResolvedValue(unlockedUser);
 
             const result = await service.unlockUser('test@test.com');
 
@@ -180,7 +187,7 @@ describe('UserService', () => {
 
     describe('updateUserStreak', () => {
         it('deberia actualizar el streak sin fecha', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.updateUserStreak('user-123', 5, false);
 
@@ -191,7 +198,7 @@ describe('UserService', () => {
         });
 
         it('deberia actualizar el streak con fecha', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.updateUserStreak('user-123', 5, true);
 
@@ -201,7 +208,7 @@ describe('UserService', () => {
 
     describe('assignQuestionToUser', () => {
         it('deberia asignar una pregunta al usuario', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.assignQuestionToUser('user-123', 'question-456');
 
@@ -248,7 +255,7 @@ describe('UserService', () => {
 
     describe('autoUnlockUser', () => {
         it('deberia desbloquear automaticamente un usuario', async () => {
-            mockUserModel.exec.mockResolvedValue(undefined);
+            mockQuery.exec.mockResolvedValue(undefined);
 
             await service.autoUnlockUser('test@test.com');
 

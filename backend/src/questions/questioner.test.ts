@@ -3,11 +3,12 @@ import { Questioner, QuestionerForProfessor, QuestionerForStudent } from './ques
 import { QuestionService } from './services/question.service';
 import { UserService } from '../users/services/user.service';
 import { AnswerService } from '../answers/services/answer.service';
+import { QuestionDocument } from '../database/schemas/question.schema';
 
 describe('Questioner', () => {
-    const mockQuestions: any[] = [
-        { _id: 'q1', text: 'question 1', topic: 'html' },
-        { _id: 'q2', text: 'question 2', topic: 'css' }
+    const mockQuestions: QuestionDocument[] = [
+        { _id: 'q1', text: 'question 1', topic: 'html' } as QuestionDocument,
+        { _id: 'q2', text: 'question 2', topic: 'css' } as QuestionDocument
     ];
 
     describe('create', () => {

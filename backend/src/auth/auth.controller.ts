@@ -38,10 +38,12 @@ export class AuthController {
             });
 
             const user = await this.authService.login(loginDto.email, loginDto.password);
-            (req.session as any).userId = user._id;
+            const sessionWithUser = req.session as unknown as SessionData & { userId: string };
+            sessionWithUser.userId = user._id;
 
             const csrfSecret = this.tokens.secretSync();
-            (req.session as any)._csrfSecret = csrfSecret;
+            const sessionWithCsrf = req.session as unknown as SessionData & { _csrfSecret: string };
+            sessionWithCsrf._csrfSecret = csrfSecret;
             const csrfToken = this.tokens.create(csrfSecret);
             res.setHeader('X-CSRF-Token', csrfToken);
 

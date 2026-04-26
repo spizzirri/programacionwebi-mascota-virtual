@@ -1,8 +1,9 @@
 import { Controller, Post, Body, Session, HttpException, HttpStatus, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { AnswersService } from './answers.service';
+import { AnswersService, SubmitAnswerResult } from './answers.service';
 import { AnswerSubmitDto } from './dto/answer-submit.dto';
 import type { SessionData } from '../common/types/session.types';
+import { AnswerDocument } from '../database/schemas/answer.schema';
 
 @Controller('answers')
 export class AnswersController {
@@ -25,15 +26,15 @@ export class AnswersController {
                 session.userId,
                 answerDto.questionId,
                 answerDto.userAnswer,
-            );
+            ) as SubmitAnswerResult & { answer: AnswerDocument };
 
             return {
                 success: true,
                 rating: result.answer.rating,
                 feedback: result.answer.feedback,
-                suggestedAnswer: (result.answer as any).suggestedAnswer,
+                suggestedAnswer: result.answer.suggestedAnswer,
                 newStreak: result.newStreak,
-                answerId: (result.answer as any)._id,
+                answerId: result.answer._id.toString(),
             };
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);

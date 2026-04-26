@@ -134,7 +134,7 @@ describe('ProfileManager', () => {
     it('deberia validar que las contraseñas coincidan', async () => {
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
-        const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => { });
+        const alertSpy = jest.spyOn(window, 'alert').mockReturnValue(undefined);
 
         new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -155,7 +155,7 @@ describe('ProfileManager', () => {
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
         jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
         const updateSpy = jest.spyOn(apiModule.api, 'updateProfilePassword').mockResolvedValue(undefined);
-        jest.spyOn(window, 'alert').mockImplementation(() => { });
+        jest.spyOn(window, 'alert').mockReturnValue(undefined);
 
         new ProfileView();
         await new Promise(resolve => setTimeout(resolve, 0));

@@ -3,14 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import type { AuthService as AuthServiceType } from './auth.service';
 import type { UserService as UserServiceType } from '../users/services/user.service';
 import { UserService } from '../users/services/user.service';
+import { User } from '../database/schemas/user.schema';
 
 jest.unstable_mockModule('bcrypt', () => ({
     hash: jest.fn(),
     compare: jest.fn(),
 }));
 
-let bcrypt: any;
-let AuthService: any;
+let bcrypt: typeof import('bcrypt');
+let AuthService: typeof import('./auth.service').AuthService;
 
 beforeAll(async () => {
     bcrypt = await import('bcrypt');
@@ -55,7 +56,7 @@ describe('AuthService', () => {
 
     describe('login', () => {
         it('deberia lanzar UnauthorizedException si el usuario no existe (mitigacion de timing attack)', async () => {
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(null);
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('nonexistent@test.com', 'wrongpass'))
@@ -63,9 +64,9 @@ describe('AuthService', () => {
         });
 
         it('deberia lanzar UnauthorizedException si la contraseña es incorrecta', async () => {
-            const mockUser = { email: 'test@test.com', password: 'hashed', role: 'STUDENT', failedLoginAttempts: 0 };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            const mockUser = { email: 'test@test.com', password: 'hashed', role: 'STUDENT', failedLoginAttempts: 0 } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('test@test.com', 'wrongpass'))
@@ -84,11 +85,11 @@ describe('AuthService', () => {
                     role: 'STUDENT',
                     failedLoginAttempts: 0,
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
-            jest.spyOn(userService as any, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
 
             const result = await service.login('test@test.com', 'correctpass');
 
@@ -116,12 +117,12 @@ describe('AuthService', () => {
                     streak: 5,
                     _id: 'user123',
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
-            jest.spyOn(userService as any, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
-            const updateStreakSpy = jest.spyOn(userService as any, 'updateUserStreak').mockResolvedValue(undefined);
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            const updateStreakSpy = jest.spyOn(userService, 'updateUserStreak').mockResolvedValue(undefined);
 
             await service.login('test@test.com', 'correctpass');
 
@@ -148,12 +149,12 @@ describe('AuthService', () => {
                     streak: 5,
                     _id: 'user123',
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
-            jest.spyOn(userService as any, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
-            const updateStreakSpy = jest.spyOn(userService as any, 'updateUserStreak').mockResolvedValue(undefined);
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            const updateStreakSpy = jest.spyOn(userService, 'updateUserStreak').mockResolvedValue(undefined);
 
             await service.login('test@test.com', 'correctpass');
 
@@ -163,7 +164,7 @@ describe('AuthService', () => {
 
     describe('getUserById', () => {
         it('deberia retornar null si el usuario no existe', async () => {
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(null);
 
             const result = await service.getUserById('nonexistent');
 
@@ -180,8 +181,8 @@ describe('AuthService', () => {
                     password: 'hashed',
                     role: 'STUDENT',
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserById').mockResolvedValue(mockUser as any);
+            } as any;
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(mockUser);
 
             const result = await service.getUserById('user123');
 
@@ -196,9 +197,9 @@ describe('AuthService', () => {
                 email: 'test@test.com',
                 failedLoginAttempts: 3,
                 lockedUntil,
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: true, minutesLeft: 10 });
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: true, minutesLeft: 10 });
 
             await expect(service.login('test@test.com', 'anypass'))
                 .rejects.toThrow('usuario bloqueado, intente nuevamente en 10 minutos');
@@ -219,12 +220,12 @@ describe('AuthService', () => {
                     lockedUntil: expiredLock,
                     role: 'STUDENT',
                 }),
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
-            jest.spyOn(userService as any, 'autoUnlockUser').mockResolvedValue(undefined);
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            jest.spyOn(userService, 'autoUnlockUser').mockResolvedValue(undefined);
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
-            jest.spyOn(userService as any, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
 
             const result = await service.login('test@test.com', 'correctpass');
 
@@ -238,15 +239,15 @@ describe('AuthService', () => {
                 password: 'hashed',
                 failedLoginAttempts: 2,
                 role: 'STUDENT',
-            };
+            } as any;
             const updatedUser = {
                 email: 'test@test.com',
                 failedLoginAttempts: 3,
-            };
-            jest.spyOn(userService as any, 'findUserByEmail').mockResolvedValue(mockUser as any);
-            jest.spyOn(userService as any, 'isUserLocked').mockResolvedValue({ isLocked: false });
-            jest.spyOn(userService as any, 'incrementFailedLoginAttempts').mockResolvedValue(updatedUser as any);
-            jest.spyOn(userService as any, 'lockUser').mockResolvedValue(updatedUser as any);
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            jest.spyOn(userService, 'incrementFailedLoginAttempts').mockResolvedValue(updatedUser);
+            jest.spyOn(userService, 'lockUser').mockResolvedValue(updatedUser);
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
             await expect(service.login('test@test.com', 'wrongpass'))

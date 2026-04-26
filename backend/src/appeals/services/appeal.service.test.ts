@@ -1,26 +1,39 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { AppealService } from './appeal.service';
 import { NotFoundException } from '@nestjs/common';
+import { Model, Types } from 'mongoose';
+import { Appeal, AppealDocument } from '../../database/schemas/appeal.schema';
 
 describe('AppealService', () => {
     let service: AppealService;
     let mockAppealModel: any;
+    let mockQuery: any;
 
     beforeEach(() => {
-        mockAppealModel = jest.fn().mockImplementation((data: any) => {
-            const mockInstance: any = Object.assign({}, data);
-            (mockInstance.save as any) = jest.fn<any>().mockResolvedValue(Object.assign({}, data, { _id: 'ap1' }));
+        mockQuery = {
+            exec: jest.fn(),
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockReturnThis(),
+            sort: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            skip: jest.fn().mockReturnThis(),
+        };
+
+        const mockModelFn = jest.fn().mockImplementation((data: Partial<AppealDocument>) => {
+            const mockInstance: any = { ...data };
+            const mockSave: any = jest.fn();
+            mockSave.mockResolvedValue({ ...data, _id: 'ap1' });
+            mockInstance.save = mockSave;
             return mockInstance;
         });
-        (mockAppealModel as any).save = jest.fn();
-        (mockAppealModel as any).find = jest.fn().mockReturnThis();
-        (mockAppealModel as any).findById = jest.fn().mockReturnThis();
-        (mockAppealModel as any).findByIdAndUpdate = jest.fn().mockReturnThis();
-        (mockAppealModel as any).countDocuments = jest.fn().mockReturnThis();
-        (mockAppealModel as any).sort = jest.fn().mockReturnThis();
-        (mockAppealModel as any).skip = jest.fn().mockReturnThis();
-        (mockAppealModel as any).limit = jest.fn().mockReturnThis();
-        (mockAppealModel as any).exec = jest.fn();
+        
+        (mockModelFn as any).save = jest.fn();
+        (mockModelFn as any).find = jest.fn().mockReturnValue(mockQuery);
+        (mockModelFn as any).findById = jest.fn().mockReturnValue(mockQuery);
+        (mockModelFn as any).findByIdAndUpdate = jest.fn().mockReturnValue(mockQuery);
+        (mockModelFn as any).countDocuments = jest.fn().mockReturnValue(mockQuery);
+
+        mockAppealModel = mockModelFn;
 
         service = new AppealService(mockAppealModel);
     });
@@ -29,11 +42,15 @@ describe('AppealService', () => {
         it('deberia crear una apelacion correctamente', async () => {
             const appealData = { userId: 'u1', answerId: 'a1', status: 'pending' };
             const savedAppeal = { ...appealData, _id: 'ap1' };
-            mockAppealModel.save.mockResolvedValue(savedAppeal);
+            
+            (mockAppealModel as any).mockImplementationOnce(() => ({
+                // @ts-ignore - Mock for testing
+                save: jest.fn().mockResolvedValue(savedAppeal as any),
+            }));
 
             const result = await service.createAppeal(appealData);
 
-            expect(result).toEqual(savedAppeal);
+            expect(result).toEqual(expect.objectContaining(savedAppeal));
         });
     });
 
@@ -43,19 +60,19 @@ describe('AppealService', () => {
                 { userId: 'u1', createdAt: new Date('2024-01-02') },
                 { userId: 'u1', createdAt: new Date('2024-01-01') },
             ];
-            mockAppealModel.exec.mockResolvedValue(appeals);
+            mockQuery.exec.mockResolvedValue(appeals);
 
             const result = await service.getAppealsByUserId('u1');
 
             expect(result).toEqual(appeals);
-            expect(mockAppealModel.sort).toHaveBeenCalledWith({ createdAt: -1 });
+            expect(mockQuery.sort).toHaveBeenCalledWith({ createdAt: -1 });
         });
     });
 
     describe('getAllAppeals', () => {
         it('deberia retornar todas las apelaciones', async () => {
             const appeals = [{ status: 'pending' }, { status: 'accepted' }];
-            mockAppealModel.exec.mockResolvedValue(appeals);
+            mockQuery.exec.mockResolvedValue(appeals);
 
             const result = await service.getAllAppeals();
 
@@ -66,7 +83,7 @@ describe('AppealService', () => {
     describe('getAllAppealsPaginated', () => {
         it('deberia retornar apelaciones paginadas con total', async () => {
             const appeals = [{ status: 'pending' }];
-            mockAppealModel.exec.mockResolvedValueOnce(appeals).mockResolvedValueOnce(10);
+            mockQuery.exec.mockResolvedValueOnce(appeals).mockResolvedValueOnce(10);
 
             const result = await service.getAllAppealsPaginated(1, 10);
 
@@ -78,7 +95,7 @@ describe('AppealService', () => {
     describe('getAppealById', () => {
         it('deberia retornar una apelacion por id', async () => {
             const appeal = { _id: 'ap1', status: 'pending' };
-            mockAppealModel.exec.mockResolvedValue(appeal);
+            mockQuery.exec.mockResolvedValue(appeal);
 
             const result = await service.getAppealById('ap1');
 
@@ -89,7 +106,7 @@ describe('AppealService', () => {
     describe('updateAppeal', () => {
         it('deberia actualizar una apelacion', async () => {
             const updatedAppeal = { _id: 'ap1', status: 'accepted' };
-            mockAppealModel.exec.mockResolvedValue(updatedAppeal);
+            mockQuery.exec.mockResolvedValue(updatedAppeal);
 
             const result = await service.updateAppeal('ap1', { status: 'accepted' });
 

@@ -4,15 +4,16 @@ import { AnswersService } from "./answers.service";
 import { AnswerService } from "./services/answer.service";
 import { QuestionService } from "../questions/services/question.service";
 import { UserService } from "../users/services/user.service";
+import { Question } from "../database/schemas/question.schema";
+import { User } from "../database/schemas/user.schema";
+import { Answer } from "../database/schemas/answer.schema";
 
 jest.mock('@google/genai', () => {
     return {
-        GoogleGenAI: jest.fn().mockImplementation(() => {
-            return {
-                models: {
-                    generateContent: jest.fn()
-                }
-            };
+        GoogleGenAI: jest.fn().mockReturnValue({
+            models: {
+                generateContent: jest.fn()
+            }
         })
     };
 });
