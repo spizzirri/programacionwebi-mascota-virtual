@@ -9,7 +9,7 @@ import { DEFAULT_THROTTLE_TTL_MS } from '../common/constants/auth.constants';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(private readonly authService: AuthService) { }
 
     private tokens = new Tokens();
 
@@ -49,7 +49,7 @@ export class AuthController {
 
             res.json({ success: true, user });
         } catch (error) {
-            throw new Error(error.message);
+            throw error;
         }
     }
 

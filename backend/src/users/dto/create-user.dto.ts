@@ -13,4 +13,8 @@ export class CreateUserDto {
     @IsEnum(['PROFESSOR', 'STUDENT'], { message: 'Role must be either PROFESSOR or STUDENT' })
     @IsNotEmpty()
     role: string;
+
+    @IsEnum(['MAÑANA', 'NOCHE'], { message: 'Commission must be either MAÑANA or NOCHE' })
+    @IsNotEmpty()
+    commission: string;
 }

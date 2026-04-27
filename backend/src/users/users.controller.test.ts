@@ -169,14 +169,14 @@ describe('UsersController', () => {
 
     describe('createUser', () => {
         it('deberia crear un usuario', async () => {
-            const body = { email: 'new@test.com', password: '12345678', role: 'STUDENT' };
+            const body = { email: 'new@test.com', password: '12345678', role: 'STUDENT', commission: 'NOCHE' };
             const mockUser = { _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'new@test.com' } as unknown as Awaited<ReturnType<typeof service.createUser>>;
 
             jest.spyOn(service, 'createUser').mockResolvedValue(mockUser);
 
             const result = await controller.createUser(body);
             expect(result).toEqual({ user: mockUser });
-            expect(service.createUser).toHaveBeenCalledWith({ email: 'new@test.com', password: '12345678', role: 'STUDENT' });
+            expect(service.createUser).toHaveBeenCalledWith({ email: 'new@test.com', password: '12345678', role: 'STUDENT', commission: 'NOCHE' });
         });
     });
 
