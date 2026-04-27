@@ -56,13 +56,6 @@ export class DOMManager {
         });
     }
 
-    public destroy(): void {
-        this.activeEventListeners.forEach(({ element, eventType, handler }) => {
-            element.removeEventListener(eventType, handler);
-        });
-        this.activeEventListeners = [];
-    }
-
     protected clearContainer(container: HTMLElement): void {
         container.innerHTML = '';
     }
@@ -112,6 +105,8 @@ export class DOMManager {
         return element;
     }
 
+    private alertModal: HTMLElement | null = null;
+
     protected showAlert(message: string): Promise<void> {
         return new Promise((resolve) => {
             const container = this.createElement('div', { class: 'alert-modal-container' });
@@ -123,18 +118,40 @@ export class DOMManager {
             this.appendToContainer(content, btn);
             this.appendToContainer(container, content);
             this.appendToContainer(document.body, container);
+            this.alertModal = container;
 
-            this.attachEvent(btn, 'click', () => {
-                document.body.removeChild(container);
-                resolve();
-            });
-
-            this.attachEvent(container, 'click', (e) => {
-                if (e.target === container) {
+            const removeModal = () => {
+                if (container.parentNode) {
                     document.body.removeChild(container);
-                    resolve();
                 }
-            });
+                container.removeEventListener('click', onBackdrop);
+                btn.removeEventListener('click', onBtnClick);
+                if (this.alertModal === container) {
+                    this.alertModal = null;
+                }
+                resolve();
+            };
+
+            const onBtnClick = () => removeModal();
+            const onBackdrop = (e: MouseEvent) => {
+                if (e.target === container) removeModal();
+            };
+
+            btn.addEventListener('click', onBtnClick);
+            container.addEventListener('click', onBackdrop);
         });
+    }
+
+    public destroy(): void {
+        this.activeEventListeners.forEach(({ element, eventType, handler }) => {
+            element.removeEventListener(eventType, handler);
+        });
+        this.activeEventListeners = [];
+        if (this.alertModal) {
+            if (this.alertModal.parentNode) {
+                document.body.removeChild(this.alertModal);
+            }
+            this.alertModal = null;
+        }
     }
 }
