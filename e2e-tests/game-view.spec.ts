@@ -484,7 +484,7 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
-        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante y comision NOCHE) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
+        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456789 y rol estudiante y comision NOCHE) y verifica que este en la tabla. Se desloguea e intenta loguear con el usuario recien creado.', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
@@ -510,20 +510,21 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
-        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456 y rol estudiante) y luego modifica el email de estudiante2 a otroestudiante. Verifica que el cambio se vea reflejado en la tabla. Elimina el usuario otroestudiante y verifica que no este en la lista.', async ({ page }) => {
+        test('El profesor navega a administracion de usuario, agrega un nuevo usuario (estudiante2@gmail.com con password 123456789 y rol estudiante) y luego modifica el email de estudiante2 a otroestudiante. Verifica que el cambio se vea reflejado en la tabla. Elimina el usuario otroestudiante y verifica que no este en la lista.', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
             await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
 
             await page.click('#add-user-btn');
-            await page.fill('#user-email', 'estudiante3@gmail.com');
+            await page.fill('#user-email', 'estudiante2@gmail.com');
             await page.fill('#user-password', '123456789');
             await page.selectOption('#user-role', 'STUDENT');
+            await page.selectOption('#user-commission', 'NOCHE');
             await page.click('#user-form button[type="submit"]');
             await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
 
-            const rowStudent2 = page.locator('#users-table-body tr').filter({ hasText: 'estudiante3@gmail.com' });
+            const rowStudent2 = page.locator('#users-table-body tr').filter({ hasText: 'estudiante2@gmail.com' });
             await rowStudent2.locator('button', { hasText: '✏️' }).click();
 
             await expect(page.locator('#user-modal')).not.toHaveClass(/hidden/);
@@ -532,7 +533,7 @@ test.describe('game-view', () => {
 
             await expect(page.locator('#user-modal')).toHaveClass(/hidden/);
             await expect(page.locator('#users-table-body')).toContainText('otroestudiante@gmail.com');
-            await expect(page.locator('#users-table-body')).not.toContainText('estudiante3@gmail.com');
+            await expect(page.locator('#users-table-body')).not.toContainText('estudiante2@gmail.com');
 
             const rowEdited = page.locator('#users-table-body tr').filter({ hasText: 'otroestudiante@gmail.com' });
             await rowEdited.locator('button', { hasText: '🗑️' }).click();

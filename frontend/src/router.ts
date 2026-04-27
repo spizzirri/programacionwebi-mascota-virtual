@@ -17,6 +17,10 @@ import { session } from './session';
 
 let currentView: (AuthView | GameView | ProfileView | AdminUsersView | AdminQuestionsView | MyAppealsView | AdminAppealsView)[] = [];
 
+type ViewWithParams = {
+    setParams?: (params: Record<string, string>) => void;
+};
+
 const routes = {
     '/': {
         html: authView,
@@ -84,11 +88,11 @@ async function navigateTo(path: string) {
 
             if (route.init) {
                 route.init.forEach(f => {
-                    const view = f();
-                    if ((view as any).setParams) {
-                        (view as any).setParams(params);
+                    const view = f() as ViewWithParams;
+                    if (view.setParams) {
+                        view.setParams(params);
                     }
-                    currentView.push(view);
+                    currentView.push(view as AuthView | GameView | ProfileView | AdminUsersView | AdminQuestionsView | MyAppealsView | AdminAppealsView);
                 });
             }
         } else {

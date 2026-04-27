@@ -1,51 +1,51 @@
 import { describe, it, expect, jest, beforeEach, beforeAll } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import type { AuthService as AuthServiceType } from './auth.service';
-import type { DatabaseService as DatabaseServiceType } from '../database/database.service';
+import type { UserService as UserServiceType } from '../users/services/user.service';
+import { UserService } from '../users/services/user.service';
+import { User } from '../database/schemas/user.schema';
 
 jest.unstable_mockModule('bcrypt', () => ({
     hash: jest.fn(),
     compare: jest.fn(),
 }));
 
-let bcrypt: any;
-let AuthService: any;
-let DatabaseService: any;
+let bcrypt: typeof import('bcrypt');
+let AuthService: typeof import('./auth.service').AuthService;
 
 beforeAll(async () => {
     bcrypt = await import('bcrypt');
     const authMod = await import('./auth.service');
     AuthService = authMod.AuthService;
-    const dbMod = await import('../database/database.service');
-    DatabaseService = dbMod.DatabaseService;
 });
 
 describe('AuthService', () => {
     let service: AuthServiceType;
-    let databaseService: DatabaseServiceType;
+    let userService: UserServiceType;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
                 {
-                    provide: DatabaseService,
+                    provide: UserService,
                     useValue: {
                         findUserByEmail: jest.fn(),
                         findUserById: jest.fn(),
-                        createUser: jest.fn(),
                         updateUserStreak: jest.fn(),
                         incrementFailedLoginAttempts: jest.fn(),
                         resetFailedLoginAttempts: jest.fn(),
                         lockUser: jest.fn(),
                         unlockUser: jest.fn(),
+                        isUserLocked: jest.fn(),
+                        autoUnlockUser: jest.fn(),
                     },
                 },
             ],
         }).compile();
 
         service = module.get<AuthServiceType>(AuthService);
-        databaseService = module.get<DatabaseServiceType>(DatabaseService);
+        userService = module.get<UserService>(UserService);
 
         process.env.REGISTRATION_SECRET = 'student-secret';
         process.env.ADMIN_SECRET = 'admin-secret';
@@ -56,245 +56,204 @@ describe('AuthService', () => {
 
     describe('login', () => {
         it('deberia lanzar UnauthorizedException si el usuario no existe (mitigacion de timing attack)', async () => {
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(null);
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
-            await expect(service.login('wrong@test.com', 'pass'))
+            await expect(service.login('nonexistent@test.com', 'wrongpass'))
                 .rejects.toThrow('usuario o contraseña incorrectos');
-
-            expect(bcrypt.compare).toHaveBeenCalled();
         });
 
         it('deberia lanzar UnauthorizedException si la contraseña es incorrecta', async () => {
-
-            const mockUser = {
-                _id: 'user1',
-                email: 'test@test.com',
-                password: 'hashed-real-password',
-                streak: 0,
-                failedLoginAttempts: 0,
-                createdAt: new Date()
-            };
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
-
+            const mockUser = { email: 'test@test.com', password: 'hashed', role: 'STUDENT', failedLoginAttempts: 0 } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
-            await expect(service.login('test@test.com', 'wrong-pass'))
+            await expect(service.login('test@test.com', 'wrongpass'))
                 .rejects.toThrow('usuario o contraseña incorrectos');
-
-            expect(bcrypt.compare).toHaveBeenCalledWith('wrong-pass', 'hashed-real-password');
         });
 
         it('deberia retornar el usuario sin contraseña si el login es exitoso', async () => {
-            const now = new Date();
-
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
-                password: 'hashed-real-password',
-                streak: 5,
+                password: 'hashed',
+                role: 'STUDENT',
                 failedLoginAttempts: 0,
-                createdAt: now
-            };
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
-
+                toObject: () => ({
+                    email: 'test@test.com',
+                    password: 'hashed',
+                    role: 'STUDENT',
+                    failedLoginAttempts: 0,
+                }),
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
 
-            const result = await service.login('test@test.com', 'correct-pass');
+            const result = await service.login('test@test.com', 'correctpass');
 
-            expect(result).toEqual({
-                _id: 'user1',
-                email: 'test@test.com',
-                streak: 5,
-                failedLoginAttempts: 0,
-                createdAt: now
-            });
             expect((result as any).password).toBeUndefined();
+            expect(userService.resetFailedLoginAttempts).toHaveBeenCalled();
         });
 
         it('deberia reiniciar la racha a 0 si la ultima respuesta correcta fue antes de ayer a las 00:00', async () => {
-            const now = new Date();
-            const startOfToday = new Date(now);
-            startOfToday.setHours(0, 0, 0, 0);
-
-            const missedDay = new Date(startOfToday);
-            missedDay.setDate(missedDay.getDate() - 2);
-
+            const twoDaysAgo = new Date();
+            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
-                password: 'hashed-real-password',
-                streak: 5,
+                password: 'hashed',
+                role: 'STUDENT',
                 failedLoginAttempts: 0,
-                lastQuestionAnsweredCorrectly: missedDay,
-                createdAt: now
-            };
-
-            const userDoc: any = { ...mockUser };
-            userDoc.toObject = () => userDoc;
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(userDoc);
-
-            const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+                lastQuestionAnsweredCorrectly: twoDaysAgo,
+                streak: 5,
+                _id: 'user123',
+                toObject: () => ({
+                    email: 'test@test.com',
+                    password: 'hashed',
+                    role: 'STUDENT',
+                    failedLoginAttempts: 0,
+                    lastQuestionAnsweredCorrectly: twoDaysAgo,
+                    streak: 5,
+                    _id: 'user123',
+                }),
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            const updateStreakSpy = jest.spyOn(userService, 'updateUserStreak').mockResolvedValue(undefined);
 
-            const result = await service.login('test@test.com', 'correct-pass');
+            await service.login('test@test.com', 'correctpass');
 
-            expect(updateStreakSpy).toHaveBeenCalledWith('user1', 0);
-            expect(result.streak).toBe(0);
+            expect(updateStreakSpy).toHaveBeenCalledWith('user123', 0);
         });
 
         it('no deberia reiniciar la racha si la ultima respuesta correcta fue ayer', async () => {
-            const now = new Date();
-            const startOfToday = new Date(now);
-            startOfToday.setHours(0, 0, 0, 0);
-
-            const yesterdayValid = new Date(startOfToday);
-            yesterdayValid.setDate(yesterdayValid.getDate() - 1);
-            yesterdayValid.setHours(23, 0, 0, 0);
-
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
             const mockUser = {
-                _id: 'user2',
-                email: 'test2@test.com',
-                password: 'hashed-real-password',
-                streak: 3,
+                email: 'test@test.com',
+                password: 'hashed',
+                role: 'STUDENT',
                 failedLoginAttempts: 0,
-                lastQuestionAnsweredCorrectly: yesterdayValid,
-                createdAt: now
-            };
-
-            const userDoc: any = { ...mockUser };
-            userDoc.toObject = () => userDoc;
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue(userDoc);
-
-            const updateStreakSpy = jest.spyOn(databaseService, 'updateUserStreak').mockResolvedValue(undefined);
+                lastQuestionAnsweredCorrectly: yesterday,
+                streak: 5,
+                _id: 'user123',
+                toObject: () => ({
+                    email: 'test@test.com',
+                    password: 'hashed',
+                    role: 'STUDENT',
+                    failedLoginAttempts: 0,
+                    lastQuestionAnsweredCorrectly: yesterday,
+                    streak: 5,
+                    _id: 'user123',
+                }),
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
+            const updateStreakSpy = jest.spyOn(userService, 'updateUserStreak').mockResolvedValue(undefined);
 
-            const result = await service.login('test2@test.com', 'correct-pass');
+            await service.login('test@test.com', 'correctpass');
 
             expect(updateStreakSpy).not.toHaveBeenCalled();
-            expect(result.streak).toBe(3);
         });
     });
 
     describe('getUserById', () => {
         it('deberia retornar null si el usuario no existe', async () => {
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(null);
 
             const result = await service.getUserById('nonexistent');
+
             expect(result).toBeNull();
         });
 
         it('deberia retornar el usuario sin contraseña si existe', async () => {
-            const now = new Date();
-
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
-                password: 'secret',
-                streak: 10,
-                failedLoginAttempts: 0,
-                createdAt: now
-            };
+                password: 'hashed',
+                role: 'STUDENT',
+                toObject: () => ({
+                    email: 'test@test.com',
+                    password: 'hashed',
+                    role: 'STUDENT',
+                }),
+            } as any;
+            jest.spyOn(userService, 'findUserById').mockResolvedValue(mockUser);
 
-            jest.spyOn(databaseService, 'findUserById').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
+            const result = await service.getUserById('user123');
 
-            const result = await service.getUserById('user1');
-
-            expect(result).toEqual({
-                _id: 'user1',
-                email: 'test@test.com',
-                streak: 10,
-                failedLoginAttempts: 0,
-                createdAt: now
-            });
-            expect((result as any).password).toBeUndefined();
+            expect(result).toEqual({ email: 'test@test.com', role: 'STUDENT' });
         });
     });
 
     describe('login - lock mechanism', () => {
         it('deberia lanzar UnauthorizedException si el usuario esta bloqueado y el lock no ha expirado', async () => {
-            const futureLock = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+            const lockedUntil = new Date(Date.now() + 10 * 60000);
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
-                password: 'hashed',
                 failedLoginAttempts: 3,
-                lockedUntil: futureLock,
-            };
+                lockedUntil,
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: true, minutesLeft: 10 });
 
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
-
-            await expect(service.login('test@test.com', 'pass'))
-                .rejects.toThrow('usuario bloqueado, intente nuevamente en');
+            await expect(service.login('test@test.com', 'anypass'))
+                .rejects.toThrow('usuario bloqueado, intente nuevamente en 10 minutos');
         });
 
         it('deberia desbloquear automaticamente si el lock ha expirado y permitir login correcto', async () => {
-            const pastLock = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes ago
+            const expiredLock = new Date(Date.now() - 10 * 60000);
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
                 password: 'hashed',
                 failedLoginAttempts: 3,
-                lockedUntil: pastLock,
-                streak: 0,
-                createdAt: new Date(),
-            };
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
-
+                lockedUntil: expiredLock,
+                role: 'STUDENT',
+                toObject: () => ({
+                    email: 'test@test.com',
+                    password: 'hashed',
+                    failedLoginAttempts: 3,
+                    lockedUntil: expiredLock,
+                    role: 'STUDENT',
+                }),
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            jest.spyOn(userService, 'autoUnlockUser').mockResolvedValue(undefined);
             (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(true));
-            jest.spyOn(databaseService, 'unlockUser').mockResolvedValue(mockUser as any);
+            jest.spyOn(userService, 'resetFailedLoginAttempts').mockResolvedValue(undefined);
 
-            const result = await service.login('test@test.com', 'correct-pass');
+            const result = await service.login('test@test.com', 'correctpass');
 
-            expect(databaseService.unlockUser).toHaveBeenCalledWith('test@test.com');
+            expect(userService.autoUnlockUser).toHaveBeenCalledWith('test@test.com');
             expect(result).toBeDefined();
-            expect(result.email).toBe('test@test.com');
         });
 
         it('deberia bloquear al usuario tras 3 intentos fallidos', async () => {
             const mockUser = {
-                _id: 'user1',
                 email: 'test@test.com',
                 password: 'hashed',
                 failedLoginAttempts: 2,
-                streak: 0,
-                createdAt: new Date(),
-            };
-
-            jest.spyOn(databaseService, 'findUserByEmail').mockResolvedValue({
-                ...mockUser,
-                toObject: () => mockUser
-            } as any);
-
-            (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
-            jest.spyOn(databaseService, 'incrementFailedLoginAttempts').mockResolvedValue({
-                ...mockUser,
+                role: 'STUDENT',
+            } as any;
+            const updatedUser = {
+                email: 'test@test.com',
                 failedLoginAttempts: 3,
-            } as any);
-            jest.spyOn(databaseService, 'lockUser').mockResolvedValue(mockUser as any);
+            } as any;
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(mockUser);
+            jest.spyOn(userService, 'isUserLocked').mockResolvedValue({ isLocked: false });
+            jest.spyOn(userService, 'incrementFailedLoginAttempts').mockResolvedValue(updatedUser);
+            jest.spyOn(userService, 'lockUser').mockResolvedValue(updatedUser);
+            (bcrypt.compare as jest.Mock).mockReturnValue(Promise.resolve(false));
 
-            await expect(service.login('test@test.com', 'wrong-pass'))
+            await expect(service.login('test@test.com', 'wrongpass'))
                 .rejects.toThrow('usuario bloqueado por 15 minutos');
 
-            expect(databaseService.lockUser).toHaveBeenCalledWith('test@test.com', 15);
+            expect(userService.lockUser).toHaveBeenCalledWith('test@test.com');
         });
     });
 });

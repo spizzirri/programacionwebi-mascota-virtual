@@ -4,6 +4,7 @@ import { AnswersController } from "./answers.controller";
 import { AnswersService } from "./answers.service";
 import { SubmitAnswerResult } from "./answers.service";
 import { ThrottlerModule } from '@nestjs/throttler';
+import { Types } from 'mongoose';
 
 describe('AnswersController', () => {
     let controller: AnswersController;
@@ -40,8 +41,9 @@ describe('AnswersController', () => {
     });
 
     it("deberia devolver la respuesta { success: true, rating: 'correct', feedback: 'feedback', newStreak: 1 } validar la respuesta del usuario", async () => {
-        const sampleResponse: SubmitAnswerResult = {
+        const sampleResponse = {
             answer: {
+                _id: { toString: () => 'answer1' },
                 questionId: '1',
                 questionText: 'question',
                 userAnswer: 'answer',
@@ -53,7 +55,7 @@ describe('AnswersController', () => {
                 streakAtMoment: 0
             },
             newStreak: 1
-        };
+        } as any;
 
         const expectedResponse = {
             success: true,
@@ -61,12 +63,12 @@ describe('AnswersController', () => {
             feedback: 'feedback',
             suggestedAnswer: 'suggested',
             newStreak: 1,
-            answerId: undefined
+            answerId: 'answer1'
         };
 
         (service.submitAnswer as any).mockResolvedValue(sampleResponse);
 
-        const answerResult = await controller.submitAnswer({ questionId: '1', userAnswer: 'answer' } as any, { userId: '1' });
+        const answerResult = await controller.submitAnswer({ questionId: '1', userAnswer: 'answer' }, { userId: '1' });
         expect(answerResult).toEqual(expectedResponse);
     });
 });

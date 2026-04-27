@@ -1,0 +1,1 @@
+Leer reglas del proyecto en @.agents/rules/

@@ -1,23 +1,27 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { hash, compare } from 'bcrypt';
-import { DatabaseService } from '../database/database.service';
+import { UserService } from '../users/services/user.service';
 import { SafeUser } from '../database/schemas/user.schema';
+import { MAX_LOGIN_ATTEMPTS } from '../common/constants/auth.constants';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly db: DatabaseService) { }
-
+    constructor(private readonly userService: UserService) {}
 
     async login(email: string, password: string): Promise<SafeUser> {
-        const user = await this.db.findUserByEmail(email);
+        const user = await this.userService.findUserByEmail(email);
 
-        if (user && user.failedLoginAttempts >= 3) {
-            if (user.lockedUntil && new Date() < user.lockedUntil) {
-                const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
-                throw new UnauthorizedException(`usuario bloqueado, intente nuevamente en ${minutesLeft} minutos`);
+        if (user) {
+            const lockStatus = await this.userService.isUserLocked(user);
+            if (lockStatus.isLocked) {
+                throw new UnauthorizedException(
+                    `usuario bloqueado, intente nuevamente en ${lockStatus.minutesLeft} minutos`,
+                );
             }
-            // Lock has expired, auto-unlock
-            await this.db.unlockUser(email);
+
+            if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS && !lockStatus.isLocked) {
+                await this.userService.autoUnlockUser(email);
+            }
         }
 
         const dummyHash = '$2b$10$fV2sc6eY0V8fW.K0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X';
@@ -26,16 +30,16 @@ export class AuthService {
 
         if (!user || !isPasswordValid) {
             if (user) {
-                const updatedUser = await this.db.incrementFailedLoginAttempts(email);
-                if (updatedUser && updatedUser.failedLoginAttempts >= 3) {
-                    await this.db.lockUser(email, 15);
+                const updatedUser = await this.userService.incrementFailedLoginAttempts(email);
+                if (updatedUser && updatedUser.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
+                    await this.userService.lockUser(email);
                     throw new UnauthorizedException('usuario bloqueado por 15 minutos');
                 }
             }
             throw new UnauthorizedException('usuario o contraseña incorrectos');
         }
 
-        await this.db.resetFailedLoginAttempts(email);
+        await this.userService.resetFailedLoginAttempts(email);
 
         if (user.lastQuestionAnsweredCorrectly) {
             const today = new Date();
@@ -45,7 +49,7 @@ export class AuthService {
             yesterday.setDate(yesterday.getDate() - 1);
 
             if (new Date(user.lastQuestionAnsweredCorrectly) < yesterday) {
-                await this.db.updateUserStreak(user._id.toString(), 0);
+                await this.userService.updateUserStreak(user._id.toString(), 0);
                 user.streak = 0;
             }
         }
@@ -55,7 +59,7 @@ export class AuthService {
     }
 
     async getUserById(id: string): Promise<SafeUser | null> {
-        const user = await this.db.findUserById(id);
+        const user = await this.userService.findUserById(id);
         if (!user) {
             return null;
         }

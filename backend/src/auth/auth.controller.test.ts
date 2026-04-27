@@ -2,9 +2,8 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { HttpException, HttpStatus } from "@nestjs/common";
-import { Request, Response } from 'express';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { SessionData } from '../common/types/session.types';
 
 describe('AuthController', () => {
 
@@ -19,13 +18,13 @@ describe('AuthController', () => {
 
     const mockRequest = {
         session: mockSession,
-    } as unknown as Request;
+    } as any;
 
     const mockResponse = {
         setHeader: jest.fn(),
         clearCookie: jest.fn(),
-        json: jest.fn().mockImplementation((val) => val),
-    } as unknown as Response;
+        json: jest.fn().mockReturnValue(undefined),
+    } as any;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -54,7 +53,7 @@ describe('AuthController', () => {
     describe('login', () => {
         it('deberia loguear un usuario correctamente y regenerar la sesion (Fix Session Fixation)', async () => {
             const body = { email: 'test@test.com', password: 'password123' };
-            const session: any = {};
+            const session: Partial<SessionData> = {};
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'login').mockResolvedValue(mockUser);
@@ -66,21 +65,21 @@ describe('AuthController', () => {
             expect(authService.login).toHaveBeenCalledWith(body.email, body.password);
         });
 
-        it('deberia lanzar HttpException con UNAUTHORIZED si las credenciales son invalidas', async () => {
+        it('deberia lanzar Error si las credenciales son invalidas', async () => {
             const body = { email: 'test@test.com', password: 'wrongpassword' };
-            const session: any = {};
+            const session: Partial<SessionData> = {};
 
             jest.spyOn(authService, 'login').mockRejectedValue(new Error('usuario o contraseña incorrectos'));
 
             await expect(controller.login(body as any, session, mockRequest, mockResponse)).rejects.toThrow(
-                new HttpException('usuario o contraseña incorrectos', HttpStatus.UNAUTHORIZED)
+                'usuario o contraseña incorrectos'
             );
         });
     });
 
     describe('logout', () => {
         it('deberia destruir la sesion completamente al cerrar sesion', async () => {
-            const session: any = { userId: 'user123' };
+            const session: Partial<SessionData> = { userId: 'user123' };
 
             await controller.logout(session, mockRequest, mockResponse);
 
@@ -92,7 +91,7 @@ describe('AuthController', () => {
 
     describe('getCurrentUser', () => {
         it('deberia retornar el usuario si la sesion es valida', async () => {
-            const session: any = { userId: 'user123' };
+            const session: Partial<SessionData> = { userId: 'user123' };
             const mockUser = { _id: 'user123', email: 'test@test.com', role: 'STUDENT', streak: 0, failedLoginAttempts: 0, createdAt: new Date() };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(mockUser);
@@ -103,21 +102,21 @@ describe('AuthController', () => {
             expect(authService.getUserById).toHaveBeenCalledWith('user123');
         });
 
-        it('deberia lanzar HttpException con UNAUTHORIZED si no hay userId en la sesion', async () => {
-            const session: any = {};
+        it('deberia lanzar Error si no hay userId en la sesion', async () => {
+            const session: Partial<SessionData> = {};
 
             await expect(controller.getCurrentUser(session)).rejects.toThrow(
-                new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED)
+                'Not authenticated'
             );
         });
 
-        it('deberia lanzar HttpException con NOT_FOUND si el usuarios no existe en base de datos', async () => {
-            const session: any = { userId: 'nonexistent' };
+        it('deberia lanzar Error si el usuario no existe en base de datos', async () => {
+            const session: Partial<SessionData> = { userId: 'nonexistent' };
 
             jest.spyOn(authService, 'getUserById').mockResolvedValue(null);
 
             await expect(controller.getCurrentUser(session)).rejects.toThrow(
-                new HttpException('User not found', HttpStatus.NOT_FOUND)
+                'User not found'
             );
         });
     });

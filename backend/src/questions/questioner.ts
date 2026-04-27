@@ -1,7 +1,10 @@
 import { Question } from '../database/schemas/question.schema';
-import { DatabaseService } from '../database/database.service';
+import { QuestionService } from './services/question.service';
+import { UserService } from '../users/services/user.service';
+import { AnswerService } from '../answers/services/answer.service';
 import { QuestionPool } from './question-pool';
 import { ActiveTopicFilter } from './active-topic-filter';
+import { AnswerDocument } from '../database/schemas/answer.schema';
 
 export interface QuestionResult {
     question: Question;
@@ -12,23 +15,36 @@ export interface QuestionResult {
 
 export abstract class Questioner {
     constructor(
-        protected readonly db: DatabaseService,
+        protected readonly questionService: QuestionService,
+        protected readonly userService: UserService,
+        protected readonly answerService: AnswerService,
         protected readonly userId: string,
-        protected readonly currentQuestion: Question
-    ) { }
+        protected readonly currentQuestion: Question,
+    ) {}
 
-    static create(role: string | undefined, db: DatabaseService, userId: string, currentQuestion: Question): Questioner {
+    protected getId(document: { _id?: any } | AnswerDocument): string {
+        return document._id?.toString() ?? '';
+    }
+
+    static create(
+        role: string | undefined,
+        questionService: QuestionService,
+        userService: UserService,
+        answerService: AnswerService,
+        userId: string,
+        currentQuestion: Question,
+    ): Questioner {
         if (role === 'PROFESSOR') {
-            return new QuestionerForProfessor(db, userId, currentQuestion);
+            return new QuestionerForProfessor(questionService, userService, answerService, userId, currentQuestion);
         }
-        return new QuestionerForStudent(db, userId, currentQuestion);
+        return new QuestionerForStudent(questionService, userService, answerService, userId, currentQuestion);
     }
 
     abstract getRandomQuestion(): Promise<QuestionResult>;
 
     protected async buildActiveQuestionPool(): Promise<{ active: QuestionPool; all: QuestionPool }> {
-        const allQuestions = await this.db.getAllQuestions();
-        const allTopics = await this.db.getAllTopics();
+        const allQuestions = await this.questionService.getAllQuestions();
+        const allTopics = await this.questionService.getAllTopics();
 
         const all = new QuestionPool(allQuestions);
         const activeTopicNames = new ActiveTopicFilter(allTopics).getActiveNames();
@@ -40,7 +56,10 @@ export abstract class Questioner {
 
 export class QuestionerForProfessor extends Questioner {
     async getRandomQuestion(): Promise<QuestionResult> {
-        const answer = await this.db.getAnswerForQuestionToday(this.userId, (this.currentQuestion as any)._id.toString());
+        const answer = await this.answerService.getAnswerForQuestionToday(
+            this.userId,
+            this.getId(this.currentQuestion),
+        );
 
         if (!answer) {
             return { question: this.currentQuestion, hasAnswered: false, answerId: undefined, rating: undefined };
@@ -50,7 +69,7 @@ export class QuestionerForProfessor extends Questioner {
         const pool = active.isEmpty() ? all : active;
         const nextQuestion = pool.pickDifferentFrom(this.currentQuestion);
 
-        await this.db.assignQuestionToUser(this.userId, (nextQuestion as any)._id.toString());
+        await this.userService.assignQuestionToUser(this.userId, this.getId(nextQuestion));
 
         return { question: nextQuestion, hasAnswered: false, answerId: undefined, rating: undefined };
     }
@@ -58,14 +77,17 @@ export class QuestionerForProfessor extends Questioner {
 
 export class QuestionerForStudent extends Questioner {
     async getRandomQuestion(): Promise<QuestionResult> {
-        const answer = await this.db.getAnswerForQuestionToday(this.userId, (this.currentQuestion as any)._id.toString());
+        const answer = await this.answerService.getAnswerForQuestionToday(
+            this.userId,
+            this.getId(this.currentQuestion),
+        );
         const hasAnswered = !!answer;
 
         return {
             question: this.currentQuestion,
             hasAnswered,
-            answerId: answer ? (answer as any)._id.toString() : undefined,
-            rating: answer?.rating
+            answerId: answer ? this.getId(answer) : undefined,
+            rating: answer?.rating,
         };
     }
 }

@@ -14,10 +14,8 @@ import { session } from '../src/session';
 
 jest.mock('../src/virtual-pet', () => {
     return {
-        VirtualPet: jest.fn().mockImplementation(() => {
-            return {
-                setEmotion: jest.fn()
-            };
+        VirtualPet: jest.fn().mockReturnValue({
+            setEmotion: jest.fn()
         })
     };
 });

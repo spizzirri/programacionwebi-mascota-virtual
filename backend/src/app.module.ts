@@ -9,13 +9,19 @@ import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
 import { AppealsModule } from './appeals/appeals.module';
 import { CsrfMiddleware } from './middleware/csrf.middleware';
+import { ProfessorGuard } from './common/guards/professor.guard';
+import {
+    DEFAULT_THROTTLE_TTL_MS,
+    DEFAULT_THROTTLE_LIMIT,
+    E2E_THROTTLE_LIMIT,
+} from './common/constants/auth.constants';
 
 @Module({
     imports: [
         ThrottlerModule.forRoot([
             {
-                ttl: 60000,
-                limit: process.env.NODE_ENV === 'e2e-local' ? 10000 : 100,
+                ttl: DEFAULT_THROTTLE_TTL_MS,
+                limit: process.env.NODE_ENV === 'e2e-local' ? E2E_THROTTLE_LIMIT : DEFAULT_THROTTLE_LIMIT,
             },
         ]),
         DatabaseModule,
@@ -28,12 +34,8 @@ import { CsrfMiddleware } from './middleware/csrf.middleware';
     ],
     providers: [
         {
-            provide: ThrottlerGuard,
-            useValue: { canActivate: () => true },
-        },
-        {
             provide: APP_GUARD,
-            useValue: { canActivate: () => true },
+            useClass: ThrottlerGuard,
         },
     ],
 })
