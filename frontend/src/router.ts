@@ -15,11 +15,12 @@ import { MyAppealsView } from './views/my-appeals';
 import { AdminAppealsView } from './views/admin-appeals';
 import { session } from './session';
 
-let currentView: (AuthView | GameView | ProfileView | AdminUsersView | AdminQuestionsView | MyAppealsView | AdminAppealsView)[] = [];
-
-type ViewWithParams = {
+type View = { destroy?: () => void };
+type ViewWithParams = View & {
     setParams?: (params: Record<string, string>) => void;
 };
+
+let activeViews: View[] = [];
 
 const routes = {
     '/': {
@@ -59,6 +60,23 @@ const routes = {
     }
 };
 
+function destroyActiveViews(): void {
+    activeViews.forEach(view => {
+        if (view.destroy) {
+            view.destroy();
+        }
+    });
+    activeViews = [];
+}
+
+function createView(initFn: () => View, params: Record<string, string>): View {
+    const view = initFn() as ViewWithParams;
+    if (view.setParams) {
+        view.setParams(params);
+    }
+    return view;
+}
+
 async function navigateTo(path: string) {
     const app = document.getElementById('app');
 
@@ -73,12 +91,7 @@ async function navigateTo(path: string) {
         }
     }
 
-    currentView.forEach(view => {
-        if (view.destroy) {
-            view.destroy();
-        }
-    });
-    currentView = [];
+    destroyActiveViews();
 
     if (route && route.guard) {
         const isAllowed = route.guard();
@@ -87,13 +100,7 @@ async function navigateTo(path: string) {
             app!.innerHTML = route.html;
 
             if (route.init) {
-                route.init.forEach(f => {
-                    const view = f() as ViewWithParams;
-                    if (view.setParams) {
-                        view.setParams(params);
-                    }
-                    currentView.push(view as AuthView | GameView | ProfileView | AdminUsersView | AdminQuestionsView | MyAppealsView | AdminAppealsView);
-                });
+                activeViews = route.init.map(factory => createView(factory, params));
             }
         } else {
             app!.innerHTML = noAuthView;
@@ -101,9 +108,9 @@ async function navigateTo(path: string) {
     }
 }
 
-window.addEventListener('navigate-to', ((e: CustomEvent<{ view: string }>) => {
-    window.history.pushState(null, '', `${e?.detail?.view}`);
-    navigateTo(`${e?.detail?.view}`);
+window.addEventListener('navigate-to', ((event: CustomEvent<{ view: string }>) => {
+    window.history.pushState(null, '', `${event?.detail?.view}`);
+    navigateTo(`${event?.detail?.view}`);
 }) as EventListener);
 
 window.addEventListener('session-expired', () => {

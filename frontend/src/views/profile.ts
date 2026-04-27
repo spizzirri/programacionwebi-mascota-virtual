@@ -1,5 +1,6 @@
 import { api, Answer } from '../api';
 import { DOMManager } from '../dom-manager';
+import { formatDate } from '../utils';
 
 export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;
@@ -111,7 +112,7 @@ export class ProfileView extends DOMManager {
 
             const rating = this.createElement('span', { class: `history-rating ${answer.rating}` }, this.getRatingLabel(answer.rating));
 
-            const timestamp = this.createElement('span', { class: 'history-timestamp' }, this.formatDate(answer.timestamp));
+            const timestamp = this.createElement('span', { class: 'history-timestamp' }, formatDate(answer.timestamp));
 
             this.appendToContainer(header, rating);
             this.appendToContainer(header, timestamp);
@@ -144,30 +145,7 @@ export class ProfileView extends DOMManager {
         }
     }
 
-    private formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) {
-            return 'Hace un momento';
-        } else if (diffMins < 60) {
-            return `Hace ${diffMins} min`;
-        } else if (diffHours < 24) {
-            return `Hace ${diffHours}h`;
-        } else if (diffDays < 7) {
-            return `Hace ${diffDays}d`;
-        } else {
-            return date.toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'short',
-                year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-            });
-        }
-    }
 
     refresh(): void {
         this.loadProfile();

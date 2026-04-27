@@ -92,7 +92,7 @@ async function apiRequest(
             if (errorJson.message) {
                 errorMessage = errorJson.message;
             }
-        } catch (e) {
+        } catch {
         }
         throw new Error(errorMessage);
     }
