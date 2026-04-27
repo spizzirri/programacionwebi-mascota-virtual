@@ -1,5 +1,6 @@
 import { api, Appeal } from '../api';
 import { DOMManager } from '../dom-manager';
+import { truncate } from '../utils';
 
 export class AdminAppealsView extends DOMManager {
     private tableBody: HTMLElement;
@@ -56,7 +57,7 @@ export class AdminAppealsView extends DOMManager {
             tr.innerHTML = `
                 <td>${date}</td>
                 <td>${appeal.userName}</td>
-                <td title="${appeal.questionText}">${this.truncate(appeal.questionText, 40)}</td>
+                <td title="${appeal.questionText}">${truncate(appeal.questionText, 40)}</td>
                 <td><span class="${statusClass}">${statusText}</span></td>
                 <td><button class="btn-icon view-appeal-btn" data-id="${appeal._id}">Ver</button></td>
             `;
@@ -113,7 +114,5 @@ export class AdminAppealsView extends DOMManager {
         }
     }
 
-    private truncate(text: string, limit: number): string {
-        return text.length > limit ? text.substring(0, limit) + '...' : text;
-    }
+
 }

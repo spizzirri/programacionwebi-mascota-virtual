@@ -122,6 +122,57 @@ export class GameView extends DOMManager {
         }
     }
 
+    private setSubmitLoading(isLoading: boolean): void {
+        this.answerInput.disabled = isLoading;
+        this.submitButton.disabled = isLoading;
+        this.setTextContent(this.submitButton, isLoading ? 'Validando...' : 'Enviar Respuesta');
+    }
+
+    private updatePetAndFeedback(
+        rating: 'correct' | 'partial' | 'incorrect',
+        feedback: string,
+        suggestedAnswer?: string
+    ): void {
+        if (rating === 'correct') {
+            this.virtualPet.setEmotion('happy');
+            this.addClass(this.feedbackSection, 'correct');
+            syncStreakWithWidget();
+        } else if (rating === 'partial') {
+            this.virtualPet.setEmotion('neutral');
+            this.addClass(this.feedbackSection, 'partial');
+        } else {
+            this.virtualPet.setEmotion('sad');
+            this.addClass(this.feedbackSection, 'incorrect');
+        }
+
+        if (suggestedAnswer) {
+            this.setTextContent(this.suggestedAnswerText, suggestedAnswer);
+            this.removeClass(this.suggestedAnswerContainer, 'hidden');
+        } else {
+            this.addClass(this.suggestedAnswerContainer, 'hidden');
+        }
+
+        if (rating !== 'correct') {
+            this.removeClass(this.appealButton, 'hidden');
+            this.appealButton.disabled = false;
+            this.setTextContent(this.appealButton, 'SOLICITAR REVISION');
+        } else {
+            this.addClass(this.appealButton, 'hidden');
+            this.addClass(this.suggestedAnswerContainer, 'hidden');
+        }
+
+        this.setTextContent(this.feedbackText, feedback);
+        this.removeClass(this.feedbackSection, 'hidden');
+    }
+
+    private enableNextForProfessor(): void {
+        const user = session.getUser();
+        if (user && user.role === 'PROFESSOR') {
+            this.nextQuestionButton.disabled = false;
+            this.removeClass(this.nextQuestionButton, 'hidden');
+        }
+    }
+
     private async handleSubmitAnswer(): Promise<void> {
         if (!this.currentQuestion) {
             return;
@@ -133,9 +184,7 @@ export class GameView extends DOMManager {
             return;
         }
 
-        this.answerInput.disabled = true;
-        this.submitButton.disabled = true;
-        this.setTextContent(this.submitButton, 'Validando...');
+        this.setSubmitLoading(true);
 
         try {
             const result = await api.submitAnswer(
@@ -145,58 +194,20 @@ export class GameView extends DOMManager {
 
             this.currentStreak = result.newStreak;
             this.updateStreakDisplay(result.newStreak);
-
-            if (result.rating === 'correct') {
-                this.virtualPet.setEmotion('happy');
-                this.addClass(this.feedbackSection, 'correct');
-                syncStreakWithWidget();
-            } else if (result.rating === 'partial') {
-                this.virtualPet.setEmotion('neutral');
-                this.addClass(this.feedbackSection, 'partial');
-            } else {
-                this.virtualPet.setEmotion('sad');
-                this.addClass(this.feedbackSection, 'incorrect');
-            }
-
             this.lastAnswerId = result.answerId;
 
-            if (result.rating !== 'correct') {
-                this.removeClass(this.appealButton, 'hidden');
-                this.appealButton.disabled = false;
-                this.setTextContent(this.appealButton, 'SOLICITAR REVISION');
-
-                if (result.suggestedAnswer) {
-                    this.setTextContent(this.suggestedAnswerText, result.suggestedAnswer);
-                    this.removeClass(this.suggestedAnswerContainer, 'hidden');
-                } else {
-                    this.addClass(this.suggestedAnswerContainer, 'hidden');
-                }
-            } else {
-                this.addClass(this.appealButton, 'hidden');
-                this.addClass(this.suggestedAnswerContainer, 'hidden');
-            }
-
-
-            this.setTextContent(this.feedbackText, result.feedback);
-            this.removeClass(this.feedbackSection, 'hidden');
-            this.setTextContent(this.submitButton, 'Enviar Respuesta');
-
-            const user = session.getUser();
-            if (user && user.role === 'PROFESSOR') {
-                this.nextQuestionButton.disabled = false;
-                this.removeClass(this.nextQuestionButton, 'hidden');
-            }
-        } catch (error: any) {
-            if (error.message === 'LLM_CONNECTION_ERROR') {
+            this.updatePetAndFeedback(result.rating, result.feedback, result.suggestedAnswer);
+            this.setSubmitLoading(false);
+            this.enableNextForProfessor();
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : '';
+            if (message === 'LLM_CONNECTION_ERROR') {
                 this.showAlert('Hubo un problema de conexión con el servicio de validación. Por favor, intenta de nuevo en unos momentos.');
             } else {
                 this.showAlert('Error al enviar la respuesta. Por favor, intenta de nuevo.');
             }
-            this.answerInput.disabled = false;
-            this.submitButton.disabled = false;
-            this.setTextContent(this.submitButton, 'Enviar Respuesta');
+            this.setSubmitLoading(false);
         }
-
     }
 
     private async handleAppeal(): Promise<void> {

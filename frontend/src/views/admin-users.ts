@@ -1,5 +1,6 @@
 import { api, User } from '../api';
 import { DOMManager } from '../dom-manager';
+import { formatDateShort } from '../utils';
 
 type SortColumn = 'email' | 'streak' | null;
 type SortDir = 'asc' | 'desc';
@@ -183,7 +184,7 @@ export class AdminUsersView extends DOMManager {
             const streakCell = this.createElement('td', {}, user.streak.toString());
             const commissionCell = this.createElement('td', {}, user.commission || '-');
             const questionCell = this.createElement('td', {}, user.currentQuestionText || '-');
-            const dateCell = this.createElement('td', {}, user.lastQuestionAssignedAt ? this.formatDate(user.lastQuestionAssignedAt) : '-');
+            const dateCell = this.createElement('td', {}, user.lastQuestionAssignedAt ? formatDateShort(user.lastQuestionAssignedAt) : '-');
 
             const actionsCell = this.createElement('td');
             const actionsContainer = this.createElement('div', { class: 'action-buttons' });
@@ -245,10 +246,10 @@ export class AdminUsersView extends DOMManager {
     private async handleUserSubmit(e: Event): Promise<void> {
         e.preventDefault();
         const id = this.userIdInput.value;
-        const userData: any = {
+        const userData: Partial<User> & { password?: string } = {
             email: this.userEmailInput.value,
-            role: this.userRoleInput.value,
-            commission: this.userCommissionInput.value || undefined,
+            role: this.userRoleInput.value as 'PROFESSOR' | 'STUDENT',
+            commission: this.userCommissionInput.value as 'MAÑANA' | 'NOCHE' | undefined || undefined,
         };
 
         if (this.userPasswordInput.value) {
@@ -291,15 +292,7 @@ export class AdminUsersView extends DOMManager {
         }
     }
 
-    private formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleString('es-ES', {
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
+
 
     refresh(): void {
         this.loadUsers();
