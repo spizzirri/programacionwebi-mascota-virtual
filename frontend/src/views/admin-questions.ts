@@ -55,27 +55,27 @@ export class AdminQuestionsView extends DOMManager {
     }
 
     private setupEventListeners(): void {
-        this.getElementSafe('#add-question-btn').addEventListener('click', () => this.openQuestionModal());
-        this.getElementSafe('#close-modal').addEventListener('click', () => this.closeQuestionModal());
-        this.getElementSafe('#close-delete-modal').addEventListener('click', () => this.closeDeleteModal());
-        this.getElementSafe('#confirm-delete').addEventListener('click', () => this.handleDeleteQuestion());
+        this.attachEvent(this.getElementSafe('#add-question-btn'), 'click', () => this.openQuestionModal());
+        this.attachEvent(this.getElementSafe('#close-modal'), 'click', () => this.closeQuestionModal());
+        this.attachEvent(this.getElementSafe('#close-delete-modal'), 'click', () => this.closeDeleteModal());
+        this.attachEvent(this.getElementSafe('#confirm-delete'), 'click', () => this.handleDeleteQuestion());
 
-        this.getElementSafe('#delete-all-btn').addEventListener('click', () => this.openDeleteAllModal());
-        this.getElementSafe('#close-delete-all-modal').addEventListener('click', () => this.closeDeleteAllModal());
-        this.getElementSafe('#confirm-delete-all').addEventListener('click', () => this.handleDeleteAllQuestions());
+        this.attachEvent(this.getElementSafe('#delete-all-btn'), 'click', () => this.openDeleteAllModal());
+        this.attachEvent(this.getElementSafe('#close-delete-all-modal'), 'click', () => this.closeDeleteAllModal());
+        this.attachEvent(this.getElementSafe('#confirm-delete-all'), 'click', () => this.handleDeleteAllQuestions());
 
-        this.getElementSafe('#import-questions-btn').addEventListener('click', () => this.fileInput.click());
-        this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        this.attachEvent(this.getElementSafe('#import-questions-btn'), 'click', () => this.fileInput.click());
+        this.attachEvent(this.fileInput, 'change', (e) => this.handleFileSelect(e));
 
-        this.filterTopicSelect.addEventListener('change', () => this.applyFilters());
-        this.filterTextInput.addEventListener('input', () => this.applyFilters());
+        this.attachEvent(this.filterTopicSelect, 'change', () => this.applyFilters());
+        this.attachEvent(this.filterTextInput, 'input', () => this.applyFilters());
 
-        this.questionForm.addEventListener('submit', (e) => this.handleQuestionSubmit(e));
-        this.topicForm.addEventListener('submit', (e) => this.handleTopicSubmit(e));
-        this.getElementSafe('#close-topic-modal').addEventListener('click', () => this.closeTopicModal());
+        this.attachEvent(this.questionForm, 'submit', (e) => this.handleQuestionSubmit(e));
+        this.attachEvent(this.topicForm, 'submit', (e) => this.handleTopicSubmit(e));
+        this.attachEvent(this.getElementSafe('#close-topic-modal'), 'click', () => this.closeTopicModal());
 
         [this.questionModal, this.deleteModal, this.deleteAllModal, this.topicModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
+            this.attachEvent(modal, 'click', (e: MouseEvent) => {
                 if (e.target === modal) {
                     this.closeQuestionModal();
                     this.closeDeleteModal();

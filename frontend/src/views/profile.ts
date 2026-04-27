@@ -30,7 +30,7 @@ export class ProfileView extends DOMManager {
     }
 
     private setupEventListeners(): void {
-        this.passwordForm.addEventListener('submit', (e) => this.handlePasswordSubmit(e));
+        this.attachEvent(this.passwordForm, 'submit', (e) => this.handlePasswordSubmit(e));
     }
 
     private async handlePasswordSubmit(e: Event): Promise<void> {

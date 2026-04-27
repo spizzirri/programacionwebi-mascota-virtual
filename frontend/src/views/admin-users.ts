@@ -49,24 +49,24 @@ export class AdminUsersView extends DOMManager {
     }
 
     private setupEventListeners(): void {
-        this.getElementSafe('#add-user-btn').addEventListener('click', () => this.openUserModal());
-        this.getElementSafe('#close-modal').addEventListener('click', () => this.closeUserModal());
-        this.getElementSafe('#close-delete-modal').addEventListener('click', () => this.closeDeleteModal());
-        this.getElementSafe('#confirm-delete').addEventListener('click', () => this.handleDeleteUser());
+        this.attachEvent(this.getElementSafe('#add-user-btn'), 'click', () => this.openUserModal());
+        this.attachEvent(this.getElementSafe('#close-modal'), 'click', () => this.closeUserModal());
+        this.attachEvent(this.getElementSafe('#close-delete-modal'), 'click', () => this.closeDeleteModal());
+        this.attachEvent(this.getElementSafe('#confirm-delete'), 'click', () => this.handleDeleteUser());
 
-        this.filterTextInput.addEventListener('input', () => this.applyFilters());
+        this.attachEvent(this.filterTextInput, 'input', () => this.applyFilters());
 
-        this.getElementSafe('#tab-all').addEventListener('click', () => this.setActiveTab('all'));
-        this.getElementSafe('#tab-manana').addEventListener('click', () => this.setActiveTab('MAÑANA'));
-        this.getElementSafe('#tab-noche').addEventListener('click', () => this.setActiveTab('NOCHE'));
+        this.attachEvent(this.getElementSafe('#tab-all'), 'click', () => this.setActiveTab('all'));
+        this.attachEvent(this.getElementSafe('#tab-manana'), 'click', () => this.setActiveTab('MAÑANA'));
+        this.attachEvent(this.getElementSafe('#tab-noche'), 'click', () => this.setActiveTab('NOCHE'));
 
-        this.getElementSafe('#sort-email').addEventListener('click', () => this.toggleSort('email'));
-        this.getElementSafe('#sort-streak').addEventListener('click', () => this.toggleSort('streak'));
+        this.attachEvent(this.getElementSafe('#sort-email'), 'click', () => this.toggleSort('email'));
+        this.attachEvent(this.getElementSafe('#sort-streak'), 'click', () => this.toggleSort('streak'));
 
-        this.userForm.addEventListener('submit', (e) => this.handleUserSubmit(e));
+        this.attachEvent(this.userForm, 'submit', (e) => this.handleUserSubmit(e));
 
         [this.userModal, this.deleteModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
+            this.attachEvent(modal, 'click', (e: MouseEvent) => {
                 if (e.target === modal) {
                     this.closeUserModal();
                     this.closeDeleteModal();

@@ -1,7 +1,23 @@
 import { api } from "../../api";
 import { session } from "../../session";
 
+type ListenerEntry = { element: HTMLElement; type: string; handler: EventListenerOrEventListenerObject };
+
 export class AppNavbar extends HTMLElement {
+    private listeners: ListenerEntry[] = [];
+
+    private addListener<K extends keyof HTMLElementEventMap>(
+        selector: string,
+        type: K,
+        handler: (event: HTMLElementEventMap[K]) => void
+    ): void {
+        const el = this.querySelector(selector);
+        if (el) {
+            el.addEventListener(type, handler as EventListener);
+            this.listeners.push({ element: el as HTMLElement, type, handler: handler as EventListener });
+        }
+    }
+
     constructor() {
         super();
     }
@@ -75,41 +91,46 @@ export class AppNavbar extends HTMLElement {
             </nav>
         `;
 
-        this.querySelector("#admin-appeals-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#admin-appeals-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-appeals" } }));
         });
 
-        this.querySelector("#admin-questions-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#admin-questions-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-questions" } }));
         });
 
-        this.querySelector("#admin-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#admin-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-users" } }));
         });
 
-        this.querySelector("#my-appeals-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#my-appeals-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/my-appeals" } }));
         });
 
-        this.querySelector("#profile-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#profile-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/profile" } }));
         });
 
-        this.querySelector("#game-nav-btn")?.addEventListener("click", () => {
+        this.addListener("#game-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/game" } }));
         });
 
-        this.querySelector("#logout-btn")?.addEventListener("click", async () => {
+        this.addListener("#logout-btn", "click", async () => {
             await api.logout();
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/" } }));
         });
 
-        const nav = this.querySelector(".navbar");
-        const mobileMenuBtn = this.querySelector("#mobile-menu-btn");
-
-        mobileMenuBtn?.addEventListener("click", () => {
+        this.addListener("#mobile-menu-btn", "click", () => {
+            const nav = this.querySelector(".navbar");
             nav?.classList.toggle("menu-open");
         });
+    }
+
+    disconnectedCallback(): void {
+        this.listeners.forEach(({ element, type, handler }) => {
+            element.removeEventListener(type, handler);
+        });
+        this.listeners = [];
     }
 }
 
