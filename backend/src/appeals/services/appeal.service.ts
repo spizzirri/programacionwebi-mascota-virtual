@@ -22,15 +22,6 @@ export class AppealService {
         return this.appealModel.find().sort({ createdAt: -1 }).exec();
     }
 
-    async getAllAppealsPaginated(page: number, limit: number): Promise<{ data: AppealDocument[]; total: number }> {
-        const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            this.appealModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
-            this.appealModel.countDocuments().exec(),
-        ]);
-        return { data, total };
-    }
-
     async getAppealById(id: string): Promise<AppealDocument | null> {
         return this.appealModel.findById(id).exec();
     }

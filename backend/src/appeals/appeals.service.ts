@@ -43,10 +43,6 @@ export class AppealsService {
         return this.appealService.getAllAppeals();
     }
 
-    async getAllAppealsPaginated(page: number, limit: number) {
-        return this.appealService.getAllAppealsPaginated(page, limit);
-    }
-
     async resolveAppeal(appealId: string, status: 'accepted' | 'rejected', professorFeedback: string) {
         const appeal = await this.appealService.getAppealById(appealId);
         if (!appeal) {

@@ -1,11 +1,9 @@
-import { Controller, Post, Get, Patch, Body, Param, Session, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, Session, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AppealsService } from './appeals.service';
 import { UserService } from '../users/services/user.service';
 import { AppealCreateDto } from './dto/appeal-create.dto';
 import { AppealResolveDto } from './dto/appeal-resolve.dto';
 import type { SessionData } from '../common/types/session.types';
-import { paginate } from '../common/types/pagination.types';
-import { DEFAULT_PAGINATION_PAGE, DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT } from '../common/constants/pagination.constants';
 import { ProfessorGuard } from '../common/guards/professor.guard';
 
 @Controller('appeals')
@@ -40,14 +38,9 @@ export class AppealsController {
 
     @Get()
     @UseGuards(ProfessorGuard)
-    async getAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-        const pageNum = Math.max(MIN_PAGINATION_LIMIT, parseInt(page || String(DEFAULT_PAGINATION_PAGE), 10));
-        const limitNum = Math.min(MAX_PAGINATION_LIMIT, Math.max(MIN_PAGINATION_LIMIT, parseInt(limit || String(DEFAULT_PAGINATION_LIMIT), 10)));
-
-        const { data: appeals, total } = await this.appealsService.getAllAppealsPaginated(pageNum, limitNum);
-        return {
-            appeals: paginate(appeals, total, pageNum, limitNum),
-        };
+    async getAll() {
+        const appeals = await this.appealsService.getAllAppeals();
+        return { appeals };
     }
 
     @Patch(':id/resolve')

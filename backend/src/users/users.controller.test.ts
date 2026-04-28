@@ -28,7 +28,6 @@ describe('UsersController', () => {
     };
 
     const mockUserService = {
-        findAllUsersPaginated: jest.fn(),
         createUser: jest.fn(),
         updateUser: jest.fn(),
         deleteUser: jest.fn(),
@@ -45,7 +44,6 @@ describe('UsersController', () => {
                         getProfile: jest.fn(),
                         getHistory: jest.fn(),
                         getAllUsers: jest.fn(),
-                        getAllUsersPaginated: jest.fn(),
                         createUser: jest.fn(),
                         updateUser: jest.fn(),
                         updateProfilePassword: jest.fn(),
@@ -153,17 +151,15 @@ describe('UsersController', () => {
     });
 
     describe('getAllUsers', () => {
-        it('deberia retornar usuarios paginados', async () => {
-            const mockUsers = [{ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'user1@test.com', currentQuestionText: 'Q1' }, { _id: new Types.ObjectId('507f1f77bcf86cd799439012'), email: 'user2@test.com', currentQuestionText: 'Q2' }] as unknown as Awaited<ReturnType<typeof service.getAllUsersPaginated>>['data'];
+        it('deberia retornar todos los usuarios', async () => {
+            const mockUsers = [{ _id: new Types.ObjectId('507f1f77bcf86cd799439011'), email: 'user1@test.com', currentQuestionText: 'Q1' }, { _id: new Types.ObjectId('507f1f77bcf86cd799439012'), email: 'user2@test.com', currentQuestionText: 'Q2' }] as unknown as Awaited<ReturnType<typeof service.getAllUsers>>;
 
-            jest.spyOn(service, 'getAllUsersPaginated').mockResolvedValue({ data: mockUsers, total: 2 } as unknown as Awaited<ReturnType<typeof service.getAllUsersPaginated>>);
+            jest.spyOn(service, 'getAllUsers').mockResolvedValue(mockUsers);
 
-            const result = await controller.getAllUsers('1', '10');
+            const result = await controller.getAllUsers();
 
-            expect(result.users.data).toEqual(mockUsers);
-            expect(result.users.meta.page).toBe(1);
-            expect(result.users.meta.limit).toBe(10);
-            expect(service.getAllUsersPaginated).toHaveBeenCalledWith(1, 10);
+            expect(result.users).toEqual(mockUsers);
+            expect(service.getAllUsers).toHaveBeenCalled();
         });
     });
 

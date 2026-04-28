@@ -94,18 +94,6 @@ describe('QuestionService', () => {
         });
     });
 
-    describe('getAllQuestionsPaginated', () => {
-        it('deberia retornar preguntas paginadas con total', async () => {
-            const questions = [{ text: 'Q1' }];
-            mockQuery.exec.mockResolvedValueOnce(questions).mockResolvedValueOnce(10);
-
-            const result = await service.getAllQuestionsPaginated(1, 10);
-
-            expect(result.data).toEqual(questions);
-            expect(result.total).toBe(10);
-        });
-    });
-
     describe('getQuestionById', () => {
         it('deberia retornar una pregunta por id', async () => {
             const question = { _id: 'q1', text: 'Test question' };

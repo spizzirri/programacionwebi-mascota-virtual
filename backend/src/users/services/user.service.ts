@@ -27,15 +27,6 @@ export class UserService {
         return this.userModel.find().exec();
     }
 
-    async findAllUsersPaginated(page: number, limit: number): Promise<{ data: UserDocument[]; total: number }> {
-        const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            this.userModel.find().skip(skip).limit(limit).exec(),
-            this.userModel.countDocuments().exec(),
-        ]);
-        return { data, total };
-    }
-
     async updateUser(id: string, data: Partial<User>): Promise<UserDocument | null> {
         return this.userModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
     }

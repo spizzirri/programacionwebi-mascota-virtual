@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Session, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Session, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { QuestionService } from './services/question.service';
 import type { SessionData } from '../common/types/session.types';
-import { paginate } from '../common/types/pagination.types';
-import { DEFAULT_PAGINATION_PAGE, DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT } from '../common/constants/pagination.constants';
 import { ProfessorGuard } from '../common/guards/professor.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -29,14 +27,9 @@ export class QuestionsController {
 
     @Get()
     @UseGuards(ProfessorGuard)
-    async getAllQuestions(@Query('page') page?: string, @Query('limit') limit?: string) {
-        const pageNum = Math.max(MIN_PAGINATION_LIMIT, parseInt(page || String(DEFAULT_PAGINATION_PAGE), 10));
-        const limitNum = Math.min(MAX_PAGINATION_LIMIT, Math.max(MIN_PAGINATION_LIMIT, parseInt(limit || String(DEFAULT_PAGINATION_LIMIT), 10)));
-
-        const { data: questions, total } = await this.questionService.getAllQuestionsPaginated(pageNum, limitNum);
-        return {
-            questions: paginate(questions, total, pageNum, limitNum),
-        };
+    async getAllQuestions() {
+        const questions = await this.questionService.getAllQuestions();
+        return { questions };
     }
 
     @Post()

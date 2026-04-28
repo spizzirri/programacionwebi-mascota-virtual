@@ -62,10 +62,6 @@ export class DatabaseService {
         return this.questionService.getAllQuestions();
     }
 
-    async getAllQuestionsPaginated(page: number, limit: number): Promise<{ data: QuestionDocument[]; total: number }> {
-        return this.questionService.getAllQuestionsPaginated(page, limit);
-    }
-
     async getQuestionById(id: string): Promise<QuestionDocument | null> {
         return this.questionService.getQuestionById(id);
     }
@@ -84,10 +80,6 @@ export class DatabaseService {
 
     async findAllUsers(): Promise<UserDocument[]> {
         return this.userService.findAllUsers();
-    }
-
-    async findAllUsersPaginated(page: number, limit: number): Promise<{ data: UserDocument[]; total: number }> {
-        return this.userService.findAllUsersPaginated(page, limit);
     }
 
     async deleteUser(id: string): Promise<void> {
@@ -124,10 +116,6 @@ export class DatabaseService {
 
     async getAllAppeals(): Promise<AppealDocument[]> {
         return this.appealService.getAllAppeals();
-    }
-
-    async getAllAppealsPaginated(page: number, limit: number): Promise<{ data: AppealDocument[]; total: number }> {
-        return this.appealService.getAllAppealsPaginated(page, limit);
     }
 
     async getAppealById(id: string): Promise<AppealDocument | null> {

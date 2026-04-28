@@ -80,18 +80,6 @@ describe('AppealService', () => {
         });
     });
 
-    describe('getAllAppealsPaginated', () => {
-        it('deberia retornar apelaciones paginadas con total', async () => {
-            const appeals = [{ status: 'pending' }];
-            mockQuery.exec.mockResolvedValueOnce(appeals).mockResolvedValueOnce(10);
-
-            const result = await service.getAllAppealsPaginated(1, 10);
-
-            expect(result.data).toEqual(appeals);
-            expect(result.total).toBe(10);
-        });
-    });
-
     describe('getAppealById', () => {
         it('deberia retornar una apelacion por id', async () => {
             const appeal = { _id: 'ap1', status: 'pending' };

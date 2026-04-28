@@ -4,8 +4,6 @@ import { PasswordUpdateDto } from './dto/password-update.dto';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import type { SessionData } from '../common/types/session.types';
-import { paginate } from '../common/types/pagination.types';
-import { DEFAULT_PAGINATION_PAGE, DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT } from '../common/constants/pagination.constants';
 import { ProfessorGuard } from '../common/guards/professor.guard';
 
 @Controller('users')
@@ -46,17 +44,9 @@ export class UsersController {
 
     @Get()
     @UseGuards(ProfessorGuard)
-    async getAllUsers(
-        @Query('page') page?: string,
-        @Query('limit') limit?: string,
-    ) {
-        const pageNum = Math.max(MIN_PAGINATION_LIMIT, parseInt(page || String(DEFAULT_PAGINATION_PAGE), 10));
-        const limitNum = Math.min(MAX_PAGINATION_LIMIT, Math.max(MIN_PAGINATION_LIMIT, parseInt(limit || String(DEFAULT_PAGINATION_LIMIT), 10)));
-
-        const { data: users, total } = await this.usersService.getAllUsersPaginated(pageNum, limitNum);
-        return {
-            users: paginate(users, total, pageNum, limitNum),
-        };
+    async getAllUsers() {
+        const users = await this.usersService.getAllUsers();
+        return { users };
     }
 
     @Post()

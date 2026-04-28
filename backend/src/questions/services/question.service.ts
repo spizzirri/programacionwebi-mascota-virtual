@@ -31,15 +31,6 @@ export class QuestionService {
         return this.questionModel.find().exec();
     }
 
-    async getAllQuestionsPaginated(page: number, limit: number): Promise<{ data: QuestionDocument[]; total: number }> {
-        const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            this.questionModel.find().skip(skip).limit(limit).exec(),
-            this.questionModel.countDocuments().exec(),
-        ]);
-        return { data, total };
-    }
-
     async getQuestionById(id: string): Promise<QuestionDocument> {
         const question = await this.questionModel.findById(id).exec();
         if (!question) {

@@ -27,7 +27,6 @@ describe('AppealsService', () => {
                         createAppeal: jest.fn(),
                         getAppealsByUserId: jest.fn(),
                         getAllAppeals: jest.fn(),
-                        getAllAppealsPaginated: jest.fn(),
                     },
                 },
                 {
@@ -90,18 +89,6 @@ describe('AppealsService', () => {
             const result = await service.getAllAppeals();
 
             expect(result).toEqual(mockAppeals);
-        });
-    });
-
-    describe('getAllAppealsPaginated', () => {
-        it('deberia retornar apelaciones paginadas', async () => {
-            const mockAppeals = [{ _id: { toString: () => 'ap1' } }] as unknown as any[];
-            jest.spyOn(appealService, 'getAllAppealsPaginated').mockResolvedValue({ data: mockAppeals, total: 1 });
-
-            const result = await service.getAllAppealsPaginated(1, 10);
-
-            expect(result.data).toEqual(mockAppeals);
-            expect(result.total).toBe(1);
         });
     });
 

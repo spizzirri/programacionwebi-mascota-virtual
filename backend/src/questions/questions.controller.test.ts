@@ -14,7 +14,6 @@ describe('QuestionsController', () => {
 
     const mockQuestionService = {
         getAllQuestions: jest.fn(),
-        getAllQuestionsPaginated: jest.fn(),
         createQuestion: jest.fn(),
         updateQuestion: jest.fn(),
         deleteQuestion: jest.fn(),
@@ -78,13 +77,12 @@ describe('QuestionsController', () => {
     describe('ABMC', () => {
         const mockQuestions = [{ _id: '1', text: 'Q1' }];
 
-        it('getAllQuestions should return paginated questions', async () => {
+        it('getAllQuestions should return all questions', async () => {
             // @ts-ignore - Mock for testing
-            mockQuestionService.getAllQuestionsPaginated.mockResolvedValue({ data: mockQuestions, total: 1 } as any);
+            mockQuestionService.getAllQuestions.mockResolvedValue(mockQuestions as any);
 
-            const result = await controller.getAllQuestions('1', '10');
-            expect(result.questions.data).toEqual(mockQuestions);
-            expect(result.questions.meta.page).toBe(1);
+            const result = await controller.getAllQuestions();
+            expect(result.questions).toEqual(mockQuestions);
         });
 
         it('createQuestion should create and return question', async () => {

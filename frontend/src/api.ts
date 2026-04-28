@@ -138,7 +138,7 @@ export const api = {
 
     async getAllQuestions(): Promise<Question[]> {
         const data = await apiRequest('/questions');
-        return data.questions.data;
+        return data.questions;
     },
 
     async createQuestion(question: Partial<Question>): Promise<Question> {
@@ -225,7 +225,7 @@ export const api = {
 
     async getAllUsers(): Promise<(User & { currentQuestionText: string })[]> {
         const data = await apiRequest('/users');
-        return data.users.data;
+        return data.users;
     },
 
     async createUser(user: Partial<User>): Promise<User> {
@@ -268,7 +268,7 @@ export const api = {
 
     async getAllAppeals(): Promise<Appeal[]> {
         const data = await apiRequest('/appeals');
-        return data.appeals.data;
+        return data.appeals;
     },
 
     async resolveAppeal(id: string, status: 'accepted' | 'rejected', feedback: string): Promise<Appeal> {

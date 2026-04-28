@@ -97,18 +97,6 @@ describe('UserService', () => {
         });
     });
 
-    describe('findAllUsersPaginated', () => {
-        it('deberia retornar usuarios paginados con total', async () => {
-            const users = [{ email: 'user1@test.com' }];
-            mockQuery.exec.mockResolvedValueOnce(users).mockResolvedValueOnce(10);
-
-            const result = await service.findAllUsersPaginated(1, 10);
-
-            expect(result.data).toEqual(users);
-            expect(result.total).toBe(10);
-        });
-    });
-
     describe('updateUser', () => {
         it('deberia actualizar un usuario', async () => {
             const updatedUser = { email: 'updated@test.com' };
