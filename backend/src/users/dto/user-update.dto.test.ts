@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { validate } from 'class-validator';
-import { UserUpdateDto, Commission } from '../dto/user-update.dto';
+import { UserUpdateDto } from '../dto/user-update.dto';
+import { MORNING_COMMISSION, EVENING_COMMISSION } from '../../common/constants/commission.constants';
 
 describe('UserUpdateDto', () => {
     it('deberia pasar validacion con commission valida MAÑANA', async () => {
         const dto = new UserUpdateDto();
-        dto.commission = 'MAÑANA';
+        dto.commission = MORNING_COMMISSION;
 
         const errors = await validate(dto);
         expect(errors.length).toBe(0);
@@ -13,7 +14,7 @@ describe('UserUpdateDto', () => {
 
     it('deberia pasar validacion con commission valida NOCHE', async () => {
         const dto = new UserUpdateDto();
-        dto.commission = 'NOCHE';
+        dto.commission = EVENING_COMMISSION;
 
         const errors = await validate(dto);
         expect(errors.length).toBe(0);

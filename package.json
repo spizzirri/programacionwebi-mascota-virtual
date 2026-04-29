@@ -21,13 +21,17 @@
     "build:frontend": "npm run build --workspace=frontend",
     "build:backend": "npm run build --workspace=backend",
     "test:frontend": "npm run test --workspace=frontend",
-    "test:backend": "npm run test --workspace=backend"
+    "test:backend": "npm run test --workspace=backend",
+    "knip-check": "knip",
+    "knip-check:frontend": "knip --workspace tamagotchi-frontend",
+    "knip-check:backend": "knip --workspace tamagotchi-backend"
   },
   "dependencies": {
     "concurrently": "^9.2.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "dotenv-cli": "^11.0.0"
+    "dotenv-cli": "^11.0.0",
+    "knip": "^6.7.0"
   }
 }

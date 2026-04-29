@@ -1,7 +1,7 @@
 import { IsArray, IsString, IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class QuestionInputDto {
+class QuestionInputDto {
     @IsString()
     @IsNotEmpty({ message: 'Question text is required' })
     text: string;

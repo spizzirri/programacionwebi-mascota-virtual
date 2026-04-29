@@ -1,4 +1,6 @@
 import { IsEmail, IsString, MinLength, IsEnum, IsNotEmpty } from 'class-validator';
+import { VALID_ROLES } from '../../common/constants/roles.constants';
+import { COMMISSION_VALUES } from '../../common/constants/commission.constants';
 
 export class CreateUserDto {
     @IsEmail({}, { message: 'Invalid email format' })
@@ -10,11 +12,11 @@ export class CreateUserDto {
     @IsNotEmpty()
     password: string;
 
-    @IsEnum(['PROFESSOR', 'STUDENT'], { message: 'Role must be either PROFESSOR or STUDENT' })
+    @IsEnum(VALID_ROLES, { message: 'Role must be either PROFESSOR or STUDENT' })
     @IsNotEmpty()
     role: string;
 
-    @IsEnum(['MAÑANA', 'NOCHE'], { message: 'Commission must be either MAÑANA or NOCHE' })
+    @IsEnum(COMMISSION_VALUES, { message: 'Commission must be either MAÑANA or NOCHE' })
     @IsNotEmpty()
     commission: string;
 }

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": [
+    "e2e-env/**",
+    "e2e-tests/**",
+    "generate-users.js"
+  ],
+  "workspaces": {
+    "frontend": {
+      "entry": [
+        "index.html"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "__tests__/**/*.ts"
+      ]
+    },
+    "backend": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    }
+  }
+}

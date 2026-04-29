@@ -1,9 +1,6 @@
 import { IsOptional, IsEnum, IsEmail, IsString } from 'class-validator';
-
-export enum Commission {
-    MANANA = 'MAÑANA',
-    NOCHE = 'NOCHE',
-}
+import { VALID_ROLES } from '../../common/constants/roles.constants';
+import { COMMISSION_VALUES } from '../../common/constants/commission.constants';
 
 export class UserUpdateDto {
     @IsOptional()
@@ -15,11 +12,11 @@ export class UserUpdateDto {
     password?: string;
 
     @IsOptional()
-    @IsEnum(['PROFESSOR', 'STUDENT'])
+    @IsEnum(VALID_ROLES)
     role?: string;
 
     @IsOptional()
-    @IsEnum(Commission, {
+    @IsEnum(COMMISSION_VALUES, {
         message: `commission must be either MAÑANA or NOCHE`,
     })
     commission?: string;
