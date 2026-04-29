@@ -65,6 +65,7 @@ async function bootstrap() {
 
     const prodOrigins = parseCorsOrigins(process.env.CORS_ORIGINS_PROD, [
         'https://mascota-virtual-frontend-production.up.railway.app',
+        'https://programacionwebi.xyz'
     ]);
 
     const corsOrigins = isProduction ? prodOrigins : [...devOrigins, ...prodOrigins];
