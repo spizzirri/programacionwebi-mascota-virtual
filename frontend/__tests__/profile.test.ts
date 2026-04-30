@@ -182,7 +182,7 @@ describe('ProfileManager', () => {
         const profilePromise = new Promise<apiModule.User>(resolve => { resolveProfile = resolve; });
 
         let callOrder: string[] = [];
-        const getProfileMock = jest.spyOn(apiModule.api, 'getProfile').mockImplementation(async (userId?: string) => {
+        jest.spyOn(apiModule.api, 'getProfile').mockImplementation(async (userId?: string) => {
             if (userId) {
                 callOrder.push('target');
                 return mockTargetProfile;

@@ -560,7 +560,7 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
-        test.only('El profesor navega a administracion de usuario y al presionar ver perfil del segundo usuario (estudiantenoche@gmail.com) navega a su perfil mostrando su email.', async ({ page }) => {
+        test('El profesor navega a administracion de usuario y al presionar ver perfil del segundo usuario (estudiantenoche@gmail.com) navega a su perfil mostrando su email.', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456789');
 
             await page.click('#admin-nav-btn');
