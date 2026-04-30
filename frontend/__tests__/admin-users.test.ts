@@ -155,4 +155,29 @@ describe('AdminUsersView', () => {
         expect(tableBody?.textContent).toContain('noche@test.com');
         expect(tableBody?.textContent).not.toContain('manana@test.com');
     });
+
+    it('deberia navegar al perfil del usuario seleccionado al presionar ver perfil', async () => {
+        const mockUsers = [
+            { _id: 'user-1', email: 'first@test.com', role: 'STUDENT' as const, streak: 1, commission: 'MAÑANA' as const, currentQuestionText: 'Pregunta 1', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'user-2', email: 'second@test.com', role: 'PROFESSOR' as const, streak: 2, commission: 'NOCHE' as const, currentQuestionText: 'Pregunta 2', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+            { _id: 'user-3', email: 'third@test.com', role: 'STUDENT' as const, streak: 3, commission: 'MAÑANA' as const, currentQuestionText: 'Pregunta 3', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
+        ] as (apiModule.User & { currentQuestionText: string })[];
+        jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
+
+        const dispatchSpy = jest.spyOn(window, 'dispatchEvent');
+
+        new AdminUsersView();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const profileButtons = document.querySelectorAll('.btn-icon[title="Ver Perfil"]');
+        expect(profileButtons.length).toBe(3);
+
+        const secondUserBtn = profileButtons[1] as HTMLButtonElement;
+        secondUserBtn.click();
+
+        expect(dispatchSpy).toHaveBeenCalledWith(expect.any(CustomEvent));
+        const dispatchedEvent = dispatchSpy.mock.calls[0][0] as CustomEvent<{ view: string }>;
+        expect(dispatchedEvent.type).toBe('navigate-to');
+        expect(dispatchedEvent.detail).toEqual({ view: '/profile/user-2' });
+    });
 });

@@ -173,4 +173,37 @@ describe('ProfileManager', () => {
 
         expect(updateSpy).toHaveBeenCalledWith('oldPassword', 'secret123');
     });
+
+    it('deberia cargar el perfil del usuario seleccionado, no el propio, cuando se navega desde admin-users con delay en la llamada', async () => {
+        const mockOwnProfile = { email: 'profesor@gmail.com', streak: 5, _id: 'prof-id', createdAt: '', role: 'PROFESSOR' as const, currentQuestionId: null, lastQuestionAssignedAt: null };
+        const mockTargetProfile = { email: 'estudiante@gmail.com', streak: 3, _id: 'est-id', createdAt: '', role: 'STUDENT' as const, currentQuestionId: null, lastQuestionAssignedAt: null };
+
+        let resolveProfile: (value: apiModule.User) => void;
+        const profilePromise = new Promise<apiModule.User>(resolve => { resolveProfile = resolve; });
+
+        let callOrder: string[] = [];
+        const getProfileMock = jest.spyOn(apiModule.api, 'getProfile').mockImplementation(async (userId?: string) => {
+            if (userId) {
+                callOrder.push('target');
+                return mockTargetProfile;
+            } else {
+                callOrder.push('own');
+                await profilePromise;
+                return mockOwnProfile;
+            }
+        });
+        jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue([]);
+
+        const view = new ProfileView();
+
+        view.setParams({ id: 'est-id' });
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        resolveProfile!(mockOwnProfile);
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const email = document.getElementById('profile-email');
+        expect(email?.textContent).toBe('estudiante@gmail.com');
+        expect(callOrder).toEqual(['own', 'target']);
+    });
 });

@@ -560,6 +560,25 @@ test.describe('game-view', () => {
             await logout(page);
         });
 
+        test.only('El profesor navega a administracion de usuario y al presionar ver perfil del segundo usuario (estudiantenoche@gmail.com) navega a su perfil mostrando su email.', async ({ page }) => {
+            await login(page, 'admin@gmail.com', '123456789');
+
+            await page.click('#admin-nav-btn');
+            await expect(page.locator('.profile-container')).toBeVisible({ timeout: 5000 });
+
+            const allRows = page.locator('#users-table-body tr');
+            await expect(allRows).toHaveCount(3);
+
+            const rowNoche = allRows.filter({ hasText: 'estudiantenoche@gmail.com' });
+            await expect(rowNoche).toBeVisible();
+            await rowNoche.locator('button', { hasText: '👤' }).click();
+
+            await expect(page.locator('#profile-page')).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('#profile-email')).toHaveText('estudiantenoche@gmail.com');
+
+            await logout(page);
+        });
+
         test('debería mostrar solo usuarios de la comision manana al seleccionar la pestaña Mañana', async ({ page }) => {
             await login(page, 'admin@gmail.com', '123456789');
 

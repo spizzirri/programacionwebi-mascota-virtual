@@ -12,6 +12,7 @@ export class ProfileView extends DOMManager {
     private confirmPasswordInput: HTMLInputElement;
     private passwordSection: HTMLElement;
     private targetUserId: string | null = null;
+    private loadId: number = 0;
 
     constructor() {
         super();
@@ -25,6 +26,14 @@ export class ProfileView extends DOMManager {
         this.passwordSection = this.getElementSafe<HTMLElement>('#password-change-section');
 
         this.setupEventListeners();
+        this.loadProfile();
+        this.loadHistory();
+    }
+
+    public setParams(params: Record<string, string>): void {
+        if (params.id) {
+            this.targetUserId = params.id;
+        }
         this.loadProfile();
         this.loadHistory();
     }
@@ -53,20 +62,15 @@ export class ProfileView extends DOMManager {
         }
     }
 
-    public setParams(params: Record<string, string>): void {
-        if (params.id) {
-            this.targetUserId = params.id;
-            this.refresh();
-        }
-    }
-
     destroy(): void {
         super.destroy();
     }
 
     private async loadProfile(): Promise<void> {
+        const currentLoadId = ++this.loadId;
         try {
             const profile = await api.getProfile(this.targetUserId || undefined);
+            if (currentLoadId !== this.loadId) return;
             this.setTextContent(this.profileEmail, profile.email);
             this.setTextContent(this.profileStreak, profile.streak.toString());
 
@@ -76,16 +80,20 @@ export class ProfileView extends DOMManager {
                 this.passwordSection.classList.remove('hidden');
             }
         } catch (error) {
+            if (currentLoadId !== this.loadId) return;
             this.setTextContent(this.profileEmail, 'Error');
             this.setTextContent(this.profileStreak, '0');
         }
     }
 
     private async loadHistory(): Promise<void> {
+        const currentLoadId = this.loadId;
         try {
             const history = await api.getHistory(50, this.targetUserId || undefined);
+            if (currentLoadId !== this.loadId) return;
             this.renderHistory(history);
         } catch (error) {
+            if (currentLoadId !== this.loadId) return;
             this.clearContainer(this.historyContainer);
             this.appendToContainer(
                 this.historyContainer,
