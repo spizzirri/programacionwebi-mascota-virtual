@@ -116,6 +116,31 @@ describe('ProfileManager', () => {
         expect(historyItem?.querySelector('.history-timestamp')?.textContent).toBe('Hace un momento');
     });
 
+    it('deberia escapar HTML en el texto de la pregunta del historial', async () => {
+        const mockHistory: apiModule.Answer[] = [
+            {
+                _id: '',
+                userId: '',
+                questionId: '',
+                questionText: 'Si un <input> en un formulario carece del atributo name, ¿qué ocurre al enviarlo?',
+                userAnswer: 'A1',
+                feedback: 'F1',
+                rating: 'correct',
+                timestamp: new Date().toISOString()
+            }
+        ];
+
+        jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue({ email: 'test', streak: 0, _id: '', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null } as apiModule.User);
+        jest.spyOn(apiModule.api, 'getHistory').mockResolvedValue(mockHistory);
+
+        new ProfileView();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const questionEl = document.querySelector('.history-question');
+        expect(questionEl?.innerHTML).toBe('Si un &lt;input&gt; en un formulario carece del atributo name, ¿qué ocurre al enviarlo?');
+        expect(questionEl?.children.length).toBe(0);
+    });
+
     it('deberia mostrar el formulario de contraseña solo en el perfil propio', async () => {
         const mockProfile: apiModule.User = { email: 'test', streak: 0, _id: 'my-id', createdAt: '', role: 'STUDENT', currentQuestionId: null, lastQuestionAssignedAt: null };
         jest.spyOn(apiModule.api, 'getProfile').mockResolvedValue(mockProfile);

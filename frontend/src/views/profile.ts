@@ -125,7 +125,8 @@ export class ProfileView extends DOMManager {
             this.appendToContainer(header, rating);
             this.appendToContainer(header, timestamp);
 
-            const question = this.createElement('div', { class: 'history-question' }, answer.questionText);
+            const question = this.createElement('div', { class: 'history-question' });
+            question.textContent = answer.questionText;
 
             const userAnswer = this.createElement('div', { class: 'history-answer' }, `Tu respuesta: ${answer.userAnswer}`);
 
