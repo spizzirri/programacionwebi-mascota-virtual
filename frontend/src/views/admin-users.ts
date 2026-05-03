@@ -183,7 +183,8 @@ export class AdminUsersView extends DOMManager {
             const roleCell = this.createElement('td', {}, user.role);
             const streakCell = this.createElement('td', {}, user.streak.toString());
             const commissionCell = this.createElement('td', {}, user.commission || '-');
-            const questionCell = this.createElement('td', {}, user.currentQuestionText || '-');
+            const questionCell = this.createElement('td', {});
+            questionCell.textContent = user.currentQuestionText || '-';
             const dateCell = this.createElement('td', {}, user.lastQuestionAssignedAt ? formatDateShort(user.lastQuestionAssignedAt) : '-');
 
             const actionsCell = this.createElement('td');

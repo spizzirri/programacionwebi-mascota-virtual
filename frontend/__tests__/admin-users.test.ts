@@ -99,6 +99,33 @@ describe('AdminUsersView', () => {
         expect(document.getElementById('delete-user-email')?.textContent).toBe('delete@test.com');
     });
 
+    it('deberia mostrar el texto de la pregunta como texto plano escapando cualquier HTML', async () => {
+        const mockUsers = [
+            {
+                _id: 'u1',
+                email: 'html@test.com',
+                role: 'STUDENT' as const,
+                streak: 0,
+                commission: 'MAÑANA' as const,
+                currentQuestionText: 'Si un <input> en un formulario carece del atributo name, ¿qué ocurre al enviarlo?',
+                currentQuestionId: null,
+                createdAt: new Date().toISOString(),
+                lastQuestionAssignedAt: null,
+            },
+        ] as (apiModule.User & { currentQuestionText: string })[];
+        jest.spyOn(apiModule.api, 'getAllUsers').mockResolvedValue(mockUsers);
+
+        new AdminUsersView();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const tableBody = document.getElementById('users-table-body');
+        const questionCell = tableBody?.querySelectorAll('tr')[0]?.querySelectorAll('td')[4];
+
+        // Con textContent: innerHTML escapa los tags, y no hay elementos hijo
+        expect(questionCell?.innerHTML).toBe('Si un &lt;input&gt; en un formulario carece del atributo name, ¿qué ocurre al enviarlo?');
+        expect(questionCell?.children.length).toBe(0);
+    });
+
     it('deberia filtrar usuarios por texto ignorando mayusculas y tildes cuando se escribe en el campo de busqueda', async () => {
         const mockUsers = [
             { _id: 'u1', email: 'quequeque@test.com', role: 'STUDENT' as const, streak: 0, currentQuestionText: '', currentQuestionId: null, createdAt: '', lastQuestionAssignedAt: null },
