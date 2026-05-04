@@ -1,6 +1,7 @@
 import { api, Answer } from '../api';
 import { DOMManager } from '../dom-manager';
 import { formatDate } from '../utils';
+import { Downloader } from '../downloader';
 
 export class ProfileView extends DOMManager {
     private profileEmail: HTMLElement;
@@ -159,25 +160,11 @@ export class ProfileView extends DOMManager {
     private downloadCSV(): void {
         const headers = ['Pregunta', 'Respuesta', 'Calificación'];
         const rows = this.historyData.map((a) => [
-            this.escapeCSV(a.questionText),
-            this.escapeCSV(a.userAnswer),
-            this.escapeCSV(this.getRatingLabel(a.rating)),
+            a.questionText,
+            a.userAnswer,
+            this.getRatingLabel(a.rating),
         ]);
-        const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'historial-respuestas.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    private escapeCSV(value: string): string {
-        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-            return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
+        new Downloader().downloadCSV(headers, rows);
     }
 
     private getRatingLabel(rating: string): string {
