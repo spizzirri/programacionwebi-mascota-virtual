@@ -244,7 +244,6 @@ body::before {
 }
 
 .history-item {
-  background: var(--bg-glass);
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-md);
@@ -253,15 +252,15 @@ body::before {
 }
 
 .history-item.correct {
-  border-left-color: var(--accent-success);
+  background: linear-gradient(20deg, white, var(--accent-success));
 }
 
 .history-item.partial {
-  border-left-color: var(--accent-warning);
+  background: linear-gradient(20deg, white, var(--accent-warning));
 }
 
 .history-item.incorrect {
-  border-left-color: var(--accent-error);
+  background: linear-gradient(20deg, white, var(--accent-error));
 }
 
 /* Profile Layouts */

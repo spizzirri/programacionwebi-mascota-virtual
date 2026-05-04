@@ -13,6 +13,8 @@ export class ProfileView extends DOMManager {
     private passwordSection: HTMLElement;
     private targetUserId: string | null = null;
     private loadId: number = 0;
+    private historyData: Answer[] = [];
+    private downloadBtn: HTMLElement;
 
     constructor() {
         super();
@@ -24,6 +26,7 @@ export class ProfileView extends DOMManager {
         this.newPasswordInput = this.getElementSafe<HTMLInputElement>('#new-password');
         this.confirmPasswordInput = this.getElementSafe<HTMLInputElement>('#confirm-password');
         this.passwordSection = this.getElementSafe<HTMLElement>('#password-change-section');
+        this.downloadBtn = this.getElementSafe<HTMLElement>('#download-csv-btn');
 
         this.setupEventListeners();
         this.loadProfile();
@@ -40,6 +43,7 @@ export class ProfileView extends DOMManager {
 
     private setupEventListeners(): void {
         this.attachEvent(this.passwordForm, 'submit', (e) => this.handlePasswordSubmit(e));
+        this.attachEvent(this.downloadBtn, 'click', () => this.downloadCSV());
     }
 
     private async handlePasswordSubmit(e: Event): Promise<void> {
@@ -103,15 +107,19 @@ export class ProfileView extends DOMManager {
     }
 
     private renderHistory(history: Answer[]): void {
+        this.historyData = history;
         this.clearContainer(this.historyContainer);
 
         if (history.length === 0) {
+            this.downloadBtn.classList.add('hidden');
             this.appendToContainer(
                 this.historyContainer,
                 this.createElement('p', { class: 'loading' }, 'No hay respuestas todavía')
             );
             return;
         }
+
+        this.downloadBtn.classList.remove('hidden');
 
         history.forEach((answer) => {
             const item = this.createElement('div', { class: `history-item ${answer.rating}` });
@@ -126,9 +134,16 @@ export class ProfileView extends DOMManager {
             this.appendToContainer(header, timestamp);
 
             const question = this.createElement('div', { class: 'history-question' });
-            question.textContent = answer.questionText;
+            const questionLabel = this.createElement('strong', {});
+            questionLabel.textContent = 'Pregunta: ';
+            this.appendToContainer(question, questionLabel);
+            question.appendChild(document.createTextNode(answer.questionText));
 
-            const userAnswer = this.createElement('div', { class: 'history-answer' }, `Tu respuesta: ${answer.userAnswer}`);
+            const userAnswer = this.createElement('div', { class: 'history-answer' });
+            const answerLabel = this.createElement('strong', {});
+            answerLabel.textContent = 'Tu respuesta: ';
+            this.appendToContainer(userAnswer, answerLabel);
+            userAnswer.appendChild(document.createTextNode(answer.userAnswer));
 
             const feedback = this.createElement('div', { class: 'history-feedback' }, answer.feedback);
 
@@ -139,6 +154,30 @@ export class ProfileView extends DOMManager {
 
             this.appendToContainer(this.historyContainer, item);
         });
+    }
+
+    private downloadCSV(): void {
+        const headers = ['Pregunta', 'Respuesta', 'Calificación'];
+        const rows = this.historyData.map((a) => [
+            this.escapeCSV(a.questionText),
+            this.escapeCSV(a.userAnswer),
+            this.escapeCSV(this.getRatingLabel(a.rating)),
+        ]);
+        const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'historial-respuestas.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    private escapeCSV(value: string): string {
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
     }
 
     private getRatingLabel(rating: string): string {

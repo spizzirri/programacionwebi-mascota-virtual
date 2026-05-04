@@ -289,6 +289,7 @@ describe('ProfileView - destroy limpia listeners', () => {
             <div id="profile-email"></div>
             <div id="profile-streak"></div>
             <div id="history-container"></div>
+            <button id="download-csv-btn" class="btn-download-csv hidden"></button>
             <form id="password-form">
                 <input id="current-password" />
                 <input id="new-password" />
