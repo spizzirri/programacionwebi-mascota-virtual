@@ -262,12 +262,9 @@ for csv_file in "${CSV_FILES[@]}"; do
 
     echo -e "${BLUE}📄 Processing: $(basename "$csv_file")${NC}"
 
-    # Extract topic from filename
-    TOPIC=$(basename "$csv_file" .csv)
-
     # Count data lines (skip header)
     TOTAL_LINES=$(tail -n +2 "$csv_file" | grep -c '[^[:space:]]' || true)
-    log_info "Found ${TOTAL_LINES} questions for topic: \"${TOPIC}\""
+    log_info "Found ${TOTAL_LINES} questions"
 
     FILE_INSERTED=0
     FILE_UPDATED=0
@@ -292,6 +289,7 @@ for csv_file in "${CSV_FILES[@]}"; do
             # Using parameter expansion to avoid subshells and issues with echo/sed
             QUESTION=$(echo "$line" | cut -d';' -f1 | xargs)
             ANSWER=$(echo "$line" | cut -d';' -f2 | xargs)
+            TOPIC=$(echo "$line" | cut -d';' -f3 | xargs)
 
             if [ -z "$QUESTION" ]; then
                 continue
