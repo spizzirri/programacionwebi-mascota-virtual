@@ -1,0 +1,22 @@
+[
+    {
+        "title": "Soportar audio",
+        "description": "Agregar soporte para audio en la mascota virtual. El usuario podra responder las preguntas enviando un audio con la respuesta. Se debe implementar un sistema de reconocimiento de voz y traduccion del audio a texto para poder evaluar la respuesta.",
+        "dificultad": "baja"
+    },
+    {
+        "title": "js challenges",
+        "description": "Crear una nueva opcion de juego que muestre al usuario un enunciado y el usuario deba escribir una funcion y/o clase en javascript que resuelva el enunciado. Debe utilizar las tecnologias ya implementadas",
+        "dificultad": "alta"
+    },
+    {
+        "title": "html structure validator",
+        "description": "Validar automáticamente si la estructura HTML proporcionada cumple con requisitos semánticos y reglas como la presencia de doctype, estructura head/body, o cierre correcto de etiquetas. Ayuda a encontrar errores comunes de sintaxis y anidamiento.",
+        "dificultad": "baja"
+    },
+    {
+        "title": "css selectors challenge",
+        "description": "Validar si el selector CSS escrito por el alumno logra seleccionar exactamente los elementos descritos en un enunciado (por ejemplo 'selecciona todos los párrafos dentro de un div'). Para esto se inyecta el CSS en un DOM virtual y se chequean automáticamente los elementos afectados.",
+        "dificultad": "media"
+    }
+]
