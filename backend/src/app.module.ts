@@ -8,6 +8,7 @@ import { AnswersModule } from './answers/answers.module';
 import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
 import { AppealsModule } from './appeals/appeals.module';
+import { SandboxModule } from './sandbox/sandbox.module';
 import { CsrfMiddleware } from './middleware/csrf.middleware';
 import { ProfessorGuard } from './common/guards/professor.guard';
 import {
@@ -31,6 +32,7 @@ import {
         UsersModule,
         HealthModule,
         AppealsModule,
+        SandboxModule,
     ],
     providers: [
         {
