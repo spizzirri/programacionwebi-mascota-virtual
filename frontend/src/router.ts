@@ -6,6 +6,7 @@ import adminQuestionsView from './views/admin-questions.html?raw';
 import noAuthView from './views/401.html?raw';
 import myAppealsView from './views/my-appeals.html?raw';
 import adminAppealsView from './views/admin-appeals.html?raw';
+import sandboxView from './views/sandbox.html?raw';
 import { AuthView } from './views/auth';
 import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
@@ -13,6 +14,7 @@ import { AdminUsersView } from './views/admin-users';
 import { AdminQuestionsView } from './views/admin-questions';
 import { MyAppealsView } from './views/my-appeals';
 import { AdminAppealsView } from './views/admin-appeals';
+import { SandboxView } from './views/sandbox';
 import { session } from './session';
 
 type View = { destroy?: () => void };
@@ -57,7 +59,12 @@ const routes = {
         html: adminAppealsView,
         init: [() => new AdminAppealsView()],
         guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
-    }
+    },
+    '/sandbox': {
+        html: sandboxView,
+        init: [() => new SandboxView()],
+        guard: () => true
+    },
 };
 
 function destroyActiveViews(): void {

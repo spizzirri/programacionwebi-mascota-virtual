@@ -277,6 +277,21 @@ export const api = {
             body: JSON.stringify({ status, feedback }),
         });
     },
+
+    async getSandboxProblems(): Promise<any[]> {
+        return apiRequest('/sandbox/problems');
+    },
+
+    async runSandboxCode(problemId: number, code: string): Promise<{
+        results: { input: number[]; expected: any; actual: any; passed: boolean }[];
+        allPassed: boolean;
+        error: string | null;
+    }> {
+        return apiRequest('/sandbox/run', {
+            method: 'POST',
+            body: JSON.stringify({ problemId, code }),
+        });
+    },
 };
 
 export type { User, Question, Answer, Appeal, Topic };

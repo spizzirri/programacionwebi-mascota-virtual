@@ -1,0 +1,41 @@
+<main id="sandbox-page" class="page">
+  <app-navbar view="sandbox"></app-navbar>
+
+  <section class="sandbox-page">
+    <div class="sandbox-header">
+      <select id="problem-selector" class="problem-selector">
+        <option value="">Seleccioná un problema...</option>
+      </select>
+      <p id="problem-description" class="problem-description">
+        Seleccioná un problema para empezar.
+      </p>
+    </div>
+
+    <div class="editor-container">
+      <pre id="editor-highlight" class="editor-highlight"><code></code></pre>
+      <textarea id="code-editor" class="editor-textarea"
+        placeholder="Escribí tu código JavaScript acá..."
+        spellcheck="false"></textarea>
+    </div>
+
+    <div id="syntax-status" class="syntax-status"></div>
+
+    <button id="run-btn" class="run-btn btn-primary" disabled>▶ Ejecutar</button>
+
+    <div id="results-container" class="hidden">
+      <div id="results-banner" class="results-banner"></div>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Input</th>
+            <th>Esperado</th>
+            <th>Obtenido</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>

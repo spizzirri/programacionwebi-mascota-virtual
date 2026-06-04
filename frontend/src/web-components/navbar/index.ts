@@ -28,7 +28,8 @@ export class AppNavbar extends HTMLElement {
             currentView === "admin-users" ? "👥 Admin de Usuarios" :
                 currentView === "admin-questions" ? "📚 Admin de Preguntas" :
                     currentView === "admin-appeals" ? "⚖️ Apelaciones" :
-                        currentView === "my-appeals" ? "📜 Mis Apelaciones" : "🎮 Mascota Virtual";
+                        currentView === "my-appeals" ? "📜 Mis Apelaciones" :
+                            currentView === "sandbox" ? "💻 Sandbox" : "🎮 Mascota Virtual";
 
         const user = session.getUser();
         const isProfessor = user?.role === 'PROFESSOR';
@@ -74,6 +75,9 @@ export class AppNavbar extends HTMLElement {
                             <button id="game-nav-btn" class="btn-secondary" ${currentView === 'game' ? 'disabled' : ''}>
                                 Volver al Juego
                             </button>
+                            <button id="sandbox-nav-btn" class="btn-secondary" ${currentView === 'sandbox' ? 'disabled' : ''}>
+                                ${currentView === 'sandbox' ? 'Sandbox Activo' : 'Sandbox'}
+                            </button>
                         ` : `
                             <button id="my-appeals-nav-btn" class="btn-secondary" ${currentView === 'my-appeals' ? 'disabled' : ''}>
                                 Mis Apelaciones
@@ -83,6 +87,9 @@ export class AppNavbar extends HTMLElement {
                             </button>
                             <button id="game-nav-btn" class="btn-secondary" ${currentView === 'game' ? 'disabled' : ''}>
                                 Volver al Juego
+                            </button>
+                            <button id="sandbox-nav-btn" class="btn-secondary" ${currentView === 'sandbox' ? 'disabled' : ''}>
+                                ${currentView === 'sandbox' ? 'Sandbox Activo' : 'Sandbox'}
                             </button>
                         `}
                         <button id="logout-btn" class="btn-secondary">Salir</button>
@@ -113,6 +120,10 @@ export class AppNavbar extends HTMLElement {
 
         this.addListener("#game-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/game" } }));
+        });
+
+        this.addListener("#sandbox-nav-btn", "click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/sandbox" } }));
         });
 
         this.addListener("#logout-btn", "click", async () => {
