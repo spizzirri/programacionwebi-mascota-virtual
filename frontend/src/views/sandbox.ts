@@ -27,9 +27,7 @@ export class SandboxView extends DOMManager {
   private highlightCode: HTMLElement;
 
   private readonly KEYWORDS = /\b(function|return|const|let|var|if|else|for|while|true|false|null|undefined|new|typeof|class|this)\b/g;
-  private readonly STRINGS = /('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g;
   private readonly NUMBERS = /\b(-?\d+\.?\d*)\b/g;
-  private readonly COMMENTS = /(\/\/.*|\/\*[\s\S]*?\*\/)/g;
 
   constructor() {
     super();
@@ -120,13 +118,38 @@ export class SandboxView extends DOMManager {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    const highlighted = escaped
-      .replace(this.COMMENTS, '<span class="comment">$1</span>')
-      .replace(this.STRINGS, '<span class="string">$1</span>')
+    const { text: tokenized, tokens } = this.extractStringAndCommentTokens(escaped);
+
+    let highlighted = tokenized
       .replace(this.KEYWORDS, '<span class="keyword">$1</span>')
       .replace(this.NUMBERS, '<span class="number">$1</span>');
 
-    this.highlightCode.innerHTML = highlighted + '\n';
+    tokens.forEach(({ id, html }) => {
+      highlighted = highlighted.replace(id, html);
+    });
+
+    // El textarea siempre reserva una línea vacía final cuando el valor
+    // termina en '\n', pero el <pre> no la renderiza. Agregamos un <br>
+    // extra para mantener la altura de scroll sincronizada con el cursor.
+    if (code.endsWith('\n')) {
+      highlighted += '<br>';
+    }
+
+    this.highlightCode.innerHTML = highlighted;
+  }
+
+  private extractStringAndCommentTokens(text: string): { text: string; tokens: { id: string; html: string }[] } {
+    const tokens: { id: string; html: string }[] = [];
+    const combinedRegex = /(\/\/.*|\/\*[\s\S]*?\*\/|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g;
+
+    const tokenized = text.replace(combinedRegex, (match) => {
+      const id = `__TOKEN_${tokens.length}__`;
+      const cssClass = match.startsWith('//') || match.startsWith('/*') ? 'comment' : 'string';
+      tokens.push({ id, html: `<span class="${cssClass}">${match}</span>` });
+      return id;
+    });
+
+    return { text: tokenized, tokens };
   }
 
   private validateSyntax(): void {

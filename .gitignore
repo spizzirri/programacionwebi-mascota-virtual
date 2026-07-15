@@ -4,3 +4,4 @@ test-results
 listado_alumnos.csv
 listado_preguntas.csv
 .qwen
+.playwright-mcp

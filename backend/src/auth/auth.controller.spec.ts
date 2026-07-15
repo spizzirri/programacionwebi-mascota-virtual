@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException, HttpStatus, ValidationPipe } from '@nestjs/common';
+import { HttpException, HttpStatus, ValidationPipe, UnauthorizedException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -155,16 +155,16 @@ describe('AuthController', () => {
             const sessionWithoutUser = { userId: undefined };
 
             await expect(controller.getCurrentUser(sessionWithoutUser)).rejects.toThrow(
-                HttpException
+                UnauthorizedException
             );
         });
 
-        it('should throw NotFoundException when user not found', async () => {
+        it('should throw UnauthorizedException when user not found', async () => {
             const sessionWithUser = { userId: 'nonexistent' };
             mockAuthService.getUserById.mockResolvedValue(null);
 
             await expect(controller.getCurrentUser(sessionWithUser)).rejects.toThrow(
-                HttpException
+                UnauthorizedException
             );
         });
     });

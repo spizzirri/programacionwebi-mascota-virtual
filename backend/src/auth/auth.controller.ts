@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Session, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Get, Body, Session, Req, Res, UseGuards, UsePipes, ValidationPipe, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -20,7 +20,7 @@ export class AuthController {
         transform: true,
         exceptionFactory: (errors) => {
             const messages = errors.flatMap((e) => Object.values(e.constraints || {}));
-            return new Error('Validation failed');
+            return new BadRequestException(messages.join(', '));
         },
     }))
     async login(
@@ -70,12 +70,12 @@ export class AuthController {
     @Get('me')
     async getCurrentUser(@Session() session: SessionData) {
         if (!session.userId) {
-            throw new Error('Not authenticated');
+            throw new UnauthorizedException('Not authenticated');
         }
 
         const user = await this.authService.getUserById(session.userId);
         if (!user) {
-            throw new Error('User not found');
+            throw new UnauthorizedException('User not found');
         }
 
         return { user };
