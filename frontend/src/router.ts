@@ -3,6 +3,7 @@ import profileView from './views/profile.html?raw';
 import authView from './views/auth.html?raw';
 import adminUsersView from './views/admin-users.html?raw';
 import adminQuestionsView from './views/admin-questions.html?raw';
+import adminProblemsView from './views/admin-problems.html?raw';
 import noAuthView from './views/401.html?raw';
 import myAppealsView from './views/my-appeals.html?raw';
 import adminAppealsView from './views/admin-appeals.html?raw';
@@ -12,6 +13,7 @@ import { GameView } from './views/game';
 import { ProfileView } from './views/profile';
 import { AdminUsersView } from './views/admin-users';
 import { AdminQuestionsView } from './views/admin-questions';
+import { AdminProblemsView } from './views/admin-problems';
 import { MyAppealsView } from './views/my-appeals';
 import { AdminAppealsView } from './views/admin-appeals';
 import { SandboxView } from './views/sandbox';
@@ -50,6 +52,11 @@ const routes = {
         init: [() => new AdminQuestionsView()],
         guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
     },
+    '/admin-problems': {
+        html: adminProblemsView,
+        init: [() => new AdminProblemsView()],
+        guard: () => session.isAuthenticated() && session.getUser()?.role === 'PROFESSOR'
+    },
     '/my-appeals': {
         html: myAppealsView,
         init: [() => new MyAppealsView()],
@@ -63,7 +70,7 @@ const routes = {
     '/sandbox': {
         html: sandboxView,
         init: [() => new SandboxView()],
-        guard: () => true
+        guard: () => session.isAuthenticated()
     },
 };
 

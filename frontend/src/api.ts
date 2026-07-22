@@ -56,6 +56,35 @@ interface Appeal {
     resolvedAt?: string;
 }
 
+interface TestCase {
+    input: unknown[];
+    expected: unknown;
+    sample: boolean;
+}
+
+interface Problem {
+    _id: string;
+    title: string;
+    description: string;
+    params: string[];
+    testCases: TestCase[];
+    active: boolean;
+}
+
+type ProblemInput = Omit<Problem, '_id' | 'active'> & { active?: boolean };
+
+interface RunResponse {
+    results: {
+        input: unknown;
+        expected: unknown;
+        actual: unknown;
+        passed: boolean;
+        hidden: boolean;
+    }[];
+    allPassed: boolean;
+    error: string | null;
+}
+
 async function apiRequest(
     endpoint: string,
     options: RequestInit = {}
@@ -278,20 +307,44 @@ export const api = {
         });
     },
 
-    async getSandboxProblems(): Promise<any[]> {
+    async getSandboxProblems(): Promise<Problem[]> {
         return apiRequest('/sandbox/problems');
     },
 
-    async runSandboxCode(problemId: number, code: string): Promise<{
-        results: { input: number[]; expected: any; actual: any; passed: boolean }[];
-        allPassed: boolean;
-        error: string | null;
-    }> {
+    async getSandboxProblem(id: string): Promise<{ problem: Problem }> {
+        return apiRequest(`/sandbox/problems/${id}`);
+    },
+
+    async getSandboxProblemsAdmin(): Promise<{ problems: Problem[] }> {
+        return apiRequest('/sandbox/problems/admin');
+    },
+
+    async runSandboxCode(problemId: string, code: string): Promise<RunResponse> {
         return apiRequest('/sandbox/run', {
             method: 'POST',
             body: JSON.stringify({ problemId, code }),
         });
     },
+
+    async createSandboxProblem(body: ProblemInput): Promise<{ problem: Problem }> {
+        return apiRequest('/sandbox/problems', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+    },
+
+    async updateSandboxProblem(id: string, body: Partial<ProblemInput>): Promise<{ problem: Problem }> {
+        return apiRequest(`/sandbox/problems/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+        });
+    },
+
+    async deleteSandboxProblem(id: string): Promise<{ success: boolean }> {
+        return apiRequest(`/sandbox/problems/${id}`, {
+            method: 'DELETE',
+        });
+    },
 };
 
-export type { User, Question, Answer, Appeal, Topic };
+export type { User, Question, Answer, Appeal, Topic, Problem, ProblemInput, TestCase, RunResponse };

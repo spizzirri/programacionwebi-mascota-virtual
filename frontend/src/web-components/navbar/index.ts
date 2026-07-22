@@ -27,9 +27,10 @@ export class AppNavbar extends HTMLElement {
         const title = currentView === "profile" ? "📊 Mi Perfil" :
             currentView === "admin-users" ? "👥 Admin de Usuarios" :
                 currentView === "admin-questions" ? "📚 Admin de Preguntas" :
-                    currentView === "admin-appeals" ? "⚖️ Apelaciones" :
-                        currentView === "my-appeals" ? "📜 Mis Apelaciones" :
-                            currentView === "sandbox" ? "💻 Sandbox" : "🎮 Mascota Virtual";
+                    currentView === "admin-problems" ? "🧪 Admin de Problemas" :
+                        currentView === "admin-appeals" ? "⚖️ Apelaciones" :
+                            currentView === "my-appeals" ? "📜 Mis Apelaciones" :
+                                currentView === "sandbox" ? "💻 Sandbox" : "🎮 Mascota Virtual";
 
         const user = session.getUser();
         const isProfessor = user?.role === 'PROFESSOR';
@@ -65,6 +66,9 @@ export class AppNavbar extends HTMLElement {
                             </button>
                             <button id="admin-questions-nav-btn" class="btn-secondary" ${currentView === 'admin-questions' ? 'disabled' : ''}>
                                 ${currentView === 'admin-questions' ? 'Preguntas Activo' : 'Admin de Preguntas'}
+                            </button>
+                            <button id="admin-problems-nav-btn" class="btn-secondary" ${currentView === 'admin-problems' ? 'disabled' : ''}>
+                                ${currentView === 'admin-problems' ? 'Problemas Activo' : 'Admin de Problemas'}
                             </button>
                             <button id="admin-nav-btn" class="btn-secondary" ${currentView === 'admin-users' ? 'disabled' : ''}>
                                 ${currentView === 'admin-users' ? 'Admin Activo' : 'Admin de Usuarios'}
@@ -104,6 +108,10 @@ export class AppNavbar extends HTMLElement {
 
         this.addListener("#admin-questions-nav-btn", "click", () => {
             window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-questions" } }));
+        });
+
+        this.addListener("#admin-problems-nav-btn", "click", () => {
+            window.dispatchEvent(new CustomEvent("navigate-to", { detail: { view: "/admin-problems" } }));
         });
 
         this.addListener("#admin-nav-btn", "click", () => {

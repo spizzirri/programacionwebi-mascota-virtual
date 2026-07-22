@@ -1,0 +1,88 @@
+<main class="page">
+    <app-navbar view="admin-problems"></app-navbar>
+
+    <section class="admin-questions-layout">
+        <aside class="admin-sidebar">
+            <section class="profile-card sidebar-card">
+                <h3>⚙️ Acciones</h3>
+                <div class="sidebar-actions">
+                    <button id="add-problem-btn" class="btn-primary">➕ Agregar Problema</button>
+                </div>
+            </section>
+        </aside>
+
+        <section class="admin-main-content">
+            <section class="profile-card">
+                <div class="profile-header">
+                    <div class="header-with-action">
+                        <div>
+                            <h1>🧪 Administración de Problemas del Sandbox</h1>
+                            <p class="profile-subtitle">Cargá problemas de código sin tocar el código fuente</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Params</th>
+                                <th>Tests</th>
+                                <th>Ejemplos</th>
+                                <th>Activo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="problems-table-body">
+                            <tr>
+                                <td colspan="6" class="loading">Cargando problemas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </section>
+
+    <div id="problem-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="problem-modal-title">Agregar Problema</h2>
+            <input type="hidden" id="problem-id">
+            <div class="form-group">
+                <label for="problem-title">Título</label>
+                <input type="text" id="problem-title" placeholder="Ej: Suma de dos números">
+            </div>
+            <div class="form-group">
+                <label for="problem-description">Enunciado / descripción</label>
+                <textarea id="problem-description" rows="4" placeholder="Escribí el enunciado visible para el alumno"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Parámetros (nombres)</label>
+                <div id="params-container"></div>
+                <button type="button" id="add-param-btn" class="btn-secondary">➕ Parámetro</button>
+            </div>
+            <div class="form-group">
+                <label>Casos de test</label>
+                <div id="test-cases-container"></div>
+                <button type="button" id="add-test-case-btn" class="btn-secondary">➕ Caso de test</button>
+            </div>
+            <div id="problem-form-error" class="form-error"></div>
+            <div class="modal-actions">
+                <button type="button" id="close-problem-modal" class="btn-secondary">Cancelar</button>
+                <button type="button" id="save-problem-btn" class="btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-problem-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Confirmar Eliminación</h2>
+            <p>¿Estás seguro de que deseas eliminar este problema?</p>
+            <div class="modal-actions">
+                <button type="button" id="close-delete-problem-modal" class="btn-secondary">Cancelar</button>
+                <button type="button" id="confirm-delete-problem-btn" class="btn-primary" style="background: var(--accent-error);">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</main>

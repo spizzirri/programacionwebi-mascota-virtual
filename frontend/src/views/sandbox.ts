@@ -1,13 +1,5 @@
-import { api } from '../api';
+import { api, Problem, RunResponse } from '../api';
 import { DOMManager } from '../dom-manager';
-
-interface Problem {
-  id: number;
-  title: string;
-  description: string;
-  params: string[];
-  testCases: { input: number[]; expected: any }[];
-}
 
 export class SandboxView extends DOMManager {
   private problems: Problem[] = [];
@@ -17,6 +9,9 @@ export class SandboxView extends DOMManager {
 
   private problemSelector: HTMLSelectElement;
   private problemDescription: HTMLElement;
+  private samplesTable: HTMLElement;
+  private samplesBody: HTMLElement;
+  private hiddenCounter: HTMLElement;
   private codeEditor: HTMLTextAreaElement;
   private editorHighlight: HTMLElement;
   private syntaxStatus: HTMLElement;
@@ -33,6 +28,9 @@ export class SandboxView extends DOMManager {
     super();
     this.problemSelector = this.getElementSafe<HTMLSelectElement>('#problem-selector');
     this.problemDescription = this.getElementSafe<HTMLElement>('#problem-description');
+    this.samplesTable = this.getElementSafe<HTMLElement>('#samples-table');
+    this.samplesBody = this.getElementSafe<HTMLElement>('#samples-body');
+    this.hiddenCounter = this.getElementSafe<HTMLElement>('#hidden-tests-counter');
     this.codeEditor = this.getElementSafe<HTMLTextAreaElement>('#code-editor');
     this.editorHighlight = this.getElementSafe<HTMLElement>('#editor-highlight');
     this.syntaxStatus = this.getElementSafe<HTMLElement>('#syntax-status');
@@ -66,7 +64,7 @@ export class SandboxView extends DOMManager {
       this.problems = await api.getSandboxProblems();
       this.problemSelector.innerHTML = '<option value="">Seleccioná un problema...</option>' +
         this.problems.map(p =>
-          `<option value="${p.id}">${p.title}</option>`
+          `<option value="${p._id}">${p.title}</option>`
         ).join('');
     } catch {
       this.showAlert('Error al cargar problemas');
@@ -74,11 +72,12 @@ export class SandboxView extends DOMManager {
   }
 
   private onProblemChange(): void {
-    const id = parseInt(this.problemSelector.value);
-    this.currentProblem = this.problems.find(p => p.id === id) || null;
+    const id = this.problemSelector.value;
+    this.currentProblem = this.problems.find(p => p._id === id) || null;
 
     if (this.currentProblem) {
       this.problemDescription.textContent = this.currentProblem.description;
+      this.renderSamples(this.currentProblem);
       this.codeEditor.value = '';
       this.syntaxStatus.textContent = '';
       this.syntaxStatus.className = 'syntax-status';
@@ -88,7 +87,43 @@ export class SandboxView extends DOMManager {
       this.highlightCode.innerHTML = '';
     } else {
       this.problemDescription.textContent = 'Seleccioná un problema para empezar.';
+      this.addClass(this.samplesTable, 'hidden');
+      this.addClass(this.hiddenCounter, 'hidden');
+      this.samplesBody.innerHTML = '';
+      this.hiddenCounter.textContent = '';
     }
+  }
+
+  private renderSamples(problem: Problem): void {
+    const samples = problem.testCases.filter(tc => tc.sample);
+    const hidden = problem.testCases.filter(tc => !tc.sample);
+
+    this.samplesBody.innerHTML = samples.map(tc => `
+      <tr>
+        <td>${this.renderValue(tc.input)}</td>
+        <td>${JSON.stringify(tc.expected)}</td>
+      </tr>
+    `).join('');
+
+    if (samples.length > 0) {
+      this.removeClass(this.samplesTable, 'hidden');
+    } else {
+      this.addClass(this.samplesTable, 'hidden');
+    }
+
+    if (hidden.length > 0) {
+      this.hiddenCounter.textContent = `${hidden.length} test(s) oculto(s) adicionales`;
+      this.removeClass(this.hiddenCounter, 'hidden');
+    } else {
+      this.addClass(this.hiddenCounter, 'hidden');
+    }
+  }
+
+  private renderValue(value: unknown): string {
+    if (Array.isArray(value)) {
+      return value.map(v => JSON.stringify(v)).join(', ');
+    }
+    return JSON.stringify(value);
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
@@ -128,9 +163,6 @@ export class SandboxView extends DOMManager {
       highlighted = highlighted.replace(id, html);
     });
 
-    // El textarea siempre reserva una línea vacía final cuando el valor
-    // termina en '\n', pero el <pre> no la renderiza. Agregamos un <br>
-    // extra para mantener la altura de scroll sincronizada con el cursor.
     if (code.endsWith('\n')) {
       highlighted += '<br>';
     }
@@ -168,8 +200,9 @@ export class SandboxView extends DOMManager {
       this.syntaxStatus.className = 'syntax-status valid';
       this.runBtn.disabled = false;
       this.syntaxValid = true;
-    } catch (e: any) {
-      this.syntaxStatus.textContent = `✗ ${e.message}`;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      this.syntaxStatus.textContent = `✗ ${message}`;
       this.syntaxStatus.className = 'syntax-status invalid';
       this.runBtn.disabled = true;
       this.syntaxValid = false;
@@ -184,7 +217,7 @@ export class SandboxView extends DOMManager {
     this.runBtn.textContent = 'Ejecutando...';
 
     try {
-      const result = await api.runSandboxCode(this.currentProblem.id, this.codeEditor.value);
+      const result: RunResponse = await api.runSandboxCode(this.currentProblem._id, this.codeEditor.value);
 
       this.removeClass(this.resultsContainer, 'hidden');
 
@@ -203,14 +236,15 @@ export class SandboxView extends DOMManager {
       this.resultsBody.innerHTML = result.results.map((r, i) => `
         <tr>
           <td>${i + 1}</td>
-          <td>(${r.input.join(', ')})</td>
-          <td>${JSON.stringify(r.expected)}</td>
+          <td>${this.renderValue(r.input)}</td>
+          <td>${r.hidden ? '[oculto]' : JSON.stringify(r.expected)}</td>
           <td>${JSON.stringify(r.actual)}</td>
           <td class="${r.passed ? 'status-pass' : 'status-fail'}">${r.passed ? '✓' : '✗'}</td>
         </tr>
       `).join('');
-    } catch (err: any) {
-      this.showAlert(err.message || 'Error al ejecutar código');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al ejecutar código';
+      this.showAlert(message);
     } finally {
       this.isRunning = false;
       this.runBtn.textContent = '▶ Ejecutar';

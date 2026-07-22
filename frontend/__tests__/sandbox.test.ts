@@ -22,18 +22,20 @@ function cargarHTML() {
 function mockSandboxProblems() {
     return [
         {
-            id: 1,
+            _id: 'p1',
             title: 'Suma dos números',
             description: 'Escribí una función que reciba dos números y devuelva su suma.',
             params: ['a', 'b'],
-            testCases: [{ input: [1, 2], expected: 3 }]
+            testCases: [{ input: [1, 2], expected: 3, sample: true }],
+            active: true,
         },
         {
-            id: 2,
+            _id: 'p2',
             title: 'Doble de un número',
             description: 'Devuelve el doble del número recibido.',
             params: ['n'],
-            testCases: [{ input: [5], expected: 10 }]
+            testCases: [{ input: [5], expected: 10, sample: true }],
+            active: true,
         }
     ];
 }
@@ -75,7 +77,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const description = document.getElementById('problem-description');
@@ -90,7 +92,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -116,7 +118,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -151,7 +153,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -174,7 +176,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -232,17 +234,17 @@ describe('SandboxView', () => {
         jest.spyOn(apiModule.api, 'getSandboxProblems').mockResolvedValue(problems);
 
         const runResponse = {
-            results: [{ input: [1, 2], expected: 3, actual: 3, passed: true }],
+            results: [{ input: [1, 2], expected: 3, actual: 3, passed: true, hidden: false }],
             allPassed: true,
             error: null
         };
-        const runSpy = jest.spyOn(apiModule.api, 'runSandboxCode').mockResolvedValue(runResponse);
+        const runSpy = jest.spyOn(apiModule.api, 'runSandboxCode').mockResolvedValue(runResponse as any);
 
         new SandboxView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -253,7 +255,7 @@ describe('SandboxView', () => {
         runBtn.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(runSpy).toHaveBeenCalledWith(1, codeEditor.value);
+        expect(runSpy).toHaveBeenCalledWith('p1', codeEditor.value);
 
         const resultsContainer = document.getElementById('results-container');
         const resultsBanner = document.getElementById('results-banner');
@@ -270,17 +272,17 @@ describe('SandboxView', () => {
         jest.spyOn(apiModule.api, 'getSandboxProblems').mockResolvedValue(problems);
 
         const runResponse = {
-            results: [{ input: [1, 2], expected: 3, actual: 5, passed: false }],
+            results: [{ input: [1, 2], expected: 3, actual: 5, passed: false, hidden: false }],
             allPassed: false,
             error: null
         };
-        const runSpy = jest.spyOn(apiModule.api, 'runSandboxCode').mockResolvedValue(runResponse);
+        const runSpy = jest.spyOn(apiModule.api, 'runSandboxCode').mockResolvedValue(runResponse as any);
 
         new SandboxView();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -291,7 +293,7 @@ describe('SandboxView', () => {
         runBtn.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(runSpy).toHaveBeenCalledWith(1, codeEditor.value);
+        expect(runSpy).toHaveBeenCalledWith('p1', codeEditor.value);
 
         const resultsBanner = document.getElementById('results-banner');
         const resultsBody = document.getElementById('results-body');
@@ -316,7 +318,7 @@ describe('SandboxView', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const selector = document.getElementById('problem-selector') as HTMLSelectElement;
-        selector.value = '1';
+        selector.value = 'p1';
         selector.dispatchEvent(new Event('change'));
 
         const codeEditor = document.getElementById('code-editor') as HTMLTextAreaElement;
@@ -327,7 +329,7 @@ describe('SandboxView', () => {
         runBtn.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(runSpy).toHaveBeenCalledWith(1, codeEditor.value);
+        expect(runSpy).toHaveBeenCalledWith('p1', codeEditor.value);
 
         const resultsBanner = document.getElementById('results-banner');
         const resultsBody = document.getElementById('results-body');
