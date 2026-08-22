@@ -34,14 +34,14 @@ describe('SandboxService', () => {
     });
 
     describe('seedProblems (OnModuleInit)', () => {
-        it('deberia sembrar 2 problemas iniciales cuando onModuleInit y la coleccion esta vacia', async () => {
+        it('deberia sembrar 20 problemas iniciales cuando onModuleInit y la coleccion esta vacia', async () => {
             problemService.countProblems.mockResolvedValue(0);
             problemService.createProblem.mockResolvedValue({} as any);
 
             await service.seedProblems();
 
             expect(problemService.countProblems).toHaveBeenCalled();
-            expect(problemService.createProblem).toHaveBeenCalledTimes(2);
+            expect(problemService.createProblem).toHaveBeenCalledTimes(20);
         });
 
         it('deberia no sembrar nada cuando onModuleInit y la coleccion ya tiene problemas', async () => {
